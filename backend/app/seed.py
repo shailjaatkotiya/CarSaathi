@@ -1,0 +1,303 @@
+from datetime import date, time, timedelta
+
+from sqlalchemy.orm import Session
+
+from app.core.security import aadhaar_token, encrypt_aadhaar, hash_password, mask_aadhaar
+from app.models import (
+    AadhaarVerification,
+    DriverProfile,
+    PassengerProfile,
+    Ride,
+    RideDropPoint,
+    RidePickupPoint,
+    User,
+    UserRole,
+    Vehicle,
+    VerificationStatus,
+)
+
+
+def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str) -> str:
+    return "\n\n".join(
+        [
+            notes,
+            f"[route_stops]{'|'.join(route_stops)}[/route_stops]",
+            f"[ride_rules]{'|'.join(ride_rules)}[/ride_rules]",
+            f"[driver_instructions]{driver_instructions}[/driver_instructions]",
+        ]
+    )
+
+
+def seed_database(db: Session) -> None:
+    if db.query(User).first():
+        return
+
+    drivers = [
+        User(
+            full_name="Nirav Patel",
+            email="driver@ridesaathi.in",
+            password_hash=hash_password("Driver@123"),
+            role=UserRole.driver,
+            mobile_number="9876501234",
+            whatsapp_number="9876501234",
+            verification_status=VerificationStatus.verified,
+            rating_average=4.8,
+            rating_count=24,
+        ),
+        User(
+            full_name="Mehul Shah",
+            email="mehul.driver@ridesaathi.in",
+            password_hash=hash_password("Driver@123"),
+            role=UserRole.driver,
+            mobile_number="9825001111",
+            whatsapp_number="9825001111",
+            verification_status=VerificationStatus.verified,
+            rating_average=4.6,
+            rating_count=18,
+        ),
+        User(
+            full_name="Jignesh Solanki",
+            email="jignesh.driver@ridesaathi.in",
+            password_hash=hash_password("Driver@123"),
+            role=UserRole.driver,
+            mobile_number="9898002222",
+            whatsapp_number="9898002222",
+            verification_status=VerificationStatus.verified,
+            rating_average=4.9,
+            rating_count=31,
+        ),
+    ]
+    passenger = User(
+        full_name="Krina Shah",
+        email="passenger@ridesaathi.in",
+        password_hash=hash_password("Passenger@123"),
+        role=UserRole.passenger,
+        mobile_number="9876509876",
+        whatsapp_number="9876509876",
+        verification_status=VerificationStatus.verified,
+        rating_average=4.7,
+        rating_count=9,
+    )
+    db.add_all([*drivers, passenger])
+    db.flush()
+
+    for driver in drivers:
+        db.add(
+            DriverProfile(
+                user_id=driver.id,
+                driving_license_number=f"GJ-DRV-{driver.id:06d}",
+                bio="Verified Gujarat intercity driver with clean car and flexible halts.",
+                auto_confirm_bookings=False,
+                completed_trips=20 + driver.id,
+                total_earnings=25000 + driver.id * 1500,
+            )
+        )
+    db.add(PassengerProfile(user_id=passenger.id, preferred_pickup_point="Iscon Cross Road", preferred_drop_point="Rajkot Bus Stand"))
+
+    for index, user in enumerate([*drivers, passenger], start=1):
+        aadhaar = f"22223333{index:04d}"
+        db.add(
+            AadhaarVerification(
+                user_id=user.id,
+                aadhaar_token=aadhaar_token(aadhaar),
+                encrypted_aadhaar=encrypt_aadhaar(aadhaar),
+                masked_aadhaar=mask_aadhaar(aadhaar),
+                status=VerificationStatus.verified,
+            )
+        )
+
+    vehicles = [
+        Vehicle(driver_id=drivers[0].id, brand="Maruti Suzuki", model="Dzire", vehicle_number="GJ01AB1234", fuel_type="Petrol", car_type="Sedan", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=drivers[0].id, brand="Hyundai", model="Creta", vehicle_number="GJ01CD5678", fuel_type="Diesel", car_type="SUV", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=drivers[1].id, brand="Toyota", model="Innova Crysta", vehicle_number="GJ03EF9012", fuel_type="CNG", car_type="7 Seater", seats=6, photo_urls="", is_verified=True),
+        Vehicle(driver_id=drivers[1].id, brand="Tata", model="Nexon EV", vehicle_number="GJ05GH3456", fuel_type="EV", car_type="SUV", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=drivers[2].id, brand="Honda", model="Amaze", vehicle_number="GJ10JK7890", fuel_type="Petrol", car_type="Sedan", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=drivers[2].id, brand="Mahindra", model="Marazzo", vehicle_number="GJ12LM1122", fuel_type="Diesel", car_type="7 Seater", seats=6, photo_urls="", is_verified=True),
+    ]
+    db.add_all(vehicles)
+    db.flush()
+
+    today = date.today()
+    common_rules = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"]
+    rides = [
+        {
+            "vehicle": vehicles[0],
+            "source_city": "Ahmedabad",
+            "destination_city": "Rajkot",
+            "distance_km": 235,
+            "journey_date": today + timedelta(days=2),
+            "departure_time": time(7, 30),
+            "available_seats": 3,
+            "price_per_seat": 320,
+            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "SG Highway", "Satellite"],
+            "route_stops": ["Limbdi", "Chotila"],
+            "drop_points": ["Gondal Road", "Kalawad Road", "Rajkot Bus Stand", "University Road", "Mavdi Circle"],
+            "route_notes": "Morning sedan ride with tea halt near Limbdi.",
+            "driver_instructions": "Please arrive 10 minutes early. One cabin bag only.",
+        },
+        {
+            "vehicle": vehicles[1],
+            "source_city": "Rajkot",
+            "destination_city": "Ahmedabad",
+            "distance_km": 238,
+            "journey_date": today + timedelta(days=3),
+            "departure_time": time(16, 0),
+            "available_seats": 2,
+            "price_per_seat": 350,
+            "pickup_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "route_stops": ["Chotila", "Limbdi"],
+            "drop_points": ["Iscon Cross Road", "Bopal", "Gota", "Satellite", "SG Highway"],
+            "route_notes": "Evening SUV ride with AC and flexible halts.",
+            "driver_instructions": "No loud music. Confirm pickup point on WhatsApp.",
+        },
+        {
+            "vehicle": vehicles[2],
+            "source_city": "Rajkot",
+            "destination_city": "Jamnagar",
+            "distance_km": 96,
+            "journey_date": today + timedelta(days=1),
+            "departure_time": time(9, 15),
+            "available_seats": 5,
+            "price_per_seat": 190,
+            "pickup_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "route_stops": ["Dhrol", "Reliance Circle"],
+            "drop_points": ["Jamnagar Bus Stand", "Patel Colony", "Reliance Circle", "Digjam Circle", "Railway Station"],
+            "route_notes": "7 seater CNG ride for groups and families.",
+            "driver_instructions": "No extra children without seat booking.",
+        },
+        {
+            "vehicle": vehicles[4],
+            "source_city": "Jamnagar",
+            "destination_city": "Rajkot",
+            "distance_km": 94,
+            "journey_date": today + timedelta(days=2),
+            "departure_time": time(18, 45),
+            "available_seats": 3,
+            "price_per_seat": 180,
+            "pickup_points": ["Jamnagar Bus Stand", "Patel Colony", "Reliance Circle", "Digjam Circle", "Railway Station"],
+            "route_stops": ["Dhrol", "Paddhari"],
+            "drop_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "route_notes": "Petrol sedan office-return ride.",
+            "driver_instructions": "Small bags preferred. No tobacco inside car.",
+            "ac_available": False,
+        },
+        {
+            "vehicle": vehicles[3],
+            "source_city": "Ahmedabad",
+            "destination_city": "Surat",
+            "distance_km": 265,
+            "journey_date": today + timedelta(days=4),
+            "departure_time": time(6, 45),
+            "available_seats": 3,
+            "price_per_seat": 420,
+            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "Prahladnagar", "Narol"],
+            "route_stops": ["Vadodara", "Bharuch", "Ankleshwar"],
+            "drop_points": ["Adajan", "Varachha", "Surat Railway Station", "Athwa Gate", "Piplod"],
+            "route_notes": "EV SUV ride via Expressway with charging buffer.",
+            "driver_instructions": "Carry compact luggage. Charging halt may take 15 minutes.",
+        },
+        {
+            "vehicle": vehicles[5],
+            "source_city": "Surat",
+            "destination_city": "Ahmedabad",
+            "distance_km": 268,
+            "journey_date": today + timedelta(days=5),
+            "departure_time": time(14, 30),
+            "available_seats": 5,
+            "price_per_seat": 450,
+            "pickup_points": ["Adajan", "Varachha", "Surat Railway Station", "Athwa Gate", "Piplod"],
+            "route_stops": ["Ankleshwar", "Bharuch", "Vadodara"],
+            "drop_points": ["Bopal", "Gota", "Iscon Cross Road", "SG Highway", "Satellite"],
+            "route_notes": "Diesel 7 seater return ride with comfortable spacing.",
+            "driver_instructions": "No alcohol. Keep seat belts on during highway drive.",
+        },
+        {
+            "vehicle": vehicles[1],
+            "source_city": "Rajkot",
+            "destination_city": "Surat",
+            "distance_km": 435,
+            "journey_date": today + timedelta(days=6),
+            "departure_time": time(8, 0),
+            "available_seats": 3,
+            "price_per_seat": 650,
+            "pickup_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "route_stops": ["Ahmedabad", "Vadodara", "Bharuch"],
+            "drop_points": ["Adajan", "Varachha", "Surat Railway Station", "Athwa Gate", "Piplod"],
+            "route_notes": "Long SUV ride with planned breakfast halt.",
+            "driver_instructions": "No pets. Please keep luggage to one medium bag.",
+        },
+        {
+            "vehicle": vehicles[2],
+            "source_city": "Surat",
+            "destination_city": "Rajkot",
+            "distance_km": 430,
+            "journey_date": today + timedelta(days=7),
+            "departure_time": time(7, 45),
+            "available_seats": 5,
+            "price_per_seat": 620,
+            "pickup_points": ["Adajan", "Varachha", "Surat Railway Station", "Athwa Gate", "Piplod"],
+            "route_stops": ["Bharuch", "Vadodara", "Ahmedabad"],
+            "drop_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "route_notes": "CNG 7 seater for Surat to Rajkot route.",
+            "driver_instructions": "Family-friendly ride. No smoking and no tobacco.",
+        },
+        {
+            "vehicle": vehicles[0],
+            "source_city": "Ahmedabad",
+            "destination_city": "Vadodara",
+            "distance_km": 115,
+            "journey_date": today + timedelta(days=2),
+            "departure_time": time(12, 0),
+            "available_seats": 3,
+            "price_per_seat": 200,
+            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "Narol", "Maninagar"],
+            "route_stops": ["Nadiad", "Anand"],
+            "drop_points": ["Alkapuri", "Fatehgunj", "Gotri", "Akota", "Vadodara Railway Station"],
+            "route_notes": "Short petrol sedan ride.",
+            "driver_instructions": "No music unless all passengers agree.",
+            "ac_available": False,
+        },
+        {
+            "vehicle": vehicles[3],
+            "source_city": "Vadodara",
+            "destination_city": "Ahmedabad",
+            "distance_km": 112,
+            "journey_date": today + timedelta(days=3),
+            "departure_time": time(19, 15),
+            "available_seats": 3,
+            "price_per_seat": 210,
+            "pickup_points": ["Alkapuri", "Fatehgunj", "Gotri", "Akota", "Vadodara Railway Station"],
+            "route_stops": ["Anand", "Nadiad"],
+            "drop_points": ["Bopal", "Gota", "Iscon Cross Road", "Narol", "Maninagar"],
+            "route_notes": "EV SUV evening return route.",
+            "driver_instructions": "Please avoid food inside the car.",
+        },
+    ]
+
+    for item in rides:
+        vehicle = item.pop("vehicle")
+        pickup_points = item.pop("pickup_points")
+        drop_points = item.pop("drop_points")
+        route_stops = item.pop("route_stops")
+        driver_instructions = item.pop("driver_instructions")
+        ac_available = item.pop("ac_available", True)
+        notes = tagged_notes(item.pop("route_notes"), route_stops, common_rules, driver_instructions)
+        ride = Ride(
+            driver_id=vehicle.driver_id,
+            vehicle_id=vehicle.id,
+            route_key=f"{item['source_city'].lower()}:{item['destination_city'].lower()}",
+            total_seats=item["available_seats"],
+            auto_confirm_bookings=False,
+            smoking_allowed=False,
+            women_only_preference=False,
+            route_notes=notes,
+            luggage_allowance="One cabin bag per passenger",
+            ac_available=ac_available,
+            **item,
+        )
+        db.add(ride)
+        db.flush()
+        db.add_all([RidePickupPoint(ride_id=ride.id, name=name) for name in pickup_points])
+        db.add_all([RideDropPoint(ride_id=ride.id, name=name) for name in drop_points])
+
+    db.commit()
