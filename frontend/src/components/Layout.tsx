@@ -1,6 +1,7 @@
 import { Car, Compass, LogOut, Search, User as UserIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
@@ -15,7 +16,21 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const token = useSessionStore((state) => state.token);
+  const setToken = useSessionStore((state) => state.setToken);
   const logout = useSessionStore((state) => state.logout);
+
+  useEffect(() => {
+    // Exchange the stored token for a fresh one on app load so an open tab
+    // does not silently expire mid-session.
+    if (!token) return;
+    api
+      .post<{ access_token: string }>("/auth/refresh")
+      .then(({ data }) => setToken(data.access_token))
+      .catch(() => {
+        /* 401 handled by the api interceptor */
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: ["me"],

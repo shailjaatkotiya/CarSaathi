@@ -200,6 +200,18 @@ class Booking(Base):
     passenger: Mapped[User] = relationship(back_populates="bookings")
     payment: Mapped["Payment"] = relationship(back_populates="booking", uselist=False)
 
+    @property
+    def driver_id(self) -> int:
+        return self.ride.driver_id
+
+    @property
+    def driver_name(self) -> str:
+        return self.ride.driver.full_name
+
+    @property
+    def route(self) -> str:
+        return f"{self.ride.source_city} to {self.ride.destination_city}"
+
 
 class Payment(Base):
     __tablename__ = "payments"

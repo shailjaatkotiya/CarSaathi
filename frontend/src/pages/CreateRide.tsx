@@ -18,13 +18,24 @@ const rideRules = [
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
 
-type CarMode = "profile" | "new" | "skip";
+type CarMode = "profile" | "saved" | "new" | "skip";
 
 const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
   { value: "profile", label: "Use car from my profile", hint: "Reuse the personal car saved in your profile" },
+  { value: "saved", label: "Pick a saved vehicle", hint: "Choose one of the vehicles you added earlier" },
   { value: "new", label: "Add new car", hint: "Type fresh car details for this ride" },
   { value: "skip", label: "Skip for now", hint: "Publish without car details and add them later" }
 ];
+
+type SavedVehicle = {
+  id: number;
+  brand: string;
+  model: string;
+  vehicle_number: string;
+  fuel_type: string;
+  car_type: string;
+  seats: number;
+};
 
 function formatRuleLabel(value: string) {
   return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
@@ -50,10 +61,16 @@ export default function CreateRide() {
   const [error, setError] = useState("");
   const [carMode, setCarMode] = useState<CarMode>("new");
   const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const token = useSessionStore((state) => state.token);
   const { data: me } = useQuery({
     queryKey: ["me"],
     queryFn: async () => (await api.get<User>("/auth/me")).data,
+    enabled: Boolean(token)
+  });
+  const { data: savedVehicles } = useQuery({
+    queryKey: ["driver-vehicles"],
+    queryFn: async () => (await api.get<SavedVehicle[]>("/driver/vehicles")).data,
     enabled: Boolean(token)
   });
   const profileCar =
@@ -105,8 +122,15 @@ export default function CreateRide() {
       return;
     }
 
+    if (carMode === "saved" && !selectedVehicleId) {
+      setError("Please pick one of your saved vehicles or choose another car option.");
+      return;
+    }
+
     const carDetails =
-      carMode === "profile" && profileCar
+      carMode === "saved" && selectedVehicleId
+        ? { vehicle_id: selectedVehicleId }
+        : carMode === "profile" && profileCar
         ? {
             car_brand: profileCar.brand || null,
             car_model: profileCar.model || null,
@@ -211,6 +235,43 @@ export default function CreateRide() {
                     Add it in My Profile
                   </Link>{" "}
                   or pick another option. Publishing still works without car details.
+                </p>
+              )}
+            </div>
+          )}
+
+          {carMode === "saved" && (
+            <div className="mt-4">
+              {savedVehicles?.length ? (
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  {savedVehicles.map((vehicle) => (
+                    <button
+                      key={vehicle.id}
+                      type="button"
+                      onClick={() => setSelectedVehicleId(vehicle.id)}
+                      className={`rounded-xl border p-4 text-left transition ${
+                        selectedVehicleId === vehicle.id
+                          ? "border-primary bg-primary text-white"
+                          : "border-sand bg-white text-ink hover:border-primary"
+                      }`}
+                    >
+                      <p className="font-bold">
+                        {vehicle.brand} {vehicle.model}
+                      </p>
+                      <p className="mt-1 text-xs">{vehicle.vehicle_number}</p>
+                      <p className="text-xs">
+                        {vehicle.car_type} · {vehicle.fuel_type} · {vehicle.seats} seats
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="alert-warning">
+                  No saved vehicles yet{token ? "" : " (login required)"}.{" "}
+                  <Link to="/driver/vehicle" className="font-bold underline">
+                    Add one on the Add Vehicle page
+                  </Link>{" "}
+                  or pick another option.
                 </p>
               )}
             </div>
