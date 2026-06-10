@@ -126,7 +126,7 @@ class VehicleOut(VehicleCreate):
 
 
 class RideCreate(BaseModel):
-    vehicle_id: int
+    vehicle_id: int | None = None
     car_brand: str | None = None
     car_model: str | None = None
     vehicle_number: str | None = None

@@ -1,8 +1,11 @@
 import { Car, CalendarCheck, ListChecks, Route as RouteIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { api } from "../api/client";
+import { Link } from "react-router-dom";
+import { api, User } from "../api/client";
+import { useSessionStore } from "../store/session";
 
 const rideRules = [
   { value: "no_pets", label: "No pets" },
@@ -14,6 +17,14 @@ const rideRules = [
 ];
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
+
+type CarMode = "profile" | "new" | "skip";
+
+const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
+  { value: "profile", label: "Use car from my profile", hint: "Reuse the personal car saved in your profile" },
+  { value: "new", label: "Add new car", hint: "Type fresh car details for this ride" },
+  { value: "skip", label: "Skip for now", hint: "Publish without car details and add them later" }
+];
 
 function formatRuleLabel(value: string) {
   return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
@@ -37,7 +48,24 @@ function FormSection({ title, subtitle, icon, children }: { title: string; subti
 export default function CreateRide() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [carMode, setCarMode] = useState<CarMode>("new");
   const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
+  const token = useSessionStore((state) => state.token);
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => (await api.get<User>("/auth/me")).data,
+    enabled: Boolean(token)
+  });
+  const profileCar =
+    me && (me.personal_car_brand || me.personal_car_model || me.personal_car_number)
+      ? {
+          brand: me.personal_car_brand || "",
+          model: me.personal_car_model || "",
+          number: me.personal_car_number || "",
+          fuel: me.personal_car_fuel_type || "",
+          category: me.personal_car_category || ""
+        }
+      : null;
   const [extraInstructions, setExtraInstructions] = useState("Please be on time. Call before reaching pickup point.");
   const defaultRideDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const instructionText = [
@@ -70,14 +98,28 @@ export default function CreateRide() {
       return;
     }
 
+    const carDetails =
+      carMode === "profile" && profileCar
+        ? {
+            car_brand: profileCar.brand || null,
+            car_model: profileCar.model || null,
+            vehicle_number: profileCar.number || null,
+            fuel_type: profileCar.fuel || null,
+            car_type: profileCar.category || null
+          }
+        : carMode === "new"
+        ? {
+            car_brand: String(payload.car_brand ?? "").trim() || null,
+            car_model: String(payload.car_model ?? "").trim() || null,
+            vehicle_number: String(payload.vehicle_number ?? "").trim() || null,
+            fuel_type: payload.fuel_type || null,
+            car_type: payload.car_type || null
+          }
+        : {};
+
     try {
       const { data } = await api.post("/driver/rides", {
-        vehicle_id: 1,
-        car_brand: payload.car_brand,
-        car_model: payload.car_model,
-        vehicle_number: payload.vehicle_number,
-        fuel_type: payload.fuel_type,
-        car_type: payload.car_type,
+        ...carDetails,
         source_city: payload.source_city,
         destination_city: payload.destination_city,
         distance_km: Number(payload.distance_km),
@@ -109,8 +151,8 @@ export default function CreateRide() {
         <div>
           <h1 className="text-3xl font-bold md:text-5xl">Driver - Publish New Ride</h1>
           <p className="mt-2 max-w-3xl text-muted">
-            Fill the labelled fields below. The demo uses your default vehicle internally, so no vehicle ID is needed on
-            this screen.
+            Fill the labelled fields below. Car details are optional: use the car saved in your profile, add a new one,
+            or skip and publish without them.
           </p>
         </div>
         <p className="alert-info">
@@ -118,42 +160,100 @@ export default function CreateRide() {
           required.
         </p>
 
-        <FormSection title="Car details" subtitle="Add the exact car passengers will see before booking." icon={<Car size={20} />}>
-          <div className="grid gap-4 md:grid-cols-3">
-            <label>
-              <span className="field-label">Car brand</span>
-              <input className="input" name="car_brand" defaultValue="Maruti Suzuki" />
-              <span className="field-hint">Example: Maruti Suzuki, Hyundai</span>
-            </label>
-            <label>
-              <span className="field-label">Car model</span>
-              <input className="input" name="car_model" defaultValue="Swift Dzire" />
-              <span className="field-hint">Example: Swift Dzire, Creta</span>
-            </label>
-            <label>
-              <span className="field-label">Vehicle number</span>
-              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
-              <span className="field-hint">Shown after confirmed booking</span>
-            </label>
-            <label>
-              <span className="field-label">Fuel type</span>
-              <select className="input" name="fuel_type" defaultValue="Petrol">
-                <option value="Petrol">Petrol</option>
-                <option value="CNG">CNG</option>
-                <option value="EV">EV</option>
-                <option value="Diesel">Diesel</option>
-              </select>
-              <span className="field-hint">Petrol, CNG, EV, or Diesel</span>
-            </label>
-            <label>
-              <span className="field-label">Car category</span>
-              <select className="input" name="car_type" defaultValue="Sedan">
-                <option value="SUV">SUV</option>
-                <option value="Sedan">Sedan</option>
-                <option value="7 Seater">7 Seater</option>
-              </select>
-              <span className="field-hint">Choose SUV, Sedan, or 7 Seater</span>
-            </label>
+        <FormSection title="Car details" subtitle="Pick your profile car, add a new one, or skip and publish without car details." icon={<Car size={20} />}>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {carModeOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setCarMode(option.value)}
+                className={`rounded-xl border p-4 text-left transition ${
+                  carMode === option.value
+                    ? "border-primary bg-primary text-white"
+                    : "border-sand bg-cream text-ink hover:border-primary"
+                }`}
+              >
+                <p className="font-bold">{option.label}</p>
+                <p className="mt-1 text-xs">{option.hint}</p>
+              </button>
+            ))}
+          </div>
+
+          {carMode === "profile" && (
+            <div className="mt-4">
+              {profileCar ? (
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  <div className="rounded-xl border border-sand bg-white p-4">
+                    <p className="text-xs font-bold text-muted">Car</p>
+                    <p className="mt-1.5 font-bold">{[profileCar.brand, profileCar.model].filter(Boolean).join(" ") || "Not added"}</p>
+                  </div>
+                  <div className="rounded-xl border border-sand bg-white p-4">
+                    <p className="text-xs font-bold text-muted">Vehicle number</p>
+                    <p className="mt-1.5 font-bold">{profileCar.number || "Not added"}</p>
+                  </div>
+                  <div className="rounded-xl border border-sand bg-white p-4">
+                    <p className="text-xs font-bold text-muted">Fuel and category</p>
+                    <p className="mt-1.5 font-bold">{[profileCar.fuel, profileCar.category].filter(Boolean).join(" · ") || "Not added"}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="alert-warning">
+                  No personal car is saved in your profile{token ? "" : " (login required)"}.{" "}
+                  <Link to="/profile" className="font-bold underline">
+                    Add it in My Profile
+                  </Link>{" "}
+                  or pick another option. Publishing still works without car details.
+                </p>
+              )}
+            </div>
+          )}
+
+          {carMode === "new" && (
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <label>
+                <span className="field-label">Car brand</span>
+                <input className="input" name="car_brand" defaultValue="Maruti Suzuki" />
+                <span className="field-hint">Example: Maruti Suzuki, Hyundai</span>
+              </label>
+              <label>
+                <span className="field-label">Car model</span>
+                <input className="input" name="car_model" defaultValue="Swift Dzire" />
+                <span className="field-hint">Example: Swift Dzire, Creta</span>
+              </label>
+              <label>
+                <span className="field-label">Vehicle number</span>
+                <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
+                <span className="field-hint">Shown after confirmed booking</span>
+              </label>
+              <label>
+                <span className="field-label">Fuel type</span>
+                <select className="input" name="fuel_type" defaultValue="Petrol">
+                  <option value="Petrol">Petrol</option>
+                  <option value="CNG">CNG</option>
+                  <option value="EV">EV</option>
+                  <option value="Diesel">Diesel</option>
+                </select>
+                <span className="field-hint">Petrol, CNG, EV, or Diesel</span>
+              </label>
+              <label>
+                <span className="field-label">Car category</span>
+                <select className="input" name="car_type" defaultValue="Sedan">
+                  <option value="SUV">SUV</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="7 Seater">7 Seater</option>
+                </select>
+                <span className="field-hint">Choose SUV, Sedan, or 7 Seater</span>
+              </label>
+            </div>
+          )}
+
+          {carMode === "skip" && (
+            <p className="alert-info mt-4">
+              Ride will publish without car details. You can add the car later from My Profile or the Add Vehicle page.
+            </p>
+          )}
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <label>
               <span className="field-label">Available seats</span>
               <input className="input" name="available_seats" defaultValue="3" />
