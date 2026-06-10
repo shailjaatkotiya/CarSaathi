@@ -2,7 +2,7 @@ from datetime import date, time
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models import BookingStatus, RideStatus, UserRole, VerificationStatus
+from app.models import BookingStatus, RideStatus, VerificationStatus
 
 
 class TokenResponse(BaseModel):
@@ -14,7 +14,6 @@ class RegisterRequest(BaseModel):
     full_name: str
     email: EmailStr
     password: str = Field(min_length=8)
-    role: UserRole = UserRole.passenger
     whatsapp_number: str | None = None
 
     @field_validator("full_name")
@@ -53,7 +52,6 @@ class UserOut(BaseModel):
     id: int
     full_name: str
     email: EmailStr
-    role: UserRole
     age: int | None
     whatsapp_number: str | None
     personal_car_brand: str | None

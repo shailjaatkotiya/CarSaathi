@@ -8,12 +8,16 @@ from app.services.twilio_client import send_via_twilio
 
 _BODY_TEMPLATES = {
     "passenger_booking_confirmation": (
-        "RideSaathi: booking confirmed!\n"
+        "RideSaathi: booking {booking_status}!\n"
+        "Booking: {booking_id}\n"
+        "Route: {route}\n"
         "Driver: {driver_name} ({driver_whatsapp_number})\n"
         "Car: {car_model} ({vehicle_number})\n"
         "Pickup: {pickup_point}\n"
-        "Departure: {journey_time}\n"
-        "Seats: {seat_count_booked}"
+        "Drop: {drop_off_point}\n"
+        "Departure: {journey_date} {journey_time}\n"
+        "Seats: {seat_count_booked}\n"
+        "Amount: Rs. {total_amount}"
     ),
     "driver_booking_request": (
         "RideSaathi: new booking {booking_id}.\n"
@@ -81,7 +85,7 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
     return log
 
 
-def notify_booking_created(db: Session, booking: Booking) -> None:
+def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = True) -> None:
     ride = booking.ride
     driver = ride.driver
     passenger = booking.passenger
@@ -93,29 +97,36 @@ def notify_booking_created(db: Session, booking: Booking) -> None:
         booking,
         "passenger_booking_confirmation",
         {
+            "booking_id": booking.booking_code,
+            "booking_status": booking.status.value,
+            "route": f"{ride.source_city} to {ride.destination_city}",
             "driver_name": driver.full_name,
             "driver_whatsapp_number": driver.whatsapp_number,
             "car_model": f"{vehicle.brand} {vehicle.model}",
             "vehicle_number": vehicle.vehicle_number,
             "pickup_point": booking.pickup_point,
+            "drop_off_point": booking.drop_point,
+            "journey_date": ride.journey_date.isoformat(),
             "journey_time": ride.departure_time.isoformat(),
             "seat_count_booked": booking.seats_booked,
+            "total_amount": booking.total_amount,
         },
     )
-    log_whatsapp(
-        db,
-        driver,
-        booking,
-        "driver_booking_request",
-        {
-            "passenger_name": passenger.full_name,
-            "passenger_whatsapp_number": passenger.whatsapp_number,
-            "seats_booked": booking.seats_booked,
-            "pickup_point": booking.pickup_point,
-            "drop_off_point": booking.drop_point,
-            "booking_id": booking.booking_code,
-        },
-    )
+    if notify_driver:
+        log_whatsapp(
+            db,
+            driver,
+            booking,
+            "driver_booking_request",
+            {
+                "passenger_name": passenger.full_name,
+                "passenger_whatsapp_number": passenger.whatsapp_number,
+                "seats_booked": booking.seats_booked,
+                "pickup_point": booking.pickup_point,
+                "drop_off_point": booking.drop_point,
+                "booking_id": booking.booking_code,
+            },
+        )
 
 
 def notify_booking_cancelled(db: Session, booking: Booking, reason: str, cancelled_by: str) -> None:

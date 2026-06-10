@@ -1,4 +1,4 @@
-import { Car, Pencil, Phone, Save, Shield, Star, User as UserIcon, UserCheck } from "lucide-react";
+import { Car, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
@@ -173,7 +173,7 @@ export default function ProfilePage() {
                   <h1 className="text-3xl font-bold">{data?.full_name || "My Profile"}</h1>
                   {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
                 </div>
-                <p className="mt-1 text-muted">{data?.role ? `${data.role} account` : "RideSaathi account"}</p>
+                <p className="mt-1 text-muted">RideSaathi account</p>
               </div>
             </div>
 
@@ -310,12 +310,11 @@ export default function ProfilePage() {
                 <DetailTile label="Profile verification" value={data?.verification_status} />
                 <DetailTile label="Aadhaar verification" value={verification?.status} />
                 <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
-                <DetailTile label="Account role" value={data?.role} icon={<UserCheck size={16} className="text-primary" />} />
                 {verification?.rejection_reason && <p className="alert-error">{verification.rejection_reason}</p>}
               </div>
               <hr className="my-5 border-sand" />
               <span className={data?.verification_status === "verified" ? "chip-solid" : "chip-outline"}>
-                {data?.verification_status === "verified" ? "Ride listing and booking enabled" : "Verification pending"}
+                {data?.verification_status === "verified" ? "Verified profile" : "Verification pending"}
               </span>
             </div>
 

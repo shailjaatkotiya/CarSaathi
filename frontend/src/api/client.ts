@@ -64,7 +64,6 @@ export type User = {
   id: number;
   full_name: string;
   email: string;
-  role: "driver" | "passenger";
   age?: number;
   whatsapp_number?: string;
   personal_car_brand?: string;

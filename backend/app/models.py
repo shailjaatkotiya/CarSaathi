@@ -7,12 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
-class UserRole(str, enum.Enum):
-    passenger = "passenger"
-    driver = "driver"
-    admin = "admin"
-
-
 class VerificationStatus(str, enum.Enum):
     pending = "pending"
     verified = "verified"
@@ -47,7 +41,6 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.passenger)
     age: Mapped[int | None] = mapped_column(Integer)
     mobile_number: Mapped[str | None] = mapped_column(String(20))
     whatsapp_number: Mapped[str | None] = mapped_column(String(20))

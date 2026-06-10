@@ -23,7 +23,7 @@ export default function AdminDashboard() {
           <div key={user.id} className="flex flex-col gap-2 border-b border-sand-light px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-semibold">{user.full_name}</p>
-              <p className="text-sm text-muted">{user.email} • {user.role}</p>
+              <p className="text-sm text-muted">{user.email}</p>
             </div>
             <span className="chip">{user.verification_status}</span>
           </div>

@@ -25,7 +25,6 @@ function authErrorMessage(err: unknown) {
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [role, setRole] = useState<"passenger" | "driver">("passenger");
   const [email, setEmail] = useState("shailja@gmail.com");
   const [password, setPassword] = useState("passenger@123");
   const [fullName, setFullName] = useState("Shailja");
@@ -57,7 +56,6 @@ export default function AuthPage() {
             full_name: fullName.trim(),
             email: normalizedEmail,
             password: password.trim(),
-            role,
             whatsapp_number: whatsappNumber.trim() || null
           };
 
@@ -83,7 +81,7 @@ export default function AuthPage() {
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div>
             <h1 className="text-3xl font-bold">{mode === "login" ? "Login" : "Register"} to RideSaathi</h1>
-            <p className="mt-2 text-muted">Use demo credentials or create a driver/passenger profile.</p>
+            <p className="mt-2 text-muted">Use demo credentials or create one account that can publish and book rides.</p>
           </div>
 
           <div className="flex rounded-full bg-sand-light p-1">
@@ -106,13 +104,6 @@ export default function AuthPage() {
               <label>
                 <span className="field-label">Full name</span>
                 <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
-              </label>
-              <label>
-                <span className="field-label">Role</span>
-                <select className="input" value={role} onChange={(event) => setRole(event.target.value as "passenger" | "driver")}>
-                  <option value="passenger">Passenger</option>
-                  <option value="driver">Driver</option>
-                </select>
               </label>
               <label>
                 <span className="field-label">WhatsApp contact</span>

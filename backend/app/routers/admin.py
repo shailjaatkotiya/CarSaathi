@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token, verify_password
 from app.database import get_db
 from app.dependencies import require_admin
-from app.models import AadhaarVerification, Booking, ReportedUser, Ride, User, VerificationStatus
+from app.models import AdminUser, AadhaarVerification, Booking, ReportedUser, Ride, User, VerificationStatus
 from app.schemas import AdminDecision, LoginRequest, TokenResponse, UserOut
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -15,7 +15,10 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 @router.post("/login", response_model=TokenResponse)
 def admin_login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     user = db.query(User).filter(User.email == payload.email).first()
-    if not user or user.role.value != "admin" or not verify_password(payload.password, user.password_hash):
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+    admin_user = db.query(AdminUser).filter(AdminUser.user_id == user.id).first()
+    if not admin_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
     return TokenResponse(access_token=create_access_token(str(user.id)))
 

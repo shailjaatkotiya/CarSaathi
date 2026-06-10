@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 type SessionState = {
   token: string | null;
@@ -14,6 +14,9 @@ export const useSessionStore = create<SessionState>()(
       setToken: (token) => set({ token }),
       logout: () => set({ token: null })
     }),
-    { name: "ridesaathi-session" }
+    {
+      name: "ridesaathi-session",
+      storage: createJSONStorage(() => sessionStorage)
+    }
   )
 );

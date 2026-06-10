@@ -32,13 +32,34 @@ export default function App() {
         />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/driver/onboarding" element={<DriverOnboarding />} />
-        <Route path="/driver/vehicle" element={<AddVehicle />} />
-        <Route path="/driver/create-ride" element={<CreateRide />} />
+        <Route
+          path="/driver/vehicle"
+          element={
+            <RequireAuth>
+              <AddVehicle />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/driver/create-ride"
+          element={
+            <RequireAuth>
+              <CreateRide />
+            </RequireAuth>
+          }
+        />
         <Route path="/search" element={<SearchRides />} />
         <Route path="/rides/:rideId" element={<RideDetail />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/my-bookings" element={<Navigate to="/profile/passenger" />} />
-        <Route path="/my-rides" element={<MyRides />} />
+        <Route
+          path="/my-rides"
+          element={
+            <RequireAuth>
+              <MyRides />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/profile"
           element={

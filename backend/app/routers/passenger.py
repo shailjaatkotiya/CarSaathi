@@ -5,24 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_optional_current_user
-from app.models import Booking, BookingStatus, CancellationReason, Review, Ride, RideStatus, User, UserRole
+from app.dependencies import get_current_user
+from app.models import Booking, BookingStatus, CancellationReason, Review, Ride, RideStatus, User
 from app.schemas import BookingCreate, BookingOut, CancellationRequest, ReportCreate, ReviewCreate, RideOut
 from app.services.whatsapp import notify_booking_cancelled, notify_booking_created
 from app.utils.serializers import ride_to_out
 
 router = APIRouter(prefix="/passenger", tags=["passenger"])
-
-
-def resolve_demo_passenger(db: Session, user: User | None) -> User:
-    if user and user.role in {UserRole.passenger, UserRole.admin}:
-        return user
-    demo_passenger = db.query(User).filter(User.role == UserRole.passenger, User.email == "passenger@ridesaathi.in").first()
-    if not demo_passenger:
-        demo_passenger = db.query(User).filter(User.role == UserRole.passenger).first()
-    if not demo_passenger:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Demo passenger is not available")
-    return demo_passenger
 
 
 @router.get("/rides/search", response_model=list[RideOut])
@@ -101,8 +90,7 @@ def ride_detail(ride_id: int, db: Session = Depends(get_db)) -> RideOut:
 
 
 @router.post("/rides/{ride_id}/book", response_model=BookingOut)
-def book_ride(ride_id: int, payload: BookingCreate, current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> Booking:
-    passenger = resolve_demo_passenger(db, current_user)
+def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
     ride = db.query(Ride).filter(Ride.id == ride_id).with_for_update().first()
     if not ride or ride.status != RideStatus.active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not available")
@@ -130,16 +118,14 @@ def book_ride(ride_id: int, payload: BookingCreate, current_user: User | None = 
     )
     db.add(booking)
     db.flush()
-    if status_value == BookingStatus.confirmed:
-        notify_booking_created(db, booking)
+    notify_booking_created(db, booking)
     db.commit()
     db.refresh(booking)
     return booking
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: int, payload: CancellationRequest, current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> Booking:
-    passenger = resolve_demo_passenger(db, current_user)
+def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
     booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -155,8 +141,7 @@ def cancel_booking(booking_id: int, payload: CancellationRequest, current_user: 
 
 
 @router.get("/bookings", response_model=list[BookingOut])
-def booking_history(current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> list[Booking]:
-    passenger = resolve_demo_passenger(db, current_user)
+def booking_history(passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Booking]:
     return (
         db.query(Booking)
         .filter(Booking.passenger_id == passenger.id, Booking.status != BookingStatus.completed)

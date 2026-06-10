@@ -1,9 +1,10 @@
 import { AlertTriangle, Car, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { useSessionStore } from "../store/session";
 
 const ruleLabels: Record<string, string> = {
   no_pets: "No pets",
@@ -20,6 +21,8 @@ export default function RideDetail() {
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [message, setMessage] = useState("");
+  const token = useSessionStore((state) => state.token);
+  const navigate = useNavigate();
   const { data: ride } = useQuery({
     queryKey: ["ride", rideId],
     queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
@@ -38,6 +41,10 @@ export default function RideDetail() {
 
   async function book() {
     if (!ride) return;
+    if (!token) {
+      navigate("/auth", { state: { from: `/rides/${ride.id}` } });
+      return;
+    }
     const { data } = await api.post(`/passenger/rides/${ride.id}/book`, {
       seats_booked: seats,
       pickup_point: pickup || ride.pickup_points[0],

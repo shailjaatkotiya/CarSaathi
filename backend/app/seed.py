@@ -3,7 +3,7 @@ from datetime import date, time, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
-from app.models import DriverProfile, PassengerProfile, Ride, RideDropPoint, RidePickupPoint, User, UserRole, Vehicle, VerificationStatus
+from app.models import AdminUser, DriverProfile, PassengerProfile, Ride, RideDropPoint, RidePickupPoint, User, Vehicle, VerificationStatus
 
 
 def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str) -> str:
@@ -17,22 +17,37 @@ def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driv
     )
 
 
+def ensure_default_admin(db: Session) -> None:
+    admin = db.query(User).filter(User.email == "admin@ridesaathi.in").first()
+    if not admin:
+        admin = User(
+            full_name="RideSaathi Admin",
+            email="admin@ridesaathi.in",
+            password_hash=hash_password("Admin@123"),
+            verification_status=VerificationStatus.verified,
+        )
+        db.add(admin)
+        db.flush()
+    if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
+        db.add(AdminUser(user_id=admin.id))
+        db.commit()
+
+
 def seed_database(db: Session) -> None:
     if db.query(User).first():
+        ensure_default_admin(db)
         return
 
     shubham = User(
         full_name="Shubham",
         email="shubham@gmail.com",
         password_hash=hash_password("driver@123"),
-        role=UserRole.driver,
         verification_status=VerificationStatus.pending,
     )
     shailja = User(
         full_name="Shailja",
         email="shailja@gmail.com",
         password_hash=hash_password("passenger@123"),
-        role=UserRole.passenger,
         verification_status=VerificationStatus.pending,
     )
     dummy_drivers = [
@@ -40,7 +55,6 @@ def seed_database(db: Session) -> None:
             full_name="Aarav Patel",
             email="aarav.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.8,
             rating_count=26,
@@ -49,7 +63,6 @@ def seed_database(db: Session) -> None:
             full_name="Mehul Shah",
             email="mehul.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.6,
             rating_count=19,
@@ -58,7 +71,6 @@ def seed_database(db: Session) -> None:
             full_name="Rohan Trivedi",
             email="rohan.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.9,
             rating_count=34,
@@ -67,7 +79,6 @@ def seed_database(db: Session) -> None:
             full_name="Nikhil Desai",
             email="nikhil.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.7,
             rating_count=22,
@@ -77,7 +88,7 @@ def seed_database(db: Session) -> None:
     db.add_all(users)
     db.flush()
 
-    for driver in [shubham, *dummy_drivers]:
+    for driver in [shubham, shailja, *dummy_drivers]:
         db.add(
             DriverProfile(
                 user_id=driver.id,
@@ -88,7 +99,8 @@ def seed_database(db: Session) -> None:
                 total_earnings=0 if driver is shubham else 22000 + driver.id * 1200,
             )
         )
-    db.add(PassengerProfile(user_id=shailja.id))
+        db.add(PassengerProfile(user_id=driver.id))
+    ensure_default_admin(db)
 
     vehicles = [
         Vehicle(driver_id=dummy_drivers[0].id, brand="Maruti Suzuki", model="Dzire", vehicle_number="GJ01AA1234", fuel_type="Petrol", car_type="Sedan", seats=4, photo_urls="", is_verified=True),

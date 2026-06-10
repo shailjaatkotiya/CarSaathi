@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     twilio_content_sid_passenger_booking_cancelled: str = ""
     twilio_content_sid_driver_booking_cancelled: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore")
 
     @property
     def cors_origin_list(self) -> list[str]:
