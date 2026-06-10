@@ -197,6 +197,11 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 
 @router.post("/rides", response_model=RideOut)
 def create_ride(payload: RideCreate, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> RideOut:
+    if not (driver.whatsapp_number and driver.whatsapp_number.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please add your WhatsApp contact number in My Profile before publishing a ride",
+        )
     validate_stop_counts(payload)
     vehicle = resolve_ride_vehicle(db, driver, payload)
     max_available_seats = default_available_seats(vehicle.car_type)

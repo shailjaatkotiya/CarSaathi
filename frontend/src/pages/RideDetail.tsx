@@ -1,8 +1,9 @@
 import { AlertTriangle, Car, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { api, Ride } from "../api/client";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { api, Ride, User } from "../api/client";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useSessionStore } from "../store/session";
 
@@ -21,12 +22,19 @@ export default function RideDetail() {
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const token = useSessionStore((state) => state.token);
   const navigate = useNavigate();
   const { data: ride, refetch } = useQuery({
     queryKey: ["ride", rideId],
     queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
   });
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => (await api.get<User>("/auth/me")).data,
+    enabled: Boolean(token)
+  });
+  const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
 
   const paymentAmount = useMemo(() => (ride ? seats * ride.price_per_seat : 0), [ride, seats]);
   const instructionLines = useMemo(() => {
@@ -45,13 +53,19 @@ export default function RideDetail() {
       navigate("/auth", { state: { from: `/rides/${ride.id}` } });
       return;
     }
-    const { data } = await api.post(`/passenger/rides/${ride.id}/book`, {
-      seats_booked: seats,
-      pickup_point: pickup || ride.pickup_points[0],
-      drop_point: drop || ride.drop_points[0]
-    });
-    setMessage(`Booking ${data.booking_code} created with ${data.status} status.`);
-    await refetch();
+    setMessage("");
+    setError("");
+    try {
+      const { data } = await api.post(`/passenger/rides/${ride.id}/book`, {
+        seats_booked: seats,
+        pickup_point: pickup || ride.pickup_points[0],
+        drop_point: drop || ride.drop_points[0]
+      });
+      setMessage(`Booking ${data.booking_code} created with ${data.status} status.`);
+    } catch (err) {
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
+      setError(detail || "Could not book the ride. Please try again.");
+    }
   }
 
   if (!ride) {
@@ -209,7 +223,16 @@ export default function RideDetail() {
                     ))}
                   </select>
                 </label>
-                <button type="button" className="btn-primary py-3" onClick={book}>
+                {missingContactNumber && (
+                  <p className="alert-warning">
+                    A WhatsApp contact number is required to book.{" "}
+                    <Link to="/profile" className="font-bold underline">
+                      Add it in My Profile
+                    </Link>{" "}
+                    first.
+                  </p>
+                )}
+                <button type="button" className="btn-primary py-3" onClick={book} disabled={missingContactNumber}>
                   <MessageCircle size={18} />
                   Book ride · Rs. {paymentAmount}
                 </button>
@@ -218,6 +241,7 @@ export default function RideDetail() {
                   {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
                 </p>
                 {message && <p className="alert-success">{message}</p>}
+                {error && <p className="alert-error">{error}</p>}
               </div>
             </div>
           </div>

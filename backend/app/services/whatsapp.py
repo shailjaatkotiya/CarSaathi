@@ -69,6 +69,9 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
     settings = get_settings()
     recipient = user.whatsapp_number or "missing"
     use_twilio = settings.whatsapp_provider == "twilio"
+    # WhatsApp rejects template sends with empty variables, and freeform
+    # bodies would render literal "None" — substitute a dash instead.
+    payload = {key: value if value is not None and str(value).strip() else "-" for key, value in payload.items()}
 
     if not use_twilio:
         status = NotificationStatus.mocked
