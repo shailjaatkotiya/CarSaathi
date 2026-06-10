@@ -188,6 +188,9 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, current_user: User |
     ride = db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver.id).first()
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
+    # Notify while bookings are still pending/confirmed; notify_ride_cancelled
+    # skips bookings already marked cancelled.
+    notify_ride_cancelled(db, ride, payload.reason)
     ride.status = RideStatus.cancelled
     ride.cancellation_reason = payload.reason
     for booking in ride.bookings:
@@ -195,7 +198,6 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, current_user: User |
             booking.status = BookingStatus.cancelled
             booking.cancellation_reason = f"Driver cancelled ride: {payload.reason}"
     db.add(CancellationReason(user_id=driver.id, ride_id=ride.id, reason=payload.reason))
-    notify_ride_cancelled(db, ride, payload.reason)
     db.commit()
     return {"message": "Ride cancelled"}
 

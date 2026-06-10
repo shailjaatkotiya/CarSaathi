@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_whatsapp_from: str = ""
+    twilio_messaging_service_sid: str = ""
+    # Approved WhatsApp template Content SIDs (HX...). Empty = send freeform
+    # body instead (works in sandbox / inside the 24h customer-service window).
+    twilio_content_sid_passenger_booking_confirmation: str = ""
+    twilio_content_sid_driver_booking_request: str = ""
+    twilio_content_sid_passenger_booking_cancelled: str = ""
+    twilio_content_sid_driver_booking_cancelled: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
