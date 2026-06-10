@@ -12,8 +12,7 @@ Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and 
 - FastAPI backend with SQLAlchemy models, JWT auth, mock Aadhaar verification, ride search, booking, reviews, admin verification, and WhatsApp notification logging
 - React + TypeScript + Tailwind frontend with mobile-first screens for passenger, driver, profile, verification, and admin flows
 - Seed data for Ahmedabad to Rajkot and Rajkot to Jamnagar
-- Docker Compose for PostgreSQL, Redis, backend, and frontend
-- GitHub Actions CI skeleton
+- Simple local run flow for backend and frontend
 
 ## Local Backend Setup
 
@@ -55,19 +54,6 @@ Frontend URL:
 
 Set `VITE_API_BASE_URL=http://localhost:8000/api/v1` if your backend runs elsewhere.
 
-## Docker Setup
-
-```powershell
-docker compose up --build
-```
-
-Services:
-
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
-- PostgreSQL: localhost:5432
-- Redis: localhost:6379
-
 ## MVP Scope
 
 The MVP supports:
@@ -84,7 +70,6 @@ The MVP supports:
 ## Production Notes
 
 - Replace mock Aadhaar flow with a compliant verification provider before production.
-- Store production secrets in AWS Secrets Manager, not `.env`.
-- Use PostgreSQL with route/date indexes and Redis locks for seat booking concurrency.
-- Use WhatsApp Business API or Twilio for live WhatsApp delivery.
-- Use S3 + CloudFront for documents and vehicle photos.
+- Store production secrets outside the repository and never commit `.env`.
+- Keep booking seat updates inside database transactions.
+- Use Twilio or WhatsApp Business API for live WhatsApp delivery when ready.

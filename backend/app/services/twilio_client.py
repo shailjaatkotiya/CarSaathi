@@ -1,7 +1,6 @@
 """Low-level Twilio WhatsApp sender. No DB, no app models — just the API call.
 
-Shared by the synchronous request path (app.services.whatsapp) and the Celery
-worker (app.tasks.whatsapp_tasks).
+Used by the synchronous request path in app.services.whatsapp.
 """
 import json
 import logging

@@ -83,17 +83,91 @@ def validate_stop_counts(payload: RideCreate) -> None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add minimum 5 drop points")
 
 
+def clean_optional(value: str | None) -> str | None:
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
+def generated_vehicle_number(driver: User) -> str:
+    return f"TBD-{driver.id}-{uuid4().hex[:6].upper()}"
+
+
+def has_car_details(payload: RideCreate) -> bool:
+    return any(
+        clean_optional(value)
+        for value in [
+            payload.car_brand,
+            payload.car_model,
+            payload.vehicle_number,
+            payload.fuel_type,
+            payload.car_type,
+        ]
+    )
+
+
 def apply_vehicle_details(vehicle: Vehicle, payload: RideCreate) -> None:
-    if payload.car_brand:
-        vehicle.brand = payload.car_brand
-    if payload.car_model:
-        vehicle.model = payload.car_model
-    if payload.vehicle_number:
-        vehicle.vehicle_number = payload.vehicle_number.upper()
-    if payload.fuel_type:
-        vehicle.fuel_type = payload.fuel_type
-    if payload.car_type:
-        vehicle.car_type = payload.car_type
+    if brand := clean_optional(payload.car_brand):
+        vehicle.brand = brand
+    if model := clean_optional(payload.car_model):
+        vehicle.model = model
+    if vehicle_number := clean_optional(payload.vehicle_number):
+        vehicle.vehicle_number = vehicle_number.upper()
+    if fuel_type := clean_optional(payload.fuel_type):
+        vehicle.fuel_type = fuel_type
+    if car_type := clean_optional(payload.car_type):
+        vehicle.car_type = car_type
+    if payload.car_seats:
+        vehicle.seats = payload.car_seats
+
+
+def resolve_ride_vehicle(db: Session, driver: User, payload: RideCreate) -> Vehicle:
+    if payload.vehicle_id is not None:
+        vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
+        if vehicle:
+            apply_vehicle_details(vehicle, payload)
+            return vehicle
+
+    vehicle_number = clean_optional(payload.vehicle_number)
+    normalized_number = vehicle_number.upper() if vehicle_number else None
+
+    if normalized_number:
+        existing_vehicle = db.query(Vehicle).filter(Vehicle.vehicle_number == normalized_number).first()
+        if existing_vehicle and existing_vehicle.driver_id != driver.id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vehicle number already belongs to another driver")
+        if existing_vehicle:
+            apply_vehicle_details(existing_vehicle, payload)
+            return existing_vehicle
+
+    if has_car_details(payload):
+        vehicle = Vehicle(
+            driver_id=driver.id,
+            brand=clean_optional(payload.car_brand) or "Car details",
+            model=clean_optional(payload.car_model) or "to be added",
+            vehicle_number=normalized_number or generated_vehicle_number(driver),
+            fuel_type=clean_optional(payload.fuel_type) or "To be added",
+            car_type=clean_optional(payload.car_type) or "To be added",
+            seats=payload.car_seats or payload.available_seats,
+            photo_urls="",
+        )
+        db.add(vehicle)
+        db.flush()
+        return vehicle
+
+    vehicle = Vehicle(
+        driver_id=driver.id,
+        brand="Car details",
+        model="to be added",
+        vehicle_number=generated_vehicle_number(driver),
+        fuel_type="To be added",
+        car_type="To be added",
+        seats=payload.available_seats,
+        photo_urls="",
+    )
+    db.add(vehicle)
+    db.flush()
+    return vehicle
 
 
 @router.post("/vehicles", response_model=VehicleOut)
@@ -136,29 +210,8 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 @router.post("/rides", response_model=RideOut)
 def create_ride(payload: RideCreate, current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> RideOut:
     driver = resolve_demo_driver(db, current_user)
-    vehicle = None
-    if payload.vehicle_id is not None:
-        vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
-    if not vehicle:
-        vehicle = db.query(Vehicle).filter(Vehicle.driver_id == driver.id).first()
-    if not vehicle:
-        # Car details are optional at publish time; create a placeholder vehicle
-        # the driver can fill in later. vehicle_number is unique, so generate one.
-        placeholder_number = f"TBD-{driver.id}-{uuid4().hex[:6].upper()}"
-        vehicle = Vehicle(
-            driver_id=driver.id,
-            brand=payload.car_brand or "Car details",
-            model=payload.car_model or "to be added",
-            vehicle_number=(payload.vehicle_number or placeholder_number).upper(),
-            fuel_type=payload.fuel_type or "Petrol",
-            car_type=payload.car_type or "Sedan",
-            seats=payload.available_seats,
-            photo_urls="",
-        )
-        db.add(vehicle)
-        db.flush()
     validate_stop_counts(payload)
-    apply_vehicle_details(vehicle, payload)
+    vehicle = resolve_ride_vehicle(db, driver, payload)
     if payload.available_seats > vehicle.seats:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Available seats exceed vehicle capacity")
     validate_publish_window(payload)

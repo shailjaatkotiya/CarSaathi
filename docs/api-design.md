@@ -77,7 +77,6 @@ Booking:
 
 Notification:
 
-- `queued`
 - `sent`
 - `failed`
 - `mocked`

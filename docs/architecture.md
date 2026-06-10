@@ -4,24 +4,19 @@
 
 ```mermaid
 flowchart LR
-  Web["React TypeScript App"] --> API["FastAPI API Gateway"]
-  API --> DB["PostgreSQL RDS"]
-  API --> Redis["Redis / ElastiCache"]
-  API --> S3["S3 Documents and Photos"]
-  API --> Queue["Celery Workers"]
-  Queue --> WhatsApp["WhatsApp Business API / Twilio"]
-  API --> Logs["CloudWatch Logs and Metrics"]
+  Web["React TypeScript App"] --> API["FastAPI REST API"]
   Admin["Admin Dashboard"] --> API
+  API --> DB["Application Database"]
+  API --> Notifications["Notification Log / Direct WhatsApp Send"]
 ```
 
 ## Backend
 
 - FastAPI exposes REST APIs under `/api/v1`
 - SQLAlchemy models keep persistence explicit and migration friendly
-- PostgreSQL is the production database
-- Redis is used for popular route cache and booking locks
-- Celery handles WhatsApp, email, SMS, and later payment reconciliation jobs
-- Alembic should manage schema migrations
+- SQLite is the default local database for the MVP
+- Alembic is available for schema migrations
+- WhatsApp messages are logged in the database, with optional direct Twilio sending when configured
 
 ## Frontend
 
@@ -35,13 +30,13 @@ flowchart LR
 
 Booking seat allocation must run in a transaction:
 
-1. Lock ride row by ID.
+1. Load the target ride by ID.
 2. Check ride status and available seats.
 3. Create booking with pending or confirmed status.
 4. Reduce available seats only after valid booking creation.
-5. Commit and enqueue notification.
+5. Commit the booking and notification log together.
 
-In PostgreSQL this should use `SELECT ... FOR UPDATE`. Redis locks can reduce duplicate submit pressure but database transactions remain the source of truth.
+The database transaction remains the source of truth for seat counts.
 
 ## Indexing Strategy
 
@@ -54,41 +49,22 @@ Recommended indexes:
 - `aadhaar_verifications(user_id, status)`
 - `reviews(reviewee_id)`
 
-## Scalability Plan
+## Local Development Plan
 
-- API horizontally scales behind an ALB
-- PostgreSQL uses read replicas for analytics/search-heavy admin reads
-- Redis caches popular route search responses with short TTL
-- Celery workers scale independently for notification bursts
-- S3 + CloudFront serve vehicle and document assets
-- Observability includes request logs, booking error alerts, queue lag, failed notification alerts, and suspicious cancellation spikes
-
-## Deployment Plan
-
-Development:
-
-- Docker Compose with PostgreSQL, Redis, backend, frontend
-
-Production:
-
-- AWS ECS Fargate or Kubernetes
-- AWS RDS PostgreSQL
-- AWS ElastiCache Redis
-- AWS S3 for uploads
-- AWS CloudFront for static assets
-- AWS Secrets Manager for JWT, DB, Aadhaar encryption, WhatsApp credentials
-- CloudWatch for logs, metrics, alerts
-- GitHub Actions for CI/CD
+- Run the backend with Uvicorn
+- Run the frontend with Vite
+- Use SQLite for local data by default
+- Use `.env` for local-only secrets and API settings
+- Verify changes with backend compile checks and frontend builds
 
 ## Security Plan
 
 - Hash passwords with bcrypt
-- Sign JWTs with a rotating secret
+- Sign JWTs with a strong secret
 - Never store Aadhaar in plain text
-- Encrypt/tokenize Aadhaar using KMS-backed keys in production
+- Encrypt/tokenize Aadhaar
 - Mask Aadhaar and phone numbers in API responses where appropriate
-- Require verified status before ride creation or booking
-- Use signed URLs for document/photo uploads
+- Require verified status before restricted ride actions
 - Add audit logs for admin verification and blocking actions
-- Rate limit auth, verification, booking, and report endpoints
+- Rate limit auth, verification, booking, and report endpoints before production
 - Add fraud checks for repeated cancellations, duplicate Aadhaar tokens, unusual booking bursts, and low-rating clusters

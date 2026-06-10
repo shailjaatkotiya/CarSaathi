@@ -57,13 +57,20 @@ export default function CreateRide() {
     enabled: Boolean(token)
   });
   const profileCar =
-    me && (me.personal_car_brand || me.personal_car_model || me.personal_car_number)
+    me &&
+    (me.personal_car_brand ||
+      me.personal_car_model ||
+      me.personal_car_number ||
+      me.personal_car_fuel_type ||
+      me.personal_car_category ||
+      me.personal_car_seats)
       ? {
           brand: me.personal_car_brand || "",
           model: me.personal_car_model || "",
           number: me.personal_car_number || "",
           fuel: me.personal_car_fuel_type || "",
-          category: me.personal_car_category || ""
+          category: me.personal_car_category || "",
+          seats: me.personal_car_seats || null
         }
       : null;
   const [extraInstructions, setExtraInstructions] = useState("Please be on time. Call before reaching pickup point.");
@@ -105,7 +112,8 @@ export default function CreateRide() {
             car_model: profileCar.model || null,
             vehicle_number: profileCar.number || null,
             fuel_type: profileCar.fuel || null,
-            car_type: profileCar.category || null
+            car_type: profileCar.category || null,
+            car_seats: profileCar.seats
           }
         : carMode === "new"
         ? {
