@@ -132,6 +132,7 @@ class RideCreate(BaseModel):
     vehicle_number: str | None = None
     fuel_type: str | None = None
     car_type: str | None = None
+    car_seats: int | None = Field(default=None, ge=1, le=8)
     source_city: str
     destination_city: str
     distance_km: int
