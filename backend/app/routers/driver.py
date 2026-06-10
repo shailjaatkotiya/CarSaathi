@@ -229,7 +229,6 @@ def active_driver_bookings(current_user: User | None = Depends(get_optional_curr
             "drop_point": booking.drop_point,
             "total_amount": booking.total_amount,
             "passenger_name": booking.passenger.full_name,
-            "passenger_mobile": booking.passenger.mobile_number,
             "passenger_whatsapp": booking.passenger.whatsapp_number,
             "route": f"{booking.ride.source_city} to {booking.ride.destination_city}",
             "journey_date": booking.ride.journey_date.isoformat(),

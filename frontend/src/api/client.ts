@@ -13,6 +13,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useSessionStore.getState().logout();
+    }
+    return Promise.reject(error);
+  }
+);
+
 export type Ride = {
   id: number;
   source_city: string;
@@ -37,7 +47,6 @@ export type Ride = {
   driver_name: string;
   driver_rating: number;
   driver_verified: boolean;
-  driver_mobile_masked?: string;
   vehicle: {
     id: number;
     brand: string;
@@ -57,9 +66,7 @@ export type User = {
   email: string;
   role: "driver" | "passenger";
   age?: number;
-  mobile_number?: string;
   whatsapp_number?: string;
-  emergency_contact?: string;
   personal_car_brand?: string;
   personal_car_model?: string;
   personal_car_number?: string;

@@ -15,13 +15,38 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     role: UserRole = UserRole.passenger
-    mobile_number: str | None = None
     whatsapp_number: str | None = None
+
+    @field_validator("full_name")
+    @classmethod
+    def normalize_full_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Full name is required")
+        return value
+
+    @field_validator("email")
+    @classmethod
+    def normalize_register_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
+    @field_validator("whatsapp_number")
+    @classmethod
+    def normalize_whatsapp_number(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize_login_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
 
 
 class UserOut(BaseModel):
@@ -30,9 +55,7 @@ class UserOut(BaseModel):
     email: EmailStr
     role: UserRole
     age: int | None
-    mobile_number: str | None
     whatsapp_number: str | None
-    emergency_contact: str | None
     personal_car_brand: str | None
     personal_car_model: str | None
     personal_car_number: str | None
@@ -51,9 +74,7 @@ class ProfileUpdate(BaseModel):
     full_name: str | None = None
     email: EmailStr | None = None
     age: int | None = Field(default=None, ge=18, le=100)
-    mobile_number: str | None = None
     whatsapp_number: str | None = None
-    emergency_contact: str | None = None
     personal_car_brand: str | None = None
     personal_car_model: str | None = None
     personal_car_number: str | None = None
@@ -153,7 +174,6 @@ class RideOut(BaseModel):
     driver_name: str
     driver_rating: float
     driver_verified: bool
-    driver_mobile_masked: str | None
     vehicle: VehicleOut
     route_stops: list[str] = []
     ride_rules: list[str] = []

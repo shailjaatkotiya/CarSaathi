@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     aadhaar_encryption_key: str = ""
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176"
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176,http://localhost:5177,http://127.0.0.1:5177"
     whatsapp_provider: str = "mock"
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
@@ -22,7 +22,19 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        if self.environment == "local":
+            origins.extend(
+                [
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173",
+                    "http://localhost:5176",
+                    "http://127.0.0.1:5176",
+                    "http://localhost:5177",
+                    "http://127.0.0.1:5177",
+                ]
+            )
+        return list(dict.fromkeys(origins))
 
 
 @lru_cache

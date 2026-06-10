@@ -1,6 +1,5 @@
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import LocalGasStationRoundedIcon from "@mui/icons-material/LocalGasStationRounded";
-import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
 import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -78,7 +77,7 @@ export default function RideDetail() {
                   {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
                 </Typography>
               </Box>
-              <Box sx={{ p: 2, borderRadius: 3, bgcolor: "rgba(15, 118, 110, 0.08)", minWidth: 170 }}>
+              <Box sx={{ p: 2, borderRadius: 3, bgcolor: "rgba(67, 196, 99, 0.12)", minWidth: 170 }}>
                 <Typography variant="caption" color="primary.main" sx={{ fontWeight: 800 }}>
                   Price per seat
                 </Typography>
@@ -96,9 +95,6 @@ export default function RideDetail() {
                       <Typography variant="h6">Driver</Typography>
                       <Typography color="text.secondary" sx={{ mt: 0.5 }}>
                         {ride.driver_name} · {ride.driver_rating} rating
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Phone hidden until confirmed: {ride.driver_mobile_masked}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -162,7 +158,6 @@ export default function RideDetail() {
                   <Chip icon={<SecurityRoundedIcon />} label="Verified badge" color="primary" />
                   <Chip icon={<WarningAmberRoundedIcon />} label="Report user option" />
                   <Chip icon={<ShareRoundedIcon />} label="Ride sharing link" />
-                  <Chip icon={<LocationOnRoundedIcon />} label="Emergency contact" />
                 </Stack>
               </Stack>
 

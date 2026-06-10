@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
+import RequireAuth from "./components/RequireAuth";
 import AddVehicle from "./pages/AddVehicle";
 import AuthPage from "./pages/AuthPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
@@ -21,7 +22,14 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/verify" element={<VerificationPage />} />
+        <Route
+          path="/verify"
+          element={
+            <RequireAuth>
+              <VerificationPage />
+            </RequireAuth>
+          }
+        />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/driver/onboarding" element={<DriverOnboarding />} />
         <Route path="/driver/vehicle" element={<AddVehicle />} />
@@ -31,9 +39,30 @@ export default function App() {
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/my-bookings" element={<Navigate to="/profile/passenger" />} />
         <Route path="/my-rides" element={<MyRides />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/driver" element={<DriverProfilePage />} />
-        <Route path="/profile/passenger" element={<PassengerProfilePage />} />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile/driver"
+          element={
+            <RequireAuth>
+              <DriverProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile/passenger"
+          element={
+            <RequireAuth>
+              <PassengerProfilePage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Layout>

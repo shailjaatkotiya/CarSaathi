@@ -1,6 +1,5 @@
 import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import { Alert, Box, Card, CardContent, Chip, Container, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -13,7 +12,6 @@ type DriverBooking = {
   pickup_point: string;
   drop_point: string;
   passenger_name: string;
-  passenger_mobile?: string;
   passenger_whatsapp?: string;
   route: string;
   journey_date: string;
@@ -29,7 +27,7 @@ export default function DriverProfilePage() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
       <Stack spacing={2.5}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(15,118,110,0.06)" }}>
+        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
           <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
             <Typography variant="h4">Driver Profile</Typography>
             <Typography color="text.secondary" sx={{ mt: 1 }}>
@@ -55,7 +53,6 @@ export default function DriverProfilePage() {
               </Stack>
               <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 2, flexWrap: "wrap" }}>
                 <Chip icon={<PersonRoundedIcon />} label={booking.booking_code} variant="outlined" />
-                <Chip icon={<PhoneRoundedIcon />} label={booking.passenger_mobile || "No mobile"} variant="outlined" />
                 <Chip icon={<MessageRoundedIcon />} label={booking.passenger_whatsapp || "No WhatsApp"} variant="outlined" />
               </Stack>
             </CardContent>

@@ -20,7 +20,6 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenRe
         email=payload.email,
         password_hash=hash_password(payload.password),
         role=payload.role,
-        mobile_number=payload.mobile_number,
         whatsapp_number=payload.whatsapp_number,
     )
     db.add(user)

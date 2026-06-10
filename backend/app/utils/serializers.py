@@ -1,6 +1,5 @@
 import re
 
-from app.core.security import mask_phone
 from app.models import Ride
 from app.schemas import RideOut, VehicleOut
 
@@ -46,7 +45,6 @@ def ride_to_out(ride: Ride) -> RideOut:
         driver_name=ride.driver.full_name,
         driver_rating=ride.driver.rating_average,
         driver_verified=ride.driver.verification_status.value == "verified",
-        driver_mobile_masked=mask_phone(ride.driver.mobile_number),
         route_stops=_extract_list(ride.route_notes, "route_stops"),
         ride_rules=_extract_list(ride.route_notes, "ride_rules"),
         driver_instructions=(_extract_list(ride.route_notes, "driver_instructions") or [None])[0],

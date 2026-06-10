@@ -31,7 +31,7 @@ export default function PassengerProfilePage() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
       <Stack spacing={2.5}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(15,118,110,0.06)" }}>
+        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
           <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
             <Typography variant="h4">Passenger Profile</Typography>
             <Typography color="text.secondary" sx={{ mt: 1 }}>

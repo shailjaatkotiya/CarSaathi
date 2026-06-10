@@ -41,7 +41,7 @@ function FormSection({ title, subtitle, icon, children }: { title: string; subti
     <Card variant="outlined">
       <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(15,118,110,0.08)", color: "primary.main" }}>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
             {icon}
           </Box>
           <Box>

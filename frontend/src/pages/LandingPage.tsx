@@ -67,7 +67,7 @@ export default function LandingPage() {
               <Box
                 sx={{
                   minHeight: { xs: 260, md: 390 },
-                  backgroundImage: `linear-gradient(180deg, rgba(16,24,40,0.02), rgba(16,24,40,0.26)), url("${heroImage}")`,
+                  backgroundImage: `linear-gradient(180deg, rgba(43,27,16,0.03), rgba(43,27,16,0.28)), url("${heroImage}")`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   position: "relative"
@@ -105,7 +105,7 @@ export default function LandingPage() {
           {features.map(([Icon, title, copy]) => (
             <Card key={title} variant="outlined" sx={{ height: "100%" }}>
               <CardContent>
-                <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(15,118,110,0.08)", color: "primary.main" }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
                   <Icon />
                 </Box>
                 <Typography variant="h6" sx={{ mt: 2 }}>

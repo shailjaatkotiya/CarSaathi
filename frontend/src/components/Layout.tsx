@@ -1,5 +1,6 @@
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
@@ -15,8 +16,11 @@ import {
   useMediaQuery,
   useTheme
 } from "@mui/material";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { api, User } from "../api/client";
+import { useSessionStore } from "../store/session";
 
 const navItems = [
   { to: "/driver/create-ride", label: "Driver", icon: <DirectionsCarRoundedIcon /> },
@@ -29,6 +33,26 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const token = useSessionStore((state) => state.token);
+  const logout = useSessionStore((state) => state.logout);
+
+  const { data: user } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => (await api.get<User>("/auth/me")).data,
+    enabled: Boolean(token),
+    retry: false
+  });
+
+  async function handleLogout() {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      logout();
+      queryClient.clear();
+      navigate("/auth", { replace: true });
+    }
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", pb: { xs: 8, md: 0 } }}>
@@ -55,7 +79,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   placeItems: "center",
                   bgcolor: "primary.main",
                   color: "primary.contrastText",
-                  boxShadow: "0 12px 30px rgba(15, 118, 110, 0.24)"
+                  boxShadow: "0 12px 30px rgba(67, 196, 99, 0.28)"
                 }}
               >
                 <DirectionsCarRoundedIcon />
@@ -89,9 +113,16 @@ export default function Layout({ children }: { children: ReactNode }) {
               </Stack>
             )}
 
-            <Button component={Link} to="/profile" variant="outlined" startIcon={<PersonRoundedIcon />} sx={{ borderColor: "divider", color: "text.primary" }}>
-              Profile
-            </Button>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <Button component={Link} to={token ? "/profile" : "/auth"} variant="outlined" startIcon={<PersonRoundedIcon />} sx={{ borderColor: "divider", color: "text.primary" }}>
+                {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
+              </Button>
+              {token && (
+                <Button variant="contained" color="secondary" startIcon={<LogoutRoundedIcon />} onClick={handleLogout}>
+                  Logout
+                </Button>
+              )}
+            </Stack>
           </Toolbar>
         </Container>
       </AppBar>

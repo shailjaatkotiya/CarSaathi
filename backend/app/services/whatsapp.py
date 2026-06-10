@@ -10,7 +10,7 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
         user_id=user.id,
         booking_id=booking.id,
         template_name=template_name,
-        recipient=user.whatsapp_number or user.mobile_number or "missing",
+        recipient=user.whatsapp_number or "missing",
         payload=json.dumps(payload),
         status=NotificationStatus.mocked,
     )
@@ -31,7 +31,7 @@ def notify_booking_created(db: Session, booking: Booking) -> None:
         "passenger_booking_confirmation",
         {
             "driver_name": driver.full_name,
-            "driver_mobile_number": driver.mobile_number,
+            "driver_whatsapp_number": driver.whatsapp_number,
             "car_model": f"{vehicle.brand} {vehicle.model}",
             "vehicle_number": vehicle.vehicle_number,
             "pickup_point": booking.pickup_point,
@@ -46,7 +46,7 @@ def notify_booking_created(db: Session, booking: Booking) -> None:
         "driver_booking_request",
         {
             "passenger_name": passenger.full_name,
-            "passenger_mobile_number": passenger.mobile_number,
+            "passenger_whatsapp_number": passenger.whatsapp_number,
             "seats_booked": booking.seats_booked,
             "pickup_point": booking.pickup_point,
             "drop_off_point": booking.drop_point,

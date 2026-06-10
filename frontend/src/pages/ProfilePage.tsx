@@ -1,6 +1,5 @@
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
@@ -37,11 +36,8 @@ type VerificationStatus = {
 
 type ProfileForm = {
   full_name: string;
-  email: string;
   age: string;
-  mobile_number: string;
   whatsapp_number: string;
-  emergency_contact: string;
   personal_car_brand: string;
   personal_car_model: string;
   personal_car_number: string;
@@ -52,11 +48,8 @@ type ProfileForm = {
 
 const emptyForm: ProfileForm = {
   full_name: "",
-  email: "",
   age: "",
-  mobile_number: "",
   whatsapp_number: "",
-  emergency_contact: "",
   personal_car_brand: "",
   personal_car_model: "",
   personal_car_number: "",
@@ -69,11 +62,8 @@ function formFromUser(user?: User): ProfileForm {
   if (!user) return emptyForm;
   return {
     full_name: user.full_name || "",
-    email: user.email || "",
     age: user.age ? String(user.age) : "",
-    mobile_number: user.mobile_number || "",
     whatsapp_number: user.whatsapp_number || "",
-    emergency_contact: user.emergency_contact || "",
     personal_car_brand: user.personal_car_brand || "",
     personal_car_model: user.personal_car_model || "",
     personal_car_number: user.personal_car_number || "",
@@ -133,11 +123,8 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const payload = {
         full_name: form.full_name.trim(),
-        email: form.email.trim(),
         age: optionalNumber(form.age),
-        mobile_number: optionalText(form.mobile_number),
         whatsapp_number: optionalText(form.whatsapp_number),
-        emergency_contact: optionalText(form.emergency_contact),
         personal_car_brand: optionalText(form.personal_car_brand),
         personal_car_model: optionalText(form.personal_car_model),
         personal_car_number: optionalText(form.personal_car_number)?.toUpperCase() || null,
@@ -263,26 +250,20 @@ export default function ProfilePage() {
               <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
                 <Typography variant="h5">User profile details</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  Update your account identity and contact details. These values are saved against the logged-in user.
+                  Update your profile identity and WhatsApp contact. These values are saved against the logged-in user.
                 </Typography>
 
                 {isEditing ? (
                   <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
                     <TextField required label="User name" value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
                     <TextField label="Age" type="number" value={form.age} onChange={(event) => setField("age", event.target.value)} slotProps={{ htmlInput: { min: 18, max: 100 } }} />
-                    <TextField required label="Email" value={form.email} onChange={(event) => setField("email", event.target.value)} />
-                    <TextField label="Phone no" value={form.mobile_number} onChange={(event) => setField("mobile_number", event.target.value)} />
-                    <TextField label="WhatsApp no" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} />
-                    <TextField label="Emergency contact" value={form.emergency_contact} onChange={(event) => setField("emergency_contact", event.target.value)} />
+                    <TextField label="WhatsApp contact" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} />
                   </Box>
                 ) : (
                   <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
                     <DetailTile label="User name" value={data?.full_name} icon={<PersonRoundedIcon color="primary" fontSize="small" />} />
                     <DetailTile label="Age" value={data?.age} icon={<PersonRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="Email" value={data?.email} icon={<EmailRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="Phone no" value={data?.mobile_number} icon={<PhoneRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="WhatsApp no" value={data?.whatsapp_number} icon={<PhoneRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="Emergency contact" value={data?.emergency_contact} icon={<PhoneRoundedIcon color="primary" fontSize="small" />} />
+                    <DetailTile label="WhatsApp contact" value={data?.whatsapp_number} icon={<PhoneRoundedIcon color="primary" fontSize="small" />} />
                   </Box>
                 )}
               </CardContent>

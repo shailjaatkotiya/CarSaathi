@@ -35,7 +35,7 @@ function BulletList({ title, items, icon: Icon }: { title: string; items: string
     <Card sx={{ height: "100%" }}>
       <CardContent sx={{ p: 3 }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(15,118,110,0.08)", color: "primary.main" }}>
+          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
             <Icon />
           </Box>
           <Typography variant="h6">{title}</Typography>
@@ -59,7 +59,7 @@ export default function ExplorePage() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
       <Stack spacing={3}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(15,118,110,0.06)" }}>
+        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
           <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
             <Typography variant="overline" color="primary" sx={{ fontWeight: 900 }}>
               RideSaathi guide

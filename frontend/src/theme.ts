@@ -4,36 +4,38 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0f766e",
-      dark: "#115e59",
-      light: "#5eead4",
+      main: "#3d251e",
+      dark: "#5b3e31",
+      light: "#b8f5c7",
       contrastText: "#ffffff"
     },
     secondary: {
-      main: "#111827",
+      main: "#7c4a21",
+      dark: "#5b3418",
+      light: "#c58a55",
       contrastText: "#ffffff"
     },
     background: {
-      default: "#f5f7f6",
-      paper: "#ffffff"
+      default: "#fbf7ed",
+      paper: "#fffdf7"
     },
     text: {
-      primary: "#101828",
-      secondary: "#667085"
+      primary: "#2b1b10",
+      secondary: "#755f4c"
     },
-    divider: "#e5e7eb"
+    divider: "#e8dcc9"
   },
   shape: {
     borderRadius: 12
   },
   typography: {
-    fontFamily: 'Inter, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif',
-    h1: { fontWeight: 800, letterSpacing: "-0.02em" },
-    h2: { fontWeight: 800, letterSpacing: "-0.02em" },
-    h3: { fontWeight: 800 },
-    h4: { fontWeight: 800 },
-    h5: { fontWeight: 800 },
-    h6: { fontWeight: 800 },
+    fontFamily: '"Poppins", Inter, "Segoe UI", Roboto, Arial, sans-serif',
+    h1: { fontWeight: 800, letterSpacing: 0 },
+    h2: { fontWeight: 800, letterSpacing: 0 },
+    h3: { fontWeight: 800, letterSpacing: 0 },
+    h4: { fontWeight: 800, letterSpacing: 0 },
+    h5: { fontWeight: 800, letterSpacing: 0 },
+    h6: { fontWeight: 800, letterSpacing: 0 },
     button: { textTransform: "none", fontWeight: 700 }
   },
   components: {
@@ -49,8 +51,8 @@ export const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 18px 50px rgba(16, 24, 40, 0.06)"
+          border: "1px solid #e8dcc9",
+          boxShadow: "0 18px 50px rgba(91, 52, 24, 0.08)"
         }
       }
     },
