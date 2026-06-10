@@ -1,10 +1,4 @@
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import LocalGasStationRoundedIcon from "@mui/icons-material/LocalGasStationRounded";
-import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
-import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import { Alert, Box, Button, Card, CardContent, Chip, Container, Divider, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { AlertTriangle, Car, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -54,157 +48,163 @@ export default function RideDetail() {
 
   if (!ride) {
     return (
-      <Container maxWidth="lg" sx={{ py: 5 }}>
-        <Alert severity="info">Loading ride details...</Alert>
-      </Container>
+      <div className="mx-auto w-full max-w-6xl px-4 py-10">
+        <p className="alert-info">Loading ride details...</p>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Card sx={{ borderRadius: 4 }}>
-        <CardContent sx={{ p: { xs: 2.25, md: 3.5 } }}>
-          <Stack spacing={3}>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
-              <Box>
-                <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                  <Typography variant="h3" sx={{ fontSize: { xs: 30, md: 42 } }}>
-                    {ride.source_city} to {ride.destination_city}
-                  </Typography>
-                  <VerifiedBadge verified={ride.driver_verified} />
-                </Stack>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
-                </Typography>
-              </Box>
-              <Box sx={{ p: 2, borderRadius: 3, bgcolor: "rgba(67, 196, 99, 0.12)", minWidth: 170 }}>
-                <Typography variant="caption" color="primary.main" sx={{ fontWeight: 800 }}>
-                  Price per seat
-                </Typography>
-                <Typography variant="h4" color="primary.dark">
-                  Rs. {ride.price_per_seat}
-                </Typography>
-              </Box>
-            </Stack>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="card rounded-3xl p-5 md:p-8">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-bold md:text-5xl">
+                  {ride.source_city} to {ride.destination_city}
+                </h1>
+                <VerifiedBadge verified={ride.driver_verified} />
+              </div>
+              <p className="mt-2 text-muted">
+                {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
+              </p>
+            </div>
+            <div className="min-w-[170px] rounded-xl bg-primary-soft p-4">
+              <p className="text-xs font-bold text-primary">Price per seat</p>
+              <p className="text-3xl font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
+            </div>
+          </div>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 380px" }, gap: 3 }}>
-              <Stack spacing={2.25}>
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="h6">Driver</Typography>
-                      <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                        {ride.driver_name} · {ride.driver_rating} rating
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="h6">Car details</Typography>
-                      <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                        {ride.vehicle.brand} {ride.vehicle.model}
-                      </Typography>
-                      <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 1.25, flexWrap: "wrap" }}>
-                        <Chip icon={<DirectionsCarRoundedIcon />} label={ride.vehicle.car_type} />
-                        <Chip icon={<LocalGasStationRoundedIcon />} label={ride.vehicle.fuel_type} variant="outlined" />
-                        <Chip label={ride.ac_available ? "AC" : "Non-AC"} variant="outlined" />
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Box>
+          <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+            <div className="flex flex-col gap-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="card p-5 shadow-none">
+                  <h3 className="font-bold">Driver</h3>
+                  <p className="mt-1 text-muted">
+                    {ride.driver_name} · {ride.driver_rating} rating
+                  </p>
+                </div>
+                <div className="card p-5 shadow-none">
+                  <h3 className="font-bold">Car details</h3>
+                  <p className="mt-1 text-muted">
+                    {ride.vehicle.brand} {ride.vehicle.model}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="chip">
+                      <Car size={14} />
+                      {ride.vehicle.car_type}
+                    </span>
+                    <span className="chip-outline">
+                      <Fuel size={14} />
+                      {ride.vehicle.fuel_type}
+                    </span>
+                    <span className="chip-outline">{ride.ac_available ? "AC" : "Non-AC"}</span>
+                  </div>
+                </div>
+              </div>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="h6">Pickup, stops, and drop points</Typography>
-                    <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" }, gap: 2 }}>
-                      {[
-                        ["Pickup", ride.pickup_points.join(", ")],
-                        ["In-between stops", ride.route_stops.length ? ride.route_stops.join(", ") : "No stops added"],
-                        ["Drop", ride.drop_points.join(", ")]
-                      ].map(([label, value]) => (
-                        <Box key={label} sx={{ p: 2, borderRadius: 3, bgcolor: "grey.50" }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-                            {label}
-                          </Typography>
-                          <Typography variant="body2" sx={{ mt: 0.75 }}>
-                            {value}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </CardContent>
-                </Card>
+              <div className="card p-5 shadow-none">
+                <h3 className="font-bold">Pickup, stops, and drop points</h3>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  {[
+                    ["Pickup", ride.pickup_points.join(", ")],
+                    ["In-between stops", ride.route_stops.length ? ride.route_stops.join(", ") : "No stops added"],
+                    ["Drop", ride.drop_points.join(", ")]
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-xl bg-cream p-4">
+                      <p className="text-xs font-bold text-muted">{label}</p>
+                      <p className="mt-1.5 text-sm">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="h6">Driver instructions</Typography>
-                    <Stack spacing={1} sx={{ mt: 2 }}>
-                      {instructionLines.map((instruction) => (
-                        <Stack key={instruction} direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                          <Box sx={{ width: 7, height: 7, borderRadius: 99, bgcolor: "primary.main" }} />
-                          <Typography variant="body2">{instruction}</Typography>
-                        </Stack>
-                      ))}
-                    </Stack>
-                    {ride.route_notes && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                        Route note: {ride.route_notes}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
+              <div className="card p-5 shadow-none">
+                <h3 className="font-bold">Driver instructions</h3>
+                <div className="mt-4 flex flex-col gap-2">
+                  {instructionLines.map((instruction) => (
+                    <div key={instruction} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                      <p className="text-sm">{instruction}</p>
+                    </div>
+                  ))}
+                </div>
+                {ride.route_notes && <p className="mt-4 text-sm text-muted">Route note: {ride.route_notes}</p>}
+              </div>
 
-                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-                  <Chip icon={<SecurityRoundedIcon />} label="Verified badge" color="primary" />
-                  <Chip icon={<WarningAmberRoundedIcon />} label="Report user option" />
-                  <Chip icon={<ShareRoundedIcon />} label="Ride sharing link" />
-                </Stack>
-              </Stack>
+              <div className="flex flex-wrap gap-2">
+                <span className="chip-solid">
+                  <ShieldCheck size={14} />
+                  Verified badge
+                </span>
+                <span className="chip-outline">
+                  <AlertTriangle size={14} />
+                  Report user option
+                </span>
+                <span className="chip-outline">
+                  <Share2 size={14} />
+                  Ride sharing link
+                </span>
+              </div>
+            </div>
 
-              <Card variant="outlined" sx={{ alignSelf: "start", position: { lg: "sticky" }, top: { lg: 96 } }}>
-                <CardContent>
-                  <Typography variant="h5">Book this ride</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                    Choose seats, pickup, and a final drop or in-between stop.
-                  </Typography>
-                  <Stack spacing={2} sx={{ mt: 2.5 }}>
-                    <TextField label="Seats" type="number" value={seats} onChange={(event) => setSeats(Number(event.target.value))} slotProps={{ htmlInput: { min: 1, max: ride.available_seats } }} />
-                    <TextField label="Pickup" select value={pickup} onChange={(event) => setPickup(event.target.value)}>
-                      <MenuItem value="">Select pickup</MenuItem>
-                      {ride.pickup_points.map((point) => (
-                        <MenuItem key={point} value={point}>
-                          {point}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField label="Drop-off or stop" select value={drop} onChange={(event) => setDrop(event.target.value)}>
-                      <MenuItem value="">Select drop</MenuItem>
-                      {ride.route_stops.map((point) => (
-                        <MenuItem key={point} value={point}>
-                          {point} (in-between stop)
-                        </MenuItem>
-                      ))}
-                      {ride.drop_points.map((point) => (
-                        <MenuItem key={point} value={point}>
-                          {point}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <Button variant="contained" size="large" startIcon={<MessageRoundedIcon />} onClick={book}>
-                      Book ride · Rs. {paymentAmount}
-                    </Button>
-                    <Divider />
-                    <Typography variant="body2" color="text.secondary">
-                      {ride.available_seats} seats available. WhatsApp details are shared after confirmation.
-                    </Typography>
-                    {message && <Alert severity="success">{message}</Alert>}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Container>
+            <div className="card self-start p-5 shadow-none lg:sticky lg:top-24">
+              <h2 className="text-xl font-bold">Book this ride</h2>
+              <p className="mt-1.5 text-sm text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
+              <div className="mt-5 flex flex-col gap-4">
+                <label>
+                  <span className="field-label">Seats</span>
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    max={ride.available_seats}
+                    value={seats}
+                    onChange={(event) => setSeats(Number(event.target.value))}
+                  />
+                </label>
+                <label>
+                  <span className="field-label">Pickup</span>
+                  <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
+                    <option value="">Select pickup</option>
+                    {ride.pickup_points.map((point) => (
+                      <option key={point} value={point}>
+                        {point}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span className="field-label">Drop-off or stop</span>
+                  <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
+                    <option value="">Select drop</option>
+                    {ride.route_stops.map((point) => (
+                      <option key={point} value={point}>
+                        {point} (in-between stop)
+                      </option>
+                    ))}
+                    {ride.drop_points.map((point) => (
+                      <option key={point} value={point}>
+                        {point}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" className="btn-primary py-3" onClick={book}>
+                  <MessageCircle size={18} />
+                  Book ride · Rs. {paymentAmount}
+                </button>
+                <hr className="border-sand" />
+                <p className="text-sm text-muted">
+                  {ride.available_seats} seats available. WhatsApp details are shared after confirmation.
+                </p>
+                {message && <p className="alert-success">{message}</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,4 @@
-import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { Alert, Box, Card, CardContent, Chip, Container, Stack, Typography } from "@mui/material";
+import { MessageCircle, User as UserIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 
@@ -25,42 +23,42 @@ export default function DriverProfilePage() {
   });
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={2.5}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
-          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-            <Typography variant="h4">Driver Profile</Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
-              Passenger details for all non-completed bookings on your rides.
-            </Typography>
-          </CardContent>
-        </Card>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-5">
+        <div className="card-soft rounded-3xl p-6 md:p-8">
+          <h1 className="text-3xl font-bold">Driver Profile</h1>
+          <p className="mt-2 text-muted">Passenger details for all non-completed bookings on your rides.</p>
+        </div>
 
         {driverBookings?.map((booking) => (
-          <Card key={booking.id}>
-            <CardContent>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
-                <Box>
-                  <Typography variant="h6">{booking.passenger_name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {booking.route} · {booking.journey_date} at {booking.departure_time.slice(0, 5)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
-                  </Typography>
-                </Box>
-                <Chip label={booking.status} />
-              </Stack>
-              <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 2, flexWrap: "wrap" }}>
-                <Chip icon={<PersonRoundedIcon />} label={booking.booking_code} variant="outlined" />
-                <Chip icon={<MessageRoundedIcon />} label={booking.passenger_whatsapp || "No WhatsApp"} variant="outlined" />
-              </Stack>
-            </CardContent>
-          </Card>
+          <div key={booking.id} className="card p-5">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row">
+              <div>
+                <h3 className="font-bold">{booking.passenger_name}</h3>
+                <p className="text-sm text-muted">
+                  {booking.route} · {booking.journey_date} at {booking.departure_time.slice(0, 5)}
+                </p>
+                <p className="text-sm text-muted">
+                  {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
+                </p>
+              </div>
+              <span className="chip self-start">{booking.status}</span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="chip-outline">
+                <UserIcon size={14} />
+                {booking.booking_code}
+              </span>
+              <span className="chip-outline">
+                <MessageCircle size={14} />
+                {booking.passenger_whatsapp || "No WhatsApp"}
+              </span>
+            </div>
+          </div>
         ))}
 
-        {driverBookings?.length === 0 && <Alert severity="info">No passenger details yet.</Alert>}
-      </Stack>
-    </Container>
+        {driverBookings?.length === 0 && <p className="alert-info">No passenger details yet.</p>}
+      </div>
+    </div>
   );
 }

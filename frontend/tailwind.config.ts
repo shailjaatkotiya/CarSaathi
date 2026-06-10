@@ -5,26 +5,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#2b1b10",
-        earth: {
-          50: "#fff7ed",
-          100: "#f2e6d6",
-          500: "#9a6a3c",
-          600: "#7c4a21",
-          700: "#5b3418",
-          900: "#2b1b10"
+        primary: {
+          DEFAULT: "#546B41",
+          dark: "#3F5130",
+          light: "#99AD7A",
+          soft: "#E9EEDF"
         },
-        saathi: {
-          50: "#efffed",
-          100: "#d7fbdc",
-          500: "#3d251e",
-          600: "#5b3e31",
-          700: "#267239",
-          900: "#15411f"
-        }
+        sage: "#99AD7A",
+        sand: {
+          DEFAULT: "#DCCCAC",
+          light: "#EAE0C9"
+        },
+        cream: "#FFF8EC",
+        ink: "#2C3324",
+        muted: "#6B7261"
+      },
+      fontFamily: {
+        sans: ["Archia", "Space Grotesk", "Inter", "Segoe UI", "Roboto", "Arial", "sans-serif"]
       },
       boxShadow: {
-        soft: "0 12px 32px rgba(91, 52, 24, 0.1)"
+        soft: "0 12px 32px rgba(84, 107, 65, 0.12)",
+        card: "0 18px 50px rgba(84, 107, 65, 0.08)"
       }
     }
   },

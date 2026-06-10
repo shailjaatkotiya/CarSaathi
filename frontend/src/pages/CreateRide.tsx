@@ -1,24 +1,7 @@
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
-import RouteRoundedIcon from "@mui/icons-material/RouteRounded";
-import RuleRoundedIcon from "@mui/icons-material/RuleRounded";
+import { Car, CalendarCheck, ListChecks, Route as RouteIcon } from "lucide-react";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Container,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography
-} from "@mui/material";
 import { api } from "../api/client";
 
 const rideRules = [
@@ -38,22 +21,16 @@ function formatRuleLabel(value: string) {
 
 function FormSection({ title, subtitle, icon, children }: { title: string; subtitle: string; icon: ReactNode; children: ReactNode }) {
   return (
-    <Card variant="outlined">
-      <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
-            {icon}
-          </Box>
-          <Box>
-            <Typography variant="h6">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {subtitle}
-            </Typography>
-          </Box>
-        </Stack>
-        <Box sx={{ mt: 2.5 }}>{children}</Box>
-      </CardContent>
-    </Card>
+    <div className="card p-5 shadow-none md:p-6">
+      <div className="flex items-start gap-3">
+        <span className="icon-tile">{icon}</span>
+        <div>
+          <h3 className="font-bold">{title}</h3>
+          <p className="text-sm text-muted">{subtitle}</p>
+        </div>
+      </div>
+      <div className="mt-5">{children}</div>
+    </div>
   );
 }
 
@@ -127,129 +104,185 @@ export default function CreateRide() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Box component="form" onSubmit={submit}>
-        <Stack spacing={2.5}>
-          <Box>
-            <Typography variant="h3" sx={{ fontSize: { xs: 30, md: 42 } }}>
-              Driver - Publish New Ride
-            </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 780 }}>
-              Fill the labelled fields below. The demo uses your default vehicle internally, so no vehicle ID is needed on this screen.
-            </Typography>
-          </Box>
-          <Alert severity="info">
-            Conditions: publish only 3 hours to 10 days before departure. Minimum 5 pickup points and 5 drop points are required.
-          </Alert>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <div>
+          <h1 className="text-3xl font-bold md:text-5xl">Driver - Publish New Ride</h1>
+          <p className="mt-2 max-w-3xl text-muted">
+            Fill the labelled fields below. The demo uses your default vehicle internally, so no vehicle ID is needed on
+            this screen.
+          </p>
+        </div>
+        <p className="alert-info">
+          Conditions: publish only 3 hours to 10 days before departure. Minimum 5 pickup points and 5 drop points are
+          required.
+        </p>
 
-          <FormSection title="Car details" subtitle="Add the exact car passengers will see before booking." icon={<DirectionsCarRoundedIcon />}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" }, gap: 2 }}>
-              <TextField name="car_brand" label="Car brand" defaultValue="Maruti Suzuki" helperText="Example: Maruti Suzuki, Hyundai" />
-              <TextField name="car_model" label="Car model" defaultValue="Swift Dzire" helperText="Example: Swift Dzire, Creta" />
-              <TextField name="vehicle_number" label="Vehicle number" defaultValue="GJ01AB1234" helperText="Shown after confirmed booking" />
-              <TextField name="fuel_type" label="Fuel type" select defaultValue="Petrol" helperText="Petrol, CNG, EV, or Diesel">
-                <MenuItem value="Petrol">Petrol</MenuItem>
-                <MenuItem value="CNG">CNG</MenuItem>
-                <MenuItem value="EV">EV</MenuItem>
-                <MenuItem value="Diesel">Diesel</MenuItem>
-              </TextField>
-              <TextField name="car_type" label="Car category" select defaultValue="Sedan" helperText="Choose SUV, Sedan, or 7 Seater">
-                <MenuItem value="SUV">SUV</MenuItem>
-                <MenuItem value="Sedan">Sedan</MenuItem>
-                <MenuItem value="7 Seater">7 Seater</MenuItem>
-              </TextField>
-              <TextField name="available_seats" label="Available seats" defaultValue="3" helperText="Seats passengers can book" />
-            </Box>
-          </FormSection>
+        <FormSection title="Car details" subtitle="Add the exact car passengers will see before booking." icon={<Car size={20} />}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <label>
+              <span className="field-label">Car brand</span>
+              <input className="input" name="car_brand" defaultValue="Maruti Suzuki" />
+              <span className="field-hint">Example: Maruti Suzuki, Hyundai</span>
+            </label>
+            <label>
+              <span className="field-label">Car model</span>
+              <input className="input" name="car_model" defaultValue="Swift Dzire" />
+              <span className="field-hint">Example: Swift Dzire, Creta</span>
+            </label>
+            <label>
+              <span className="field-label">Vehicle number</span>
+              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
+              <span className="field-hint">Shown after confirmed booking</span>
+            </label>
+            <label>
+              <span className="field-label">Fuel type</span>
+              <select className="input" name="fuel_type" defaultValue="Petrol">
+                <option value="Petrol">Petrol</option>
+                <option value="CNG">CNG</option>
+                <option value="EV">EV</option>
+                <option value="Diesel">Diesel</option>
+              </select>
+              <span className="field-hint">Petrol, CNG, EV, or Diesel</span>
+            </label>
+            <label>
+              <span className="field-label">Car category</span>
+              <select className="input" name="car_type" defaultValue="Sedan">
+                <option value="SUV">SUV</option>
+                <option value="Sedan">Sedan</option>
+                <option value="7 Seater">7 Seater</option>
+              </select>
+              <span className="field-hint">Choose SUV, Sedan, or 7 Seater</span>
+            </label>
+            <label>
+              <span className="field-label">Available seats</span>
+              <input className="input" name="available_seats" defaultValue="3" />
+              <span className="field-hint">Seats passengers can book</span>
+            </label>
+          </div>
+        </FormSection>
 
-          <FormSection title="Ride route and timing" subtitle="Set the final route, date, time, and recoverable seat price." icon={<EventAvailableRoundedIcon />}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" }, gap: 2 }}>
-              <TextField name="source_city" label="Source city" defaultValue="Rajkot" helperText="Main city where ride starts" />
-              <TextField name="destination_city" label="Destination city" defaultValue="Jamnagar" helperText="Final city where ride ends" />
-              <TextField name="distance_km" label="Distance in km" defaultValue="96" helperText="Approx route distance" />
-              <TextField name="journey_date" label="Journey date" type="date" defaultValue={defaultRideDate} slotProps={{ inputLabel: { shrink: true } }} helperText="Maximum 10 days ahead" />
-              <TextField name="departure_time" label="Departure time" type="time" defaultValue="07:30" slotProps={{ inputLabel: { shrink: true } }} helperText="Minimum 3 hours from now" />
-              <TextField name="price_per_seat" label="Price per seat" defaultValue="180" helperText="Passenger pays this amount per seat" />
-            </Box>
-          </FormSection>
+        <FormSection title="Ride route and timing" subtitle="Set the final route, date, time, and recoverable seat price." icon={<CalendarCheck size={20} />}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <label>
+              <span className="field-label">Source city</span>
+              <input className="input" name="source_city" defaultValue="Rajkot" />
+              <span className="field-hint">Main city where ride starts</span>
+            </label>
+            <label>
+              <span className="field-label">Destination city</span>
+              <input className="input" name="destination_city" defaultValue="Jamnagar" />
+              <span className="field-hint">Final city where ride ends</span>
+            </label>
+            <label>
+              <span className="field-label">Distance in km</span>
+              <input className="input" name="distance_km" defaultValue="96" />
+              <span className="field-hint">Approx route distance</span>
+            </label>
+            <label>
+              <span className="field-label">Journey date</span>
+              <input className="input" name="journey_date" type="date" defaultValue={defaultRideDate} />
+              <span className="field-hint">Maximum 10 days ahead</span>
+            </label>
+            <label>
+              <span className="field-label">Departure time</span>
+              <input className="input" name="departure_time" type="time" defaultValue="07:30" />
+              <span className="field-hint">Minimum 3 hours from now</span>
+            </label>
+            <label>
+              <span className="field-label">Price per seat</span>
+              <input className="input" name="price_per_seat" defaultValue="180" />
+              <span className="field-hint">Passenger pays this amount per seat</span>
+            </label>
+          </div>
+        </FormSection>
 
-          <FormSection title="Pickup, stops, and drop points" subtitle="Use comma-separated local points. Passengers can pick from these." icon={<RouteRoundedIcon />}>
-            <Stack spacing={2}>
-              <TextField
+        <FormSection title="Pickup, stops, and drop points" subtitle="Use comma-separated local points. Passengers can pick from these." icon={<RouteIcon size={20} />}>
+          <div className="flex flex-col gap-4">
+            <label>
+              <span className="field-label">Pickup points - minimum 5</span>
+              <textarea
+                className="input"
                 name="pickup_points"
-                label="Pickup points - minimum 5"
-                multiline
-                minRows={2}
+                rows={2}
                 defaultValue="Rajkot Bus Stand, Kalawad Road, Gondal Road, University Road, Mavdi Circle"
-                helperText="Example: Bopal, Gota, Iscon. Separate each point with comma."
               />
-              <TextField
-                name="route_stops"
-                label="In-between stops"
-                multiline
-                minRows={2}
-                defaultValue="Dhrol, Reliance Circle"
-                helperText="Stops passengers can choose before final destination."
-              />
-              <TextField
+              <span className="field-hint">Example: Bopal, Gota, Iscon. Separate each point with comma.</span>
+            </label>
+            <label>
+              <span className="field-label">In-between stops</span>
+              <textarea className="input" name="route_stops" rows={2} defaultValue="Dhrol, Reliance Circle" />
+              <span className="field-hint">Stops passengers can choose before final destination.</span>
+            </label>
+            <label>
+              <span className="field-label">Drop points - minimum 5</span>
+              <textarea
+                className="input"
                 name="drop_points"
-                label="Drop points - minimum 5"
-                multiline
-                minRows={2}
+                rows={2}
                 defaultValue="Jamnagar Bus Stand, Patel Colony, Reliance Circle, Digjam Circle, Railway Station"
-                helperText="Final city drop points. Separate each point with comma."
               />
-            </Stack>
-          </FormSection>
+              <span className="field-hint">Final city drop points. Separate each point with comma.</span>
+            </label>
+          </div>
+        </FormSection>
 
-          <FormSection title="Passenger instructions" subtitle="Clear rules reduce friction before booking." icon={<RuleRoundedIcon />}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 1 }}>
-              {rideRules.map((rule) => (
-                <FormControlLabel
-                  key={rule.value}
-                  control={<Checkbox checked={selectedRules.includes(rule.value)} onChange={(event) => toggleRule(rule.value, event.target.checked)} />}
-                  label={rule.label}
-                  sx={{ m: 0, p: 1, border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+        <FormSection title="Passenger instructions" subtitle="Clear rules reduce friction before booking." icon={<ListChecks size={20} />}>
+          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+            {rideRules.map((rule) => (
+              <label key={rule.value} className="flex cursor-pointer items-center gap-2 rounded-xl border border-sand p-3 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={selectedRules.includes(rule.value)}
+                  onChange={(event) => toggleRule(rule.value, event.target.checked)}
                 />
-              ))}
-            </Box>
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              <TextField
-                label="Extra driver instructions"
-                multiline
-                minRows={2}
+                {rule.label}
+              </label>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-col gap-4">
+            <label>
+              <span className="field-label">Extra driver instructions</span>
+              <textarea
+                className="input"
+                rows={2}
                 value={extraInstructions}
                 onChange={(event) => setExtraInstructions(event.target.value)}
-                helperText="Add any extra note passengers must read before booking."
               />
-              <TextField
-                name="driver_instructions_preview"
-                label="Instructions field shown to passengers"
-                multiline
-                minRows={5}
-                value={instructionText}
-                slotProps={{ input: { readOnly: true } }}
-                helperText="Selected passenger instruction pointers are added here as bullet points."
-              />
-            </Stack>
-          </FormSection>
+              <span className="field-hint">Add any extra note passengers must read before booking.</span>
+            </label>
+            <label>
+              <span className="field-label">Instructions field shown to passengers</span>
+              <textarea className="input" name="driver_instructions_preview" rows={5} value={instructionText} readOnly />
+              <span className="field-hint">Selected passenger instruction pointers are added here as bullet points.</span>
+            </label>
+          </div>
+        </FormSection>
 
-          <FormSection title="Other ride details" subtitle="Help passengers understand luggage and route expectations." icon={<RouteRoundedIcon />}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
-              <TextField name="luggage_allowance" label="Luggage allowance" defaultValue="One cabin bag" helperText="Example: One cabin bag per passenger" />
-              <TextField name="route_notes" label="Route notes" multiline minRows={2} defaultValue="Short route with one optional water break." helperText="Example: halt, route preference, road condition" />
-            </Box>
-          </FormSection>
+        <FormSection title="Other ride details" subtitle="Help passengers understand luggage and route expectations." icon={<RouteIcon size={20} />}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label>
+              <span className="field-label">Luggage allowance</span>
+              <input className="input" name="luggage_allowance" defaultValue="One cabin bag" />
+              <span className="field-hint">Example: One cabin bag per passenger</span>
+            </label>
+            <label>
+              <span className="field-label">Route notes</span>
+              <textarea className="input" name="route_notes" rows={2} defaultValue="Short route with one optional water break." />
+              <span className="field-hint">Example: halt, route preference, road condition</span>
+            </label>
+          </div>
+        </FormSection>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { xs: "stretch", sm: "center" } }}>
-            <Button variant="contained" size="large" type="submit">
-              Publish New Ride
-            </Button>
-            {message && <Alert severity="success">{message}</Alert>}
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
-        </Stack>
-      </Box>
-    </Container>
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <button className="btn-primary px-6 py-3 text-base" type="submit">
+            Publish New Ride
+          </button>
+          {message && <p className="alert-success">{message}</p>}
+          {error && <p className="alert-error">{error}</p>}
+        </div>
+      </form>
+    </div>
   );
 }

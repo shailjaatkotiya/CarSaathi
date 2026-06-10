@@ -1,6 +1,4 @@
-import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
-import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
-import { Alert, Box, Button, Card, CardContent, Chip, Container, Stack, Typography } from "@mui/material";
+import { Ticket, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../api/client";
@@ -29,44 +27,41 @@ export default function PassengerProfilePage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={2.5}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
-          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-            <Typography variant="h4">Passenger Profile</Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }}>
-              Booked rides that are not completed yet.
-            </Typography>
-          </CardContent>
-        </Card>
-        {message && <Alert severity="success">{message}</Alert>}
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-5">
+        <div className="card-soft rounded-3xl p-6 md:p-8">
+          <h1 className="text-3xl font-bold">Passenger Profile</h1>
+          <p className="mt-2 text-muted">Booked rides that are not completed yet.</p>
+        </div>
+        {message && <p className="alert-success">{message}</p>}
 
         {passengerBookings?.map((booking) => (
-          <Card key={booking.id}>
-            <CardContent>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
-                <Box>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                    <ConfirmationNumberRoundedIcon color="primary" fontSize="small" />
-                    <Typography variant="h6">{booking.booking_code}</Typography>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
-                  </Typography>
-                  <Chip label={`${booking.status} · Rs. ${booking.total_amount}`} color="primary" variant="outlined" sx={{ mt: 1 }} />
-                </Box>
-                {["pending", "confirmed"].includes(booking.status) && (
-                  <Button variant="outlined" color="error" startIcon={<CancelRoundedIcon />} onClick={() => cancelBooking(booking.id)} sx={{ alignSelf: { xs: "stretch", sm: "center" } }}>
-                    Cancel
-                  </Button>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+          <div key={booking.id} className="card p-5">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Ticket size={18} className="text-primary" />
+                  <h3 className="font-bold">{booking.booking_code}</h3>
+                </div>
+                <p className="text-sm text-muted">
+                  {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
+                </p>
+                <span className="chip mt-2">
+                  {booking.status} · Rs. {booking.total_amount}
+                </span>
+              </div>
+              {["pending", "confirmed"].includes(booking.status) && (
+                <button type="button" className="btn-danger self-stretch sm:self-center" onClick={() => cancelBooking(booking.id)}>
+                  <XCircle size={16} />
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
         ))}
 
-        {passengerBookings?.length === 0 && <Alert severity="info">No unfinished booked rides yet.</Alert>}
-      </Stack>
-    </Container>
+        {passengerBookings?.length === 0 && <p className="alert-info">No unfinished booked rides yet.</p>}
+      </div>
+    </div>
   );
 }

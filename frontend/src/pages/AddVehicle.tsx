@@ -1,5 +1,4 @@
-import LocalGasStationRoundedIcon from "@mui/icons-material/LocalGasStationRounded";
-import { Alert, Box, Button, Card, CardContent, Container, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Fuel } from "lucide-react";
 import { useState } from "react";
 import { api } from "../api/client";
 
@@ -22,63 +21,73 @@ export default function AddVehicle() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Card sx={{ borderRadius: 4 }}>
-        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          <Box component="form" onSubmit={submit}>
-            <Stack spacing={2.5}>
-              <Box>
-                <Typography variant="h4">Add vehicle</Typography>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Add car details passengers can compare before requesting seats.
-                </Typography>
-              </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 2 }}>
-                <TextField name="brand" label="Brand" defaultValue="Maruti Suzuki" />
-                <TextField name="model" label="Model" defaultValue="Swift Dzire" />
-                <TextField name="vehicle_number" label="Vehicle number" defaultValue="GJ01AB1234" />
-                <TextField name="fuel_type" label="Fuel type" select defaultValue="Petrol">
-                  <MenuItem value="Petrol">Petrol</MenuItem>
-                  <MenuItem value="Diesel">Diesel</MenuItem>
-                  <MenuItem value="CNG">CNG</MenuItem>
-                  <MenuItem value="EV">EV</MenuItem>
-                </TextField>
-                <TextField name="seats" label="Seats" defaultValue="4" />
-              </Box>
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+      <div className="card rounded-3xl p-6 md:p-8">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <div>
+            <h1 className="text-3xl font-bold">Add vehicle</h1>
+            <p className="mt-2 text-muted">Add car details passengers can compare before requesting seats.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label>
+              <span className="field-label">Brand</span>
+              <input className="input" name="brand" defaultValue="Maruti Suzuki" />
+            </label>
+            <label>
+              <span className="field-label">Model</span>
+              <input className="input" name="model" defaultValue="Swift Dzire" />
+            </label>
+            <label>
+              <span className="field-label">Vehicle number</span>
+              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
+            </label>
+            <label>
+              <span className="field-label">Fuel type</span>
+              <select className="input" name="fuel_type" defaultValue="Petrol">
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="CNG">CNG</option>
+                <option value="EV">EV</option>
+              </select>
+            </label>
+            <label>
+              <span className="field-label">Seats</span>
+              <input className="input" name="seats" defaultValue="4" />
+            </label>
+          </div>
 
-              <Box>
-                <Typography variant="h6">Car category</Typography>
-                <Box sx={{ mt: 1.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1.5 }}>
-                  {categories.map((item) => (
-                    <Button
-                      key={item.value}
-                      type="button"
-                      variant={category === item.value ? "contained" : "outlined"}
-                      onClick={() => setCategory(item.value)}
-                      sx={{ justifyContent: "flex-start", p: 2, borderRadius: 3, textAlign: "left" }}
-                    >
-                      <Stack sx={{ alignItems: "flex-start" }}>
-                        <Typography sx={{ fontWeight: 900 }}>
-                          {item.icon} · {item.value}
-                        </Typography>
-                        <Typography variant="caption" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                          <LocalGasStationRoundedIcon fontSize="inherit" /> Fuel type selected above
-                        </Typography>
-                        <Typography variant="caption">{item.hint}</Typography>
-                      </Stack>
-                    </Button>
-                  ))}
-                </Box>
-              </Box>
+          <div>
+            <h2 className="font-bold">Car category</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {categories.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setCategory(item.value)}
+                  className={`rounded-xl border p-4 text-left transition ${
+                    category === item.value
+                      ? "border-primary bg-primary text-white"
+                      : "border-sand bg-cream text-ink hover:border-primary"
+                  }`}
+                >
+                  <p className="font-bold">
+                    {item.icon} · {item.value}
+                  </p>
+                  <p className="mt-1 inline-flex items-center gap-1 text-xs">
+                    <Fuel size={12} /> Fuel type selected above
+                  </p>
+                  <p className="text-xs">{item.hint}</p>
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <Button variant="contained" type="submit" size="large" sx={{ alignSelf: "flex-start" }}>
-                Save vehicle
-              </Button>
-              {message && <Alert severity="success">{message}</Alert>}
-            </Stack>
-          </Box>
-        </CardContent>
-      </Card>
-    </Container>
+          <button className="btn-primary self-start px-6 py-3 text-base" type="submit">
+            Save vehicle
+          </button>
+          {message && <p className="alert-success">{message}</p>}
+        </form>
+      </div>
+    </div>
   );
 }

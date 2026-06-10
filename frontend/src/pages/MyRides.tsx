@@ -1,5 +1,4 @@
-import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
-import { Alert, Button, Container, Stack, Typography } from "@mui/material";
+import { XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, Ride } from "../api/client";
@@ -19,21 +18,22 @@ export default function MyRides() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={2.5}>
-        <Typography variant="h4">Driver - My rides</Typography>
-        {message && <Alert severity="success">{message}</Alert>}
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-5">
+        <h1 className="text-3xl font-bold">Driver - My rides</h1>
+        {message && <p className="alert-success">{message}</p>}
         {data?.map((ride) => (
-          <Stack key={ride.id} spacing={1.25}>
+          <div key={ride.id} className="flex flex-col gap-3">
             <RideCard ride={ride} />
             {ride.status !== "cancelled" && (
-              <Button variant="outlined" color="error" startIcon={<CancelRoundedIcon />} onClick={() => cancelRide(ride.id)}>
+              <button type="button" className="btn-danger self-start" onClick={() => cancelRide(ride.id)}>
+                <XCircle size={16} />
                 Cancel ride and notify passengers on WhatsApp
-              </Button>
+              </button>
             )}
-          </Stack>
+          </div>
         ))}
-      </Stack>
-    </Container>
+      </div>
+    </div>
   );
 }

@@ -1,11 +1,4 @@
-import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
-import AirlineSeatReclineNormalRoundedIcon from "@mui/icons-material/AirlineSeatReclineNormalRounded";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import LocalGasStationRoundedIcon from "@mui/icons-material/LocalGasStationRounded";
-import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
-import RouteRoundedIcon from "@mui/icons-material/RouteRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography } from "@mui/material";
+import { Armchair, Car, Clock, Fuel, MapPin, Route as RouteIcon, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Ride } from "../api/client";
 import VerifiedBadge from "./VerifiedBadge";
@@ -20,73 +13,79 @@ function categoryIcon(category: string) {
 
 export default function RideCard({ ride }: { ride: Ride }) {
   return (
-    <Card sx={{ overflow: "hidden" }}>
-      <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-        <Stack spacing={2.25}>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
-            <Box>
-              <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                <Typography variant="h6">
-                  {ride.source_city} to {ride.destination_city}
-                </Typography>
-                <VerifiedBadge verified={ride.driver_verified} />
-              </Stack>
-              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                {ride.vehicle.brand} {ride.vehicle.model} · {ride.ac_available ? "AC" : "Non-AC"}
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
-              <Typography variant="h5">Rs. {ride.price_per_seat}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                per seat
-              </Typography>
-            </Box>
-          </Stack>
+    <div className="card overflow-hidden p-5 sm:p-6">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-bold">
+                {ride.source_city} to {ride.destination_city}
+              </h3>
+              <VerifiedBadge verified={ride.driver_verified} />
+            </div>
+            <p className="mt-1 text-muted">
+              {ride.vehicle.brand} {ride.vehicle.model} · {ride.ac_available ? "AC" : "Non-AC"}
+            </p>
+          </div>
+          <div className="text-left sm:text-right">
+            <p className="text-2xl font-bold">Rs. {ride.price_per_seat}</p>
+            <p className="text-xs text-muted">per seat</p>
+          </div>
+        </div>
 
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-            <Chip icon={<DirectionsCarRoundedIcon />} label={`${categoryIcon(ride.vehicle.car_type)} · ${ride.vehicle.car_type}`} />
-            <Chip icon={<LocalGasStationRoundedIcon />} label={ride.vehicle.fuel_type} variant="outlined" />
-            <Chip icon={<AirlineSeatReclineNormalRoundedIcon />} label={`${ride.available_seats} seats left`} variant="outlined" />
-            <Chip icon={<StarRoundedIcon />} label={`${ride.driver_rating || 4.5} rating`} variant="outlined" />
-          </Stack>
+        <div className="flex flex-wrap gap-2">
+          <span className="chip">
+            <Car size={14} />
+            {categoryIcon(ride.vehicle.car_type)} · {ride.vehicle.car_type}
+          </span>
+          <span className="chip-outline">
+            <Fuel size={14} />
+            {ride.vehicle.fuel_type}
+          </span>
+          <span className="chip-outline">
+            <Armchair size={14} />
+            {ride.available_seats} seats left
+          </span>
+          <span className="chip-outline">
+            <Star size={14} />
+            {ride.driver_rating || 4.5} rating
+          </span>
+        </div>
 
-          <Divider />
+        <hr className="border-sand" />
 
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} color="text.secondary">
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <AccessTimeRoundedIcon fontSize="small" />
-              <Typography variant="body2">
-                {ride.journey_date} at {ride.departure_time.slice(0, 5)}
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <LocationOnRoundedIcon fontSize="small" />
-              <Typography variant="body2">{ride.distance_km} km</Typography>
-            </Stack>
-            {ride.route_stops.length > 0 && (
-              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <RouteRoundedIcon fontSize="small" />
-                <Typography variant="body2">{ride.route_stops.join(" → ")}</Typography>
-              </Stack>
-            )}
-          </Stack>
+        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:gap-5">
+          <span className="flex items-center gap-2">
+            <Clock size={16} />
+            {ride.journey_date} at {ride.departure_time.slice(0, 5)}
+          </span>
+          <span className="flex items-center gap-2">
+            <MapPin size={16} />
+            {ride.distance_km} km
+          </span>
+          {ride.route_stops.length > 0 && (
+            <span className="flex items-center gap-2">
+              <RouteIcon size={16} />
+              {ride.route_stops.join(" → ")}
+            </span>
+          )}
+        </div>
 
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-            {ride.pickup_points.slice(0, 4).map((point) => (
-              <Chip key={point} size="small" label={point} sx={{ bgcolor: "grey.100" }} />
-            ))}
-          </Stack>
+        <div className="flex flex-wrap gap-2">
+          {ride.pickup_points.slice(0, 4).map((point) => (
+            <span key={point} className="rounded-full bg-sand-light px-3 py-1 text-xs font-semibold text-ink">
+              {point}
+            </span>
+          ))}
+        </div>
 
-          <Stack direction="row" spacing={2} sx={{ justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-              Hosted by {ride.driver_name}
-            </Typography>
-            <Button component={Link} to={`/rides/${ride.id}`} variant="contained">
-              View ride
-            </Button>
-          </Stack>
-        </Stack>
-      </CardContent>
-    </Card>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm font-bold text-muted">Hosted by {ride.driver_name}</p>
+          <Link to={`/rides/${ride.id}`} className="btn-primary">
+            View ride
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,37 +1,17 @@
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import {
-  AppBar,
-  BottomNavigation,
-  BottomNavigationAction,
-  Box,
-  Button,
-  Container,
-  Stack,
-  Toolbar,
-  Typography,
-  useMediaQuery,
-  useTheme
-} from "@mui/material";
+import { Car, Compass, LogOut, Search, User as UserIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 
 const navItems = [
-  { to: "/driver/create-ride", label: "Driver", icon: <DirectionsCarRoundedIcon /> },
-  { to: "/search", label: "Passenger", icon: <SearchRoundedIcon /> },
-  { to: "/explore", label: "Explore", icon: <ExploreRoundedIcon /> }
+  { to: "/driver/create-ride", label: "Driver", icon: Car },
+  { to: "/search", label: "Passenger", icon: Search },
+  { to: "/explore", label: "Explore", icon: Compass }
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const token = useSessionStore((state) => state.token);
@@ -55,100 +35,69 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", pb: { xs: 8, md: 0 } }}>
-      <AppBar
-        position="sticky"
-        elevation={0}
-        color="transparent"
-        sx={{
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          bgcolor: "rgba(255,255,255,0.86)",
-          backdropFilter: "blur(18px)"
-        }}
-      >
-        <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ minHeight: 72, justifyContent: "space-between", gap: 2 }}>
-            <Stack component={Link} to="/" direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-              <Box
-                sx={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 3,
-                  display: "grid",
-                  placeItems: "center",
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
-                  boxShadow: "0 12px 30px rgba(67, 196, 99, 0.28)"
-                }}
+    <div className="min-h-screen pb-20 md:pb-0">
+      <header className="sticky top-0 z-40 border-b border-sand bg-cream/85 backdrop-blur-xl">
+        <div className="mx-auto flex min-h-[72px] w-full max-w-6xl items-center justify-between gap-4 px-4">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-white shadow-soft">
+              <Car size={22} />
+            </span>
+            <span>
+              <span className="block text-lg font-bold leading-none">RideSaathi</span>
+              <span className="block text-xs text-muted">Gujarat intercity carpooling</span>
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
+                    isActive ? "bg-primary text-white" : "text-muted hover:bg-primary-soft hover:text-primary-dark"
+                  }`
+                }
               >
-                <DirectionsCarRoundedIcon />
-              </Box>
-              <Box>
-                <Typography variant="h6" sx={{ lineHeight: 1 }}>
-                  RideSaathi
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Gujarat intercity carpooling
-                </Typography>
-              </Box>
-            </Stack>
+                <item.icon size={18} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
 
-            {!isMobile && (
-              <Stack direction="row" spacing={0.5}>
-                {navItems.map((item) => (
-                  <Button
-                    key={item.to}
-                    component={NavLink}
-                    to={item.to}
-                    startIcon={item.icon}
-                    sx={{
-                      color: "text.secondary",
-                      "&.active": { bgcolor: "primary.main", color: "primary.contrastText" }
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </Stack>
+          <div className="flex items-center gap-2">
+            <Link to={token ? "/profile" : "/auth"} className="btn-outline">
+              <UserIcon size={18} />
+              {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
+            </Link>
+            {token && (
+              <button type="button" className="btn-primary" onClick={handleLogout}>
+                <LogOut size={18} />
+                Logout
+              </button>
             )}
+          </div>
+        </div>
+      </header>
 
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <Button component={Link} to={token ? "/profile" : "/auth"} variant="outlined" startIcon={<PersonRoundedIcon />} sx={{ borderColor: "divider", color: "text.primary" }}>
-                {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
-              </Button>
-              {token && (
-                <Button variant="contained" color="secondary" startIcon={<LogoutRoundedIcon />} onClick={handleLogout}>
-                  Logout
-                </Button>
-              )}
-            </Stack>
-          </Toolbar>
-        </Container>
-      </AppBar>
+      <main>{children}</main>
 
-      <Box component="main">{children}</Box>
-
-      {isMobile && (
-        <BottomNavigation
-          value={navItems.some((item) => item.to === location.pathname) ? location.pathname : "/search"}
-          onChange={(_, value) => navigate(value)}
-          showLabels
-          sx={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: theme.zIndex.appBar,
-            borderTop: "1px solid",
-            borderColor: "divider"
-          }}
-        >
-          {navItems.map((item) => (
-            <BottomNavigationAction key={item.to} label={item.label} value={item.to} icon={item.icon} />
-          ))}
-        </BottomNavigation>
-      )}
-    </Box>
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-sand bg-cream/95 backdrop-blur-xl md:hidden">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-bold transition ${
+                isActive ? "text-primary" : "text-muted"
+              }`
+            }
+          >
+            <item.icon size={20} />
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
   );
 }

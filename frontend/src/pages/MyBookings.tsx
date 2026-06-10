@@ -19,14 +19,14 @@ export default function MyBookings() {
   });
 
   return (
-    <section className="section pb-24">
-      <h1 className="text-2xl font-black">My bookings</h1>
+    <section className="section">
+      <h1 className="text-2xl font-bold">My bookings</h1>
       <div className="mt-4 grid gap-3">
         {data?.map((booking) => (
-          <div key={booking.id} className="rounded-lg border border-slate-200 bg-white p-4">
+          <div key={booking.id} className="card p-4">
             <p className="font-bold">{booking.booking_code}</p>
-            <p className="text-sm text-slate-600">{booking.seats_booked} seats • {booking.pickup_point} to {booking.drop_point}</p>
-            <p className="mt-2 text-sm font-semibold text-saathi-700">{booking.status} • Rs. {booking.total_amount}</p>
+            <p className="text-sm text-muted">{booking.seats_booked} seats • {booking.pickup_point} to {booking.drop_point}</p>
+            <p className="mt-2 text-sm font-semibold text-primary-dark">{booking.status} • Rs. {booking.total_amount}</p>
           </div>
         ))}
       </div>

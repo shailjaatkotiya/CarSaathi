@@ -1,11 +1,5 @@
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
-import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
-import { Box, Card, CardContent, Container, Stack, Typography } from "@mui/material";
-import type { SvgIconComponent } from "@mui/icons-material";
+import { Car, CheckCircle2, Compass, MessageCircle, Search, ShieldCheck } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const bookSteps = [
   "Open Passenger and search by city, date, time, price, car category, and pickup area like Bopal, Gota, or Iscon.",
@@ -30,80 +24,64 @@ const features = [
   "Passenger Profile shows active booked rides. Driver Profile shows passenger details."
 ];
 
-function BulletList({ title, items, icon: Icon }: { title: string; items: string[]; icon: SvgIconComponent }) {
+function BulletList({ title, items, icon: Icon }: { title: string; items: string[]; icon: LucideIcon }) {
   return (
-    <Card sx={{ height: "100%" }}>
-      <CardContent sx={{ p: 3 }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
-            <Icon />
-          </Box>
-          <Typography variant="h6">{title}</Typography>
-        </Stack>
-        <Stack spacing={1.5} sx={{ mt: 2.5 }}>
-          {items.map((item) => (
-            <Stack key={item} direction="row" spacing={1.25} sx={{ alignItems: "flex-start" }}>
-              <CheckCircleRoundedIcon color="primary" fontSize="small" sx={{ mt: 0.15 }} />
-              <Typography variant="body2" color="text.secondary">
-                {item}
-              </Typography>
-            </Stack>
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
+    <div className="card h-full p-6">
+      <div className="flex items-center gap-3">
+        <span className="icon-tile">
+          <Icon size={20} />
+        </span>
+        <h3 className="font-bold">{title}</h3>
+      </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {items.map((item) => (
+          <div key={item} className="flex items-start gap-2.5">
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-primary" />
+            <p className="text-sm text-muted">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
 export default function ExplorePage() {
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={3}>
-        <Card sx={{ borderRadius: 4, bgcolor: "rgba(67,196,99,0.1)" }}>
-          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 900 }}>
-              RideSaathi guide
-            </Typography>
-            <Typography variant="h3" sx={{ mt: 0.5, fontSize: { xs: 30, md: 42 } }}>
-              Explore how to use the app easily
-            </Typography>
-            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 820 }}>
-              Book comfortable carpool seats, publish your own intercity ride, manage cancellations, and compare stops before choosing a driver.
-            </Typography>
-          </CardContent>
-        </Card>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-6">
+        <div className="card-soft rounded-3xl p-6 md:p-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-primary">RideSaathi guide</p>
+          <h1 className="mt-1 text-3xl font-bold md:text-5xl">Explore how to use the app easily</h1>
+          <p className="mt-2 max-w-3xl text-muted">
+            Book comfortable carpool seats, publish your own intercity ride, manage cancellations, and compare stops
+            before choosing a driver.
+          </p>
+        </div>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "repeat(3, 1fr)" }, gap: 2 }}>
-          <BulletList title="How to book a ride" items={bookSteps} icon={SearchRoundedIcon} />
-          <BulletList title="How to publish a ride" items={publishSteps} icon={DirectionsCarRoundedIcon} />
-          <BulletList title="Other functionality" items={features} icon={ExploreRoundedIcon} />
-        </Box>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <BulletList title="How to book a ride" items={bookSteps} icon={Search} />
+          <BulletList title="How to publish a ride" items={publishSteps} icon={Car} />
+          <BulletList title="Other functionality" items={features} icon={Compass} />
+        </div>
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
-          <Card>
-            <CardContent>
-              <SecurityRoundedIcon color="primary" />
-              <Typography variant="h6" sx={{ mt: 1 }}>
-                Safety-first ride rules
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                Drivers can publish clear ride instructions before passengers book, so expectations are set early.
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent>
-              <MessageRoundedIcon color="primary" />
-              <Typography variant="h6" sx={{ mt: 1 }}>
-                WhatsApp-ready updates
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                Booking, passenger cancellation, and driver ride cancellation all create WhatsApp notification logs in the MVP.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
-      </Stack>
-    </Container>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="card p-6">
+            <ShieldCheck size={24} className="text-primary" />
+            <h3 className="mt-2 font-bold">Safety-first ride rules</h3>
+            <p className="mt-1.5 text-sm text-muted">
+              Drivers can publish clear ride instructions before passengers book, so expectations are set early.
+            </p>
+          </div>
+          <div className="card p-6">
+            <MessageCircle size={24} className="text-primary" />
+            <h3 className="mt-2 font-bold">WhatsApp-ready updates</h3>
+            <p className="mt-1.5 text-sm text-muted">
+              Booking, passenger cancellation, and driver ride cancellation all create WhatsApp notification logs in the
+              MVP.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

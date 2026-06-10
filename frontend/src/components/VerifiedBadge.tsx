@@ -1,15 +1,10 @@
-import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
-import { Chip } from "@mui/material";
+import { BadgeCheck } from "lucide-react";
 
 export default function VerifiedBadge({ verified }: { verified: boolean }) {
   return (
-    <Chip
-      size="small"
-      icon={<VerifiedRoundedIcon />}
-      label={verified ? "Verified" : "Pending"}
-      color={verified ? "primary" : "warning"}
-      variant={verified ? "filled" : "outlined"}
-      sx={{ height: 28 }}
-    />
+    <span className={verified ? "chip-solid" : "chip-outline"}>
+      <BadgeCheck size={14} />
+      {verified ? "Verified" : "Pending"}
+    </span>
   );
 }

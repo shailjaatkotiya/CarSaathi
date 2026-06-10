@@ -1,6 +1,4 @@
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Alert, Box, Button, Card, CardContent, Container, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, Ride } from "../api/client";
@@ -67,77 +65,120 @@ export default function SearchRides() {
   });
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={3}>
-        <Card sx={{ borderRadius: 4 }}>
-          <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ justifyContent: "space-between" }}>
-              <Box>
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <TuneRoundedIcon color="primary" />
-                  <Typography variant="h4" sx={{ fontSize: { xs: 28, md: 34 } }}>
-                    Passenger ride search
-                  </Typography>
-                </Stack>
-                <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 780 }}>
-                  Compare friendly car rides by city, local area, date, time, price, rating, fuel, AC, seats, and car category.
-                </Typography>
-              </Box>
-              <Button variant="contained" startIcon={<SearchRoundedIcon />} onClick={() => refetch()} sx={{ alignSelf: { xs: "stretch", md: "center" } }}>
-                Search rides
-              </Button>
-            </Stack>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-6">
+        <div className="card rounded-3xl p-5 md:p-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row">
+            <div>
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal size={26} className="text-primary" />
+                <h1 className="text-3xl font-bold md:text-4xl">Passenger ride search</h1>
+              </div>
+              <p className="mt-2 max-w-3xl text-muted">
+                Compare friendly car rides by city, local area, date, time, price, rating, fuel, AC, seats, and car
+                category.
+              </p>
+            </div>
+            <button type="button" className="btn-primary self-stretch md:self-center" onClick={() => refetch()}>
+              <Search size={18} />
+              Search rides
+            </button>
+          </div>
 
-            <Box sx={{ mt: 3, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
-              <TextField label="Source city" value={source} onChange={(event) => setSource(event.target.value)} placeholder="Ahmedabad" />
-              <TextField label="Destination city" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Rajkot" />
-              <TextField label="Pickup area" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
-              <TextField label="Stop or drop area" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
-              <TextField label="Journey date" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label="Departure after" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label="Departure before" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-              <TextField label="Seats needed" type="number" value={seats} onChange={(event) => setSeats(Number(event.target.value))} slotProps={{ htmlInput: { min: 1 } }} />
-              <TextField label="Minimum price" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="Rs. 150" />
-              <TextField label="Maximum price" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="Rs. 650" />
-              <TextField label="Minimum driver rating" select value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
-                <MenuItem value="">Any rating</MenuItem>
-                <MenuItem value="4">4.0+ stars</MenuItem>
-                <MenuItem value="4.5">4.5+ stars</MenuItem>
-                <MenuItem value="4.8">4.8+ stars</MenuItem>
-              </TextField>
-              <TextField label="Car category" select value={carType} onChange={(event) => setCarType(event.target.value)}>
-                <MenuItem value="">All car categories</MenuItem>
-                <MenuItem value="SUV">SUV</MenuItem>
-                <MenuItem value="Sedan">Sedan</MenuItem>
-                <MenuItem value="7 Seater">7 Seater</MenuItem>
-              </TextField>
-              <TextField label="Fuel type" select value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
-                <MenuItem value="">All fuel types</MenuItem>
-                <MenuItem value="Petrol">Petrol</MenuItem>
-                <MenuItem value="CNG">CNG</MenuItem>
-                <MenuItem value="EV">EV</MenuItem>
-                <MenuItem value="Diesel">Diesel</MenuItem>
-              </TextField>
-              <TextField label="AC preference" select value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
-                <MenuItem value="">AC and non-AC</MenuItem>
-                <MenuItem value="true">AC only</MenuItem>
-                <MenuItem value="false">Non-AC only</MenuItem>
-              </TextField>
-              <TextField label="Sort rides" select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <MenuItem value="date_time">Sort by date</MenuItem>
-                <MenuItem value="time">Sort by time</MenuItem>
-                <MenuItem value="price">Sort by price</MenuItem>
-              </TextField>
-            </Box>
-          </CardContent>
-        </Card>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <label>
+              <span className="field-label">Source city</span>
+              <input className="input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="Ahmedabad" />
+            </label>
+            <label>
+              <span className="field-label">Destination city</span>
+              <input className="input" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Rajkot" />
+            </label>
+            <label>
+              <span className="field-label">Pickup area</span>
+              <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
+            </label>
+            <label>
+              <span className="field-label">Stop or drop area</span>
+              <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
+            </label>
+            <label>
+              <span className="field-label">Journey date</span>
+              <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Departure after</span>
+              <input className="input" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Departure before</span>
+              <input className="input" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Seats needed</span>
+              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
+            </label>
+            <label>
+              <span className="field-label">Minimum price</span>
+              <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="Rs. 150" />
+            </label>
+            <label>
+              <span className="field-label">Maximum price</span>
+              <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="Rs. 650" />
+            </label>
+            <label>
+              <span className="field-label">Minimum driver rating</span>
+              <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
+                <option value="">Any rating</option>
+                <option value="4">4.0+ stars</option>
+                <option value="4.5">4.5+ stars</option>
+                <option value="4.8">4.8+ stars</option>
+              </select>
+            </label>
+            <label>
+              <span className="field-label">Car category</span>
+              <select className="input" value={carType} onChange={(event) => setCarType(event.target.value)}>
+                <option value="">All car categories</option>
+                <option value="SUV">SUV</option>
+                <option value="Sedan">Sedan</option>
+                <option value="7 Seater">7 Seater</option>
+              </select>
+            </label>
+            <label>
+              <span className="field-label">Fuel type</span>
+              <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
+                <option value="">All fuel types</option>
+                <option value="Petrol">Petrol</option>
+                <option value="CNG">CNG</option>
+                <option value="EV">EV</option>
+                <option value="Diesel">Diesel</option>
+              </select>
+            </label>
+            <label>
+              <span className="field-label">AC preference</span>
+              <select className="input" value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
+                <option value="">AC and non-AC</option>
+                <option value="true">AC only</option>
+                <option value="false">Non-AC only</option>
+              </select>
+            </label>
+            <label>
+              <span className="field-label">Sort rides</span>
+              <select className="input" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                <option value="date_time">Sort by date</option>
+                <option value="time">Sort by time</option>
+                <option value="price">Sort by price</option>
+              </select>
+            </label>
+          </div>
+        </div>
 
-        <Stack spacing={2}>
-          {isLoading && <Alert severity="info">Loading rides...</Alert>}
+        <div className="flex flex-col gap-4">
+          {isLoading && <p className="alert-info">Loading rides...</p>}
           {data?.map((ride) => <RideCard key={ride.id} ride={ride} />)}
-          {data?.length === 0 && <Alert severity="warning">No rides found for this route.</Alert>}
-        </Stack>
-      </Stack>
-    </Container>
+          {data?.length === 0 && <p className="alert-warning">No rides found for this route.</p>}
+        </div>
+      </div>
+    </div>
   );
 }

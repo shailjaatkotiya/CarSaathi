@@ -1,5 +1,4 @@
-import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
-import { Alert, Button, Card, CardContent, Container, Stack, TextField, Typography } from "@mui/material";
+import { Shield } from "lucide-react";
 import { useState } from "react";
 import { api } from "../api/client";
 
@@ -14,23 +13,25 @@ export default function VerificationPage() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 4, md: 7 }, pb: 11 }}>
-      <Card sx={{ borderRadius: 4 }}>
-        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          <Stack component="form" onSubmit={submit} spacing={2.5}>
-            <ShieldRoundedIcon color="primary" sx={{ fontSize: 42 }} />
-            <Typography variant="h4">Aadhaar verification</Typography>
-            <Typography color="text.secondary">
-              Aadhaar is masked after submission. The backend stores encrypted and tokenized values only, then verification can be reviewed manually in the MVP.
-            </Typography>
-            <TextField label="Aadhaar number" value={aadhaar} onChange={(event) => setAadhaar(event.target.value)} slotProps={{ htmlInput: { maxLength: 16 } }} />
-            <Button variant="contained" type="submit" size="large">
-              Submit securely
-            </Button>
-            {status && <Alert severity="success">{status}</Alert>}
-          </Stack>
-        </CardContent>
-      </Card>
-    </Container>
+    <div className="mx-auto w-full max-w-xl px-4 py-8 pb-24 md:py-14">
+      <div className="card rounded-3xl p-6 md:p-8">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <Shield size={42} className="text-primary" />
+          <h1 className="text-3xl font-bold">Aadhaar verification</h1>
+          <p className="text-muted">
+            Aadhaar is masked after submission. The backend stores encrypted and tokenized values only, then verification
+            can be reviewed manually in the MVP.
+          </p>
+          <label>
+            <span className="field-label">Aadhaar number</span>
+            <input className="input" maxLength={16} value={aadhaar} onChange={(event) => setAadhaar(event.target.value)} />
+          </label>
+          <button className="btn-primary py-3 text-base" type="submit">
+            Submit securely
+          </button>
+          {status && <p className="alert-success">{status}</p>}
+        </form>
+      </div>
+    </div>
   );
 }

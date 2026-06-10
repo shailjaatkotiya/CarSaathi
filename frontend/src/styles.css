@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -15,12 +15,12 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  font-family: "Poppins", Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: "Archia", "Space Grotesk", Inter, "Segoe UI", Roboto, Arial, sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(67, 196, 99, 0.18), transparent 28rem),
-    radial-gradient(circle at bottom right, rgba(124, 74, 33, 0.12), transparent 30rem),
-    linear-gradient(180deg, #fffdf7 0%, #fbf7ed 48%, #f2e6d6 100%);
-  color: #2b1b10;
+    radial-gradient(circle at top left, rgba(153, 173, 122, 0.22), transparent 28rem),
+    radial-gradient(circle at bottom right, rgba(220, 204, 172, 0.28), transparent 30rem),
+    linear-gradient(180deg, #fff8ec 0%, #faf2e0 48%, #efe3cb 100%);
+  color: #2c3324;
 }
 
 a {
@@ -28,43 +28,80 @@ a {
   text-decoration: none;
 }
 
-.section {
-  width: 100%;
-  max-width: 1200px;
-  margin-inline: auto;
-  padding: 32px 16px 96px;
-}
+@layer components {
+  .section {
+    @apply mx-auto w-full max-w-6xl px-4 py-8 pb-24;
+  }
 
-.input {
-  width: 100%;
-  min-height: 40px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  background: #fffdf7;
-  padding: 10px 12px;
-  color: #2b1b10;
-  font: inherit;
-}
+  .card {
+    @apply rounded-2xl border border-sand bg-white shadow-card;
+  }
 
-.btn-primary,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-weight: 700;
-}
+  .card-soft {
+    @apply rounded-2xl border border-sand bg-primary-soft;
+  }
 
-.btn-primary {
-  border: 0;
-  background: #3d251e;
-  color: #ffffff;
-}
+  .field-label {
+    @apply mb-1 block text-xs font-bold uppercase tracking-wide text-muted;
+  }
 
-.btn-secondary {
-  border: 1px solid #d0d5dd;
-  background: #fffdf7;
-  color: #2b1b10;
+  .field-hint {
+    @apply mt-1 block text-xs text-muted;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-sand bg-cream px-3 py-2.5 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply btn border-0 bg-primary text-white hover:bg-primary-dark;
+  }
+
+  .btn-outline {
+    @apply btn border border-sand bg-cream text-ink hover:border-primary hover:text-primary;
+  }
+
+  .btn-danger {
+    @apply btn border border-red-300 bg-white text-red-700 hover:bg-red-50;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-dark;
+  }
+
+  .chip-outline {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-sand bg-cream px-3 py-1 text-xs font-bold text-ink;
+  }
+
+  .chip-solid {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white;
+  }
+
+  .alert {
+    @apply rounded-xl border px-4 py-3 text-sm font-semibold;
+  }
+
+  .alert-success {
+    @apply alert border-primary-light bg-primary-soft text-primary-dark;
+  }
+
+  .alert-error {
+    @apply alert border-red-300 bg-red-50 text-red-800;
+  }
+
+  .alert-info {
+    @apply alert border-sand bg-cream text-ink;
+  }
+
+  .alert-warning {
+    @apply alert border-sand bg-sand-light text-ink;
+  }
+
+  .icon-tile {
+    @apply grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary;
+  }
 }

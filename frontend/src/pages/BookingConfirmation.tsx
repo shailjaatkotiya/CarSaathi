@@ -1,22 +1,18 @@
-import MessageRoundedIcon from "@mui/icons-material/MessageRounded";
-import { Card, CardContent, Container, Stack, Typography } from "@mui/material";
+import { MessageCircle } from "lucide-react";
 
 export default function BookingConfirmation() {
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 5, md: 8 }, pb: 11 }}>
-      <Card sx={{ borderRadius: 4, textAlign: "center" }}>
-        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          <Stack spacing={2} sx={{ alignItems: "center" }}>
-            <MessageRoundedIcon color="primary" sx={{ fontSize: 52 }} />
-            <Typography variant="h3" sx={{ fontSize: { xs: 30, md: 40 } }}>
-              Booking request sent
-            </Typography>
-            <Typography color="text.secondary">
-              Once the driver confirms, RideSaathi sends both passenger and driver details through WhatsApp with pickup, drop, seat count, and booking ID.
-            </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Container>
+    <div className="mx-auto w-full max-w-xl px-4 py-10 pb-24 md:py-16">
+      <div className="card rounded-3xl p-8 text-center md:p-12">
+        <div className="flex flex-col items-center gap-4">
+          <MessageCircle size={52} className="text-primary" />
+          <h1 className="text-3xl font-bold md:text-4xl">Booking request sent</h1>
+          <p className="text-muted">
+            Once the driver confirms, RideSaathi sends both passenger and driver details through WhatsApp with pickup,
+            drop, seat count, and booking ID.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

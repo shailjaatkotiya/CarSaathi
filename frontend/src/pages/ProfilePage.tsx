@@ -1,25 +1,4 @@
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Container,
-  Divider,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography
-} from "@mui/material";
+import { Car, Pencil, Phone, Save, Shield, Star, User as UserIcon, UserCheck } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
@@ -83,15 +62,13 @@ function optionalText(value: string) {
 
 function DetailTile({ label, value, icon }: { label: string; value?: string | number | null; icon?: ReactNode }) {
   return (
-    <Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 3, bgcolor: "background.paper" }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+    <div className="rounded-xl border border-sand bg-white p-4">
+      <div className="flex items-center gap-2">
         {icon}
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-          {label}
-        </Typography>
-      </Stack>
-      <Typography sx={{ mt: 0.75, fontWeight: 800 }}>{value || "Not added"}</Typography>
-    </Box>
+        <p className="text-xs font-bold text-muted">{label}</p>
+      </div>
+      <p className="mt-1.5 font-bold">{value || "Not added"}</p>
+    </div>
   );
 }
 
@@ -161,203 +138,201 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-        <Alert severity="info">Loading your profile...</Alert>
-      </Container>
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+        <p className="alert-info">Loading your profile...</p>
+      </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-        <Stack spacing={2}>
-          <Alert severity="warning">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+        <div className="flex flex-col gap-4">
+          <p className="alert-warning">
             Please login to view and update your profile. Profile data is saved separately for each logged-in user.
-          </Alert>
-          <Button component={Link} to="/auth" variant="contained" sx={{ alignSelf: "flex-start" }}>
+          </p>
+          <Link to="/auth" className="btn-primary self-start">
             Login to continue
-          </Button>
-        </Stack>
-      </Container>
+          </Link>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, pb: 11 }}>
-      <Stack spacing={2.5}>
-        <Card sx={{ borderRadius: 4, overflow: "hidden" }}>
-          <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2.5} sx={{ justifyContent: "space-between" }}>
-              <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
-                <Box
-                  sx={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 4,
-                    display: "grid",
-                    placeItems: "center",
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    fontSize: 28,
-                    fontWeight: 900
-                  }}
-                >
-                  {data?.full_name?.slice(0, 1).toUpperCase() || "R"}
-                </Box>
-                <Box>
-                  <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <Typography variant="h4">{data?.full_name || "My Profile"}</Typography>
-                    {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
-                  </Stack>
-                  <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                    {data?.role ? `${data.role} account` : "RideSaathi account"}
-                  </Typography>
-                </Box>
-              </Stack>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+      <div className="flex flex-col gap-5">
+        <div className="card overflow-hidden rounded-3xl p-6 md:p-8">
+          <div className="flex flex-col justify-between gap-5 md:flex-row">
+            <div className="flex items-center gap-4">
+              <span className="grid h-[72px] w-[72px] place-items-center rounded-2xl bg-primary text-3xl font-bold text-white">
+                {data?.full_name?.slice(0, 1).toUpperCase() || "R"}
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-3xl font-bold">{data?.full_name || "My Profile"}</h1>
+                  {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
+                </div>
+                <p className="mt-1 text-muted">{data?.role ? `${data.role} account` : "RideSaathi account"}</p>
+              </div>
+            </div>
 
-              <Stack spacing={1.25} sx={{ alignItems: { xs: "stretch", md: "flex-end" } }}>
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary" }}>
-                  <StarRoundedIcon fontSize="small" />
-                  <Typography variant="body2">
-                    Rating {data?.rating_average || 0} from {data?.rating_count || 0} reviews
-                  </Typography>
-                </Stack>
-                {!isEditing ? (
-                  <Button variant="contained" startIcon={<EditRoundedIcon />} onClick={() => setIsEditing(true)}>
-                    Edit profile
-                  </Button>
-                ) : (
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                    <Button variant="outlined" onClick={cancelEdit}>
-                      Cancel
-                    </Button>
-                    <Button variant="contained" startIcon={<SaveRoundedIcon />} onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
-                      Save profile
-                    </Button>
-                  </Stack>
-                )}
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
+            <div className="flex flex-col gap-3 md:items-end">
+              <p className="flex items-center gap-2 text-sm text-muted">
+                <Star size={16} />
+                Rating {data?.rating_average || 0} from {data?.rating_count || 0} reviews
+              </p>
+              {!isEditing ? (
+                <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
+                  <Pencil size={16} />
+                  Edit profile
+                </button>
+              ) : (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button type="button" className="btn-outline" onClick={cancelEdit}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => updateProfile.mutate()}
+                    disabled={updateProfile.isPending}
+                  >
+                    <Save size={16} />
+                    Save profile
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-        {message && <Alert severity="success">{message}</Alert>}
-        {error && <Alert severity="error">{error}</Alert>}
+        {message && <p className="alert-success">{message}</p>}
+        {error && <p className="alert-error">{error}</p>}
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1.2fr 0.8fr" }, gap: 2.5 }}>
-          <Stack spacing={2.5}>
-            <Card>
-              <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
-                <Typography variant="h5">User profile details</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  Update your profile identity and WhatsApp contact. These values are saved against the logged-in user.
-                </Typography>
+        <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="flex flex-col gap-5">
+            <div className="card p-5 md:p-6">
+              <h2 className="text-xl font-bold">User profile details</h2>
+              <p className="mt-1.5 text-sm text-muted">
+                Update your profile identity and WhatsApp contact. These values are saved against the logged-in user.
+              </p>
 
-                {isEditing ? (
-                  <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
-                    <TextField required label="User name" value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
-                    <TextField label="Age" type="number" value={form.age} onChange={(event) => setField("age", event.target.value)} slotProps={{ htmlInput: { min: 18, max: 100 } }} />
-                    <TextField label="WhatsApp contact" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} />
-                  </Box>
-                ) : (
-                  <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
-                    <DetailTile label="User name" value={data?.full_name} icon={<PersonRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="Age" value={data?.age} icon={<PersonRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="WhatsApp contact" value={data?.whatsapp_number} icon={<PhoneRoundedIcon color="primary" fontSize="small" />} />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
+              {isEditing ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <label>
+                    <span className="field-label">User name</span>
+                    <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
+                  </label>
+                  <label>
+                    <span className="field-label">Age</span>
+                    <input className="input" type="number" min={18} max={100} value={form.age} onChange={(event) => setField("age", event.target.value)} />
+                  </label>
+                  <label>
+                    <span className="field-label">WhatsApp contact</span>
+                    <input className="input" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} />
+                  </label>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <DetailTile label="User name" value={data?.full_name} icon={<UserIcon size={16} className="text-primary" />} />
+                  <DetailTile label="Age" value={data?.age} icon={<UserIcon size={16} className="text-primary" />} />
+                  <DetailTile label="WhatsApp contact" value={data?.whatsapp_number} icon={<Phone size={16} className="text-primary" />} />
+                </div>
+              )}
+            </div>
 
-            <Card>
-              <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
-                <Typography variant="h5">Personal car details optional</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  Add a personal car reference for your profile. Driver ride vehicle details remain handled in the publish ride and vehicle flows.
-                </Typography>
+            <div className="card p-5 md:p-6">
+              <h2 className="text-xl font-bold">Personal car details optional</h2>
+              <p className="mt-1.5 text-sm text-muted">
+                Add a personal car reference for your profile. Driver ride vehicle details remain handled in the publish
+                ride and vehicle flows.
+              </p>
 
-                {isEditing ? (
-                  <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
-                    <TextField label="Car brand optional" value={form.personal_car_brand} onChange={(event) => setField("personal_car_brand", event.target.value)} placeholder="Honda, Hyundai, Maruti Suzuki" />
-                    <TextField label="Car model optional" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
-                    <TextField label="Vehicle number optional" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
-                    <TextField label="Fuel type optional" select value={form.personal_car_fuel_type} onChange={(event) => setField("personal_car_fuel_type", event.target.value)}>
-                      <MenuItem value="">Not added</MenuItem>
-                      <MenuItem value="Petrol">Petrol</MenuItem>
-                      <MenuItem value="CNG">CNG</MenuItem>
-                      <MenuItem value="EV">EV</MenuItem>
-                      <MenuItem value="Diesel">Diesel</MenuItem>
-                    </TextField>
-                    <TextField label="Car category optional" select value={form.personal_car_category} onChange={(event) => setField("personal_car_category", event.target.value)}>
-                      <MenuItem value="">Not added</MenuItem>
-                      <MenuItem value="Mini">Mini</MenuItem>
-                      <MenuItem value="Sedan">Sedan</MenuItem>
-                      <MenuItem value="SUV">SUV</MenuItem>
-                      <MenuItem value="7 Seater">7 Seater</MenuItem>
-                    </TextField>
-                    <TextField label="Seats optional" type="number" value={form.personal_car_seats} onChange={(event) => setField("personal_car_seats", event.target.value)} slotProps={{ htmlInput: { min: 1, max: 8 } }} />
-                  </Box>
-                ) : (
-                  <Box sx={{ mt: 2.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
-                    <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<DirectionsCarRoundedIcon color="primary" fontSize="small" />} />
-                    <DetailTile label="Vehicle number" value={data?.personal_car_number} />
-                    <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
-                    <DetailTile label="Category" value={data?.personal_car_category} />
-                    <DetailTile label="Seats" value={data?.personal_car_seats} />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Stack>
+              {isEditing ? (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <label>
+                    <span className="field-label">Car brand optional</span>
+                    <input className="input" value={form.personal_car_brand} onChange={(event) => setField("personal_car_brand", event.target.value)} placeholder="Honda, Hyundai, Maruti Suzuki" />
+                  </label>
+                  <label>
+                    <span className="field-label">Car model optional</span>
+                    <input className="input" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
+                  </label>
+                  <label>
+                    <span className="field-label">Vehicle number optional</span>
+                    <input className="input" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
+                  </label>
+                  <label>
+                    <span className="field-label">Fuel type optional</span>
+                    <select className="input" value={form.personal_car_fuel_type} onChange={(event) => setField("personal_car_fuel_type", event.target.value)}>
+                      <option value="">Not added</option>
+                      <option value="Petrol">Petrol</option>
+                      <option value="CNG">CNG</option>
+                      <option value="EV">EV</option>
+                      <option value="Diesel">Diesel</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span className="field-label">Car category optional</span>
+                    <select className="input" value={form.personal_car_category} onChange={(event) => setField("personal_car_category", event.target.value)}>
+                      <option value="">Not added</option>
+                      <option value="Mini">Mini</option>
+                      <option value="Sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="7 Seater">7 Seater</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span className="field-label">Seats optional</span>
+                    <input className="input" type="number" min={1} max={8} value={form.personal_car_seats} onChange={(event) => setField("personal_car_seats", event.target.value)} />
+                  </label>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<Car size={16} className="text-primary" />} />
+                  <DetailTile label="Vehicle number" value={data?.personal_car_number} />
+                  <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
+                  <DetailTile label="Category" value={data?.personal_car_category} />
+                  <DetailTile label="Seats" value={data?.personal_car_seats} />
+                </div>
+              )}
+            </div>
+          </div>
 
-          <Stack spacing={2.5}>
-            <Card>
-              <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
-                <Stack direction="row" spacing={1.25} sx={{ alignItems: "center" }}>
-                  <ShieldRoundedIcon color="primary" />
-                  <Typography variant="h5">Verification details</Typography>
-                </Stack>
-                <Stack spacing={1.5} sx={{ mt: 2.5 }}>
-                  <DetailTile label="Profile verification" value={data?.verification_status} />
-                  <DetailTile label="Aadhaar verification" value={verification?.status} />
-                  <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
-                  <DetailTile label="Account role" value={data?.role} icon={<VerifiedUserRoundedIcon color="primary" fontSize="small" />} />
-                  {verification?.rejection_reason && <Alert severity="error">{verification.rejection_reason}</Alert>}
-                </Stack>
-                <Divider sx={{ my: 2.5 }} />
-                <Chip
-                  color={data?.verification_status === "verified" ? "primary" : "warning"}
-                  label={data?.verification_status === "verified" ? "Ride listing and booking enabled" : "Verification pending"}
-                />
-              </CardContent>
-            </Card>
+          <div className="flex flex-col gap-5">
+            <div className="card p-5 md:p-6">
+              <div className="flex items-center gap-2.5">
+                <Shield size={22} className="text-primary" />
+                <h2 className="text-xl font-bold">Verification details</h2>
+              </div>
+              <div className="mt-5 flex flex-col gap-3">
+                <DetailTile label="Profile verification" value={data?.verification_status} />
+                <DetailTile label="Aadhaar verification" value={verification?.status} />
+                <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
+                <DetailTile label="Account role" value={data?.role} icon={<UserCheck size={16} className="text-primary" />} />
+                {verification?.rejection_reason && <p className="alert-error">{verification.rejection_reason}</p>}
+              </div>
+              <hr className="my-5 border-sand" />
+              <span className={data?.verification_status === "verified" ? "chip-solid" : "chip-outline"}>
+                {data?.verification_status === "verified" ? "Ride listing and booking enabled" : "Verification pending"}
+              </span>
+            </div>
 
-            <Card component={Link} to="/profile/driver" variant="outlined" sx={{ transition: "160ms ease", "&:hover": { transform: "translateY(-2px)", borderColor: "primary.main" } }}>
-              <CardContent>
-                <DirectionsCarRoundedIcon color="primary" />
-                <Typography variant="h6" sx={{ mt: 1 }}>
-                  Driver Profile
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  Passenger details section for rides published by the driver.
-                </Typography>
-              </CardContent>
-            </Card>
+            <Link to="/profile/driver" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
+              <Car size={22} className="text-primary" />
+              <h3 className="mt-2 font-bold">Driver Profile</h3>
+              <p className="mt-1.5 text-sm text-muted">Passenger details section for rides published by the driver.</p>
+            </Link>
 
-            <Card component={Link} to="/profile/passenger" variant="outlined" sx={{ transition: "160ms ease", "&:hover": { transform: "translateY(-2px)", borderColor: "primary.main" } }}>
-              <CardContent>
-                <PersonRoundedIcon color="primary" />
-                <Typography variant="h6" sx={{ mt: 1 }}>
-                  Passenger Profile
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  Booked unfinished rides for the passenger.
-                </Typography>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Box>
-      </Stack>
-    </Container>
+            <Link to="/profile/passenger" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
+              <UserIcon size={22} className="text-primary" />
+              <h3 className="mt-2 font-bold">Passenger Profile</h3>
+              <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for the passenger.</p>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Alert, Box, Button, Card, CardContent, Container, MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -79,52 +78,70 @@ export default function AuthPage() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 5, md: 8 }, pb: 11 }}>
-      <Card sx={{ borderRadius: 4 }}>
-        <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-          <Box component="form" onSubmit={submit}>
-            <Stack spacing={2.5}>
-              <Box>
-                <Typography variant="h4">{mode === "login" ? "Login" : "Register"} to RideSaathi</Typography>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Use demo credentials or create a driver/passenger profile.
-                </Typography>
-              </Box>
-              <ToggleButtonGroup
-                exclusive
-                fullWidth
-                value={mode}
-                onChange={(_, value) => value && setMode(value)}
-                sx={{ bgcolor: "grey.100", borderRadius: 999, p: 0.5 }}
+    <div className="mx-auto w-full max-w-xl px-4 py-10 pb-24 md:py-16">
+      <div className="card rounded-3xl p-6 md:p-10">
+        <form onSubmit={submit} className="flex flex-col gap-5">
+          <div>
+            <h1 className="text-3xl font-bold">{mode === "login" ? "Login" : "Register"} to RideSaathi</h1>
+            <p className="mt-2 text-muted">Use demo credentials or create a driver/passenger profile.</p>
+          </div>
+
+          <div className="flex rounded-full bg-sand-light p-1">
+            {(["login", "register"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-bold capitalize transition ${
+                  mode === value ? "bg-primary text-white" : "text-muted hover:text-ink"
+                }`}
               >
-                <ToggleButton value="login" sx={{ borderRadius: 999 }}>
-                  Login
-                </ToggleButton>
-                <ToggleButton value="register" sx={{ borderRadius: 999 }}>
-                  Register
-                </ToggleButton>
-              </ToggleButtonGroup>
-              {mode === "register" && (
-                <>
-                  <TextField label="Full name" value={fullName} onChange={(event) => setFullName(event.target.value)} />
-                  <TextField label="Role" select value={role} onChange={(event) => setRole(event.target.value as "passenger" | "driver")}>
-                    <MenuItem value="passenger">Passenger</MenuItem>
-                    <MenuItem value="driver">Driver</MenuItem>
-                  </TextField>
-                  <TextField label="WhatsApp contact" value={whatsappNumber} onChange={(event) => setWhatsappNumber(event.target.value)} placeholder="9876509876" />
-                </>
-              )}
-              <TextField label="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
-              <TextField label="Password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-              <Button variant="contained" size="large" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Please wait..." : "Continue"}
-              </Button>
-              {message && <Alert severity="success">{message}</Alert>}
-              {error && <Alert severity="error">{error}</Alert>}
-            </Stack>
-          </Box>
-        </CardContent>
-      </Card>
-    </Container>
+                {value}
+              </button>
+            ))}
+          </div>
+
+          {mode === "register" && (
+            <>
+              <label>
+                <span className="field-label">Full name</span>
+                <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Role</span>
+                <select className="input" value={role} onChange={(event) => setRole(event.target.value as "passenger" | "driver")}>
+                  <option value="passenger">Passenger</option>
+                  <option value="driver">Driver</option>
+                </select>
+              </label>
+              <label>
+                <span className="field-label">WhatsApp contact</span>
+                <input
+                  className="input"
+                  value={whatsappNumber}
+                  onChange={(event) => setWhatsappNumber(event.target.value)}
+                  placeholder="9876509876"
+                />
+              </label>
+            </>
+          )}
+
+          <label>
+            <span className="field-label">Email</span>
+            <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <label>
+            <span className="field-label">Password</span>
+            <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+
+          <button className="btn-primary py-3 text-base" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Please wait..." : "Continue"}
+          </button>
+          {message && <p className="alert-success">{message}</p>}
+          {error && <p className="alert-error">{error}</p>}
+        </form>
+      </div>
+    </div>
   );
 }

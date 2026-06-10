@@ -1,10 +1,4 @@
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
-import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import MapRoundedIcon from "@mui/icons-material/MapRounded";
-import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
-import VerifiedRoundedIcon from "@mui/icons-material/VerifiedRounded";
-import { Box, Button, Card, CardContent, Chip, Container, Stack, Typography } from "@mui/material";
+import { ArrowRight, BadgeCheck, Car, Map, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const heroImage = "https://commons.wikimedia.org/wiki/Special:FilePath/2019_Honda_City_E_(Indonesia)_front_view.jpg?width=1400";
@@ -15,110 +9,95 @@ const routes = [
 ];
 
 const features = [
-  [ShieldRoundedIcon, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
-  [DirectionsCarRoundedIcon, "Homely car comfort", "Choose drivers, cars, AC, pickup points, and flexible halt notes."],
-  [GroupsRoundedIcon, "Friendly travel", "Skip the lonely bus and share intercity routes with verified people."],
-  [MapRoundedIcon, "Gujarat-first routes", "Ahmedabad, Rajkot, Jamnagar, Surat, and nearby city corridors."]
+  [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
+  [Car, "Homely car comfort", "Choose drivers, cars, AC, pickup points, and flexible halt notes."],
+  [Users, "Friendly travel", "Skip the lonely bus and share intercity routes with verified people."],
+  [Map, "Gujarat-first routes", "Ahmedabad, Rajkot, Jamnagar, Surat, and nearby city corridors."]
 ] as const;
+
+const stats = [
+  ["10", "fresh seeded rides"],
+  ["5+", "pickup and drop points"],
+  ["3-10 days", "publish window"]
+];
 
 export default function LandingPage() {
   return (
     <>
-      <Box sx={{ pt: { xs: 4, md: 8 }, pb: { xs: 5, md: 8 } }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.05fr 0.95fr" }, gap: { xs: 4, md: 6 }, alignItems: "center" }}>
-            <Stack spacing={3}>
-              <Chip icon={<VerifiedRoundedIcon />} label="Verified Gujarat intercity carpooling" color="primary" sx={{ alignSelf: "flex-start" }} />
-              <Box>
-                <Typography variant="h1" sx={{ fontSize: { xs: 44, md: 68 }, lineHeight: 0.96 }}>
-                  RideSaathi
-                </Typography>
-                <Typography variant="h5" color="text.secondary" sx={{ mt: 2, maxWidth: 680, lineHeight: 1.45 }}>
-                  Bored going alone in a bus? Choose a friendly car ride, flexible halts, and a homely intercity travel experience.
-                </Typography>
-              </Box>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <Button component={Link} to="/search" variant="contained" size="large" endIcon={<ArrowForwardRoundedIcon />}>
-                  Find a ride
-                </Button>
-                <Button component={Link} to="/driver/create-ride" variant="outlined" size="large">
-                  Publish your journey
-                </Button>
-              </Stack>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1.5 }}>
-                {[
-                  ["10", "fresh seeded rides"],
-                  ["5+", "pickup and drop points"],
-                  ["3-10 days", "publish window"]
-                ].map(([value, label]) => (
-                  <Card key={label} variant="outlined">
-                    <CardContent>
-                      <Typography variant="h5">{value}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {label}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </Stack>
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:pb-16 md:pt-16">
+        <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+          <div className="flex flex-col gap-6">
+            <span className="chip-solid self-start px-4 py-1.5">
+              <BadgeCheck size={15} />
+              Verified Gujarat intercity carpooling
+            </span>
+            <div>
+              <h1 className="text-5xl font-bold leading-none md:text-7xl">RideSaathi</h1>
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
+                Bored going alone in a bus? Choose a friendly car ride, flexible halts, and a homely intercity travel
+                experience.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link to="/search" className="btn-primary px-6 py-3 text-base">
+                Find a ride
+                <ArrowRight size={18} />
+              </Link>
+              <Link to="/driver/create-ride" className="btn-outline px-6 py-3 text-base">
+                Publish your journey
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {stats.map(([value, label]) => (
+                <div key={label} className="card p-4 shadow-none">
+                  <p className="text-xl font-bold">{value}</p>
+                  <p className="text-sm text-muted">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            <Card sx={{ borderRadius: 5, overflow: "hidden" }}>
-              <Box
-                sx={{
-                  minHeight: { xs: 260, md: 390 },
-                  backgroundImage: `linear-gradient(180deg, rgba(43,27,16,0.03), rgba(43,27,16,0.28)), url("${heroImage}")`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  position: "relative"
-                }}
-              >
-                <Chip
-                  label="Honda City style sedan"
-                  sx={{ position: "absolute", left: 18, top: 18, bgcolor: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)" }}
-                />
-              </Box>
-              <CardContent>
-                <Stack spacing={1.5}>
-                  {routes.map((item) => (
-                    <Box key={item.route} sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 3 }}>
-                      <Stack direction="row" spacing={2} sx={{ justifyContent: "space-between" }}>
-                        <Typography sx={{ fontWeight: 800 }}>{item.route}</Typography>
-                        <Typography color="primary.main" sx={{ fontWeight: 800 }}>
-                          {item.price}
-                        </Typography>
-                      </Stack>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {item.distance} · {item.points}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Box>
-        </Container>
-      </Box>
+          <div className="card overflow-hidden rounded-3xl">
+            <div
+              className="relative min-h-[260px] bg-cover bg-center md:min-h-[390px]"
+              style={{
+                backgroundImage: `linear-gradient(180deg, rgba(44,51,36,0.03), rgba(44,51,36,0.28)), url("${heroImage}")`
+              }}
+            >
+              <span className="absolute left-4 top-4 rounded-full bg-cream/90 px-3 py-1 text-xs font-bold backdrop-blur">
+                Honda City style sedan
+              </span>
+            </div>
+            <div className="flex flex-col gap-3 p-5">
+              {routes.map((item) => (
+                <div key={item.route} className="rounded-xl border border-sand p-4">
+                  <div className="flex justify-between gap-4">
+                    <p className="font-bold">{item.route}</p>
+                    <p className="font-bold text-primary">{item.price}</p>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">
+                    {item.distance} · {item.points}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Container maxWidth="lg" sx={{ pb: 10 }}>
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map(([Icon, title, copy]) => (
-            <Card key={title} variant="outlined" sx={{ height: "100%" }}>
-              <CardContent>
-                <Box sx={{ width: 42, height: 42, borderRadius: 3, display: "grid", placeItems: "center", bgcolor: "rgba(67,196,99,0.12)", color: "primary.main" }}>
-                  <Icon />
-                </Box>
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                  {title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                  {copy}
-                </Typography>
-              </CardContent>
-            </Card>
+            <div key={title} className="card h-full p-5 shadow-none">
+              <span className="icon-tile">
+                <Icon size={20} />
+              </span>
+              <h3 className="mt-4 font-bold">{title}</h3>
+              <p className="mt-1.5 text-sm text-muted">{copy}</p>
+            </div>
           ))}
-        </Box>
-      </Container>
+        </div>
+      </div>
     </>
   );
 }
