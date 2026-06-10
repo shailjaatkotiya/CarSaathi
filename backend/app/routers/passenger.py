@@ -91,6 +91,11 @@ def ride_detail(ride_id: int, db: Session = Depends(get_db)) -> RideOut:
 
 @router.post("/rides/{ride_id}/book", response_model=BookingOut)
 def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
+    if not (passenger.whatsapp_number and passenger.whatsapp_number.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please add your WhatsApp contact number in My Profile before booking a ride",
+        )
     ride = db.query(Ride).filter(Ride.id == ride_id).with_for_update().first()
     if not ride or ride.status != RideStatus.active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not available")

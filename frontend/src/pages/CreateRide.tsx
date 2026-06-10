@@ -191,6 +191,15 @@ export default function CreateRide() {
           Conditions: publish only 3 hours to 10 days before departure. Minimum 5 pickup points and 5 drop points are
           required.
         </p>
+        {me && !me.whatsapp_number?.trim() && (
+          <p className="alert-warning">
+            A WhatsApp contact number is required to publish a ride.{" "}
+            <Link to="/profile" className="font-bold underline">
+              Add it in My Profile
+            </Link>{" "}
+            first.
+          </p>
+        )}
 
         <FormSection title="Car details" subtitle="Pick your profile car, add a new one, or skip and publish without car details." icon={<Car size={20} />}>
           <div className="grid gap-3 sm:grid-cols-3">
