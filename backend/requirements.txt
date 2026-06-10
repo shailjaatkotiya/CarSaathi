@@ -12,3 +12,4 @@ python-multipart==0.0.20
 cryptography==44.0.0
 redis==5.2.1
 celery==5.4.0
+twilio==9.4.1

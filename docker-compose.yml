@@ -17,17 +17,34 @@ services:
 
   backend:
     build: ./backend
-    environment:
+    environment: &backend_env
       DATABASE_URL: postgresql+psycopg2://ridesaathi:ridesaathi@postgres:5432/ridesaathi
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: change-me-in-production
       AADHAAR_ENCRYPTION_KEY: ""
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      WHATSAPP_PROVIDER: ${WHATSAPP_PROVIDER:-mock}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      TWILIO_MESSAGING_SERVICE_SID: ${TWILIO_MESSAGING_SERVICE_SID:-}
+      TWILIO_CONTENT_SID_PASSENGER_BOOKING_CONFIRMATION: ${TWILIO_CONTENT_SID_PASSENGER_BOOKING_CONFIRMATION:-}
+      TWILIO_CONTENT_SID_DRIVER_BOOKING_REQUEST: ${TWILIO_CONTENT_SID_DRIVER_BOOKING_REQUEST:-}
+      TWILIO_CONTENT_SID_PASSENGER_BOOKING_CANCELLED: ${TWILIO_CONTENT_SID_PASSENGER_BOOKING_CANCELLED:-}
+      TWILIO_CONTENT_SID_DRIVER_BOOKING_CANCELLED: ${TWILIO_CONTENT_SID_DRIVER_BOOKING_CANCELLED:-}
     depends_on:
       - postgres
       - redis
     ports:
       - "8000:8000"
+
+  worker:
+    build: ./backend
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    environment: *backend_env
+    depends_on:
+      - postgres
+      - redis
 
   frontend:
     build: ./frontend
