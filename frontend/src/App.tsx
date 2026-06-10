@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
 import AddVehicle from "./pages/AddVehicle";
+import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import CreateRide from "./pages/CreateRide";
@@ -84,6 +85,7 @@ export default function App() {
             </RequireAuth>
           }
         />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Layout>

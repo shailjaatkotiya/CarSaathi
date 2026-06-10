@@ -190,6 +190,9 @@ class BookingOut(BaseModel):
     booking_code: str
     ride_id: int
     passenger_id: int
+    driver_id: int
+    driver_name: str
+    route: str
     seats_booked: int
     pickup_point: str
     drop_point: str

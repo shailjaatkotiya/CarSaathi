@@ -1,5 +1,6 @@
-import { Fuel } from "lucide-react";
-import { useState } from "react";
+import { Car, Fuel, Pencil } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 import { api } from "../api/client";
 
 const categories = [
@@ -8,24 +9,66 @@ const categories = [
   { value: "7 Seater", icon: "7", hint: "Large family/group car" }
 ];
 
+type Vehicle = {
+  id: number;
+  brand: string;
+  model: string;
+  vehicle_number: string;
+  fuel_type: string;
+  car_type: string;
+  seats: number;
+  photo_urls: string[];
+  is_verified: boolean;
+};
+
 export default function AddVehicle() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Sedan");
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const { data: vehicles, refetch } = useQuery({
+    queryKey: ["driver-vehicles"],
+    queryFn: async () => (await api.get<Vehicle[]>("/driver/vehicles")).data
+  });
+
+  function startEdit(vehicle: Vehicle) {
+    setEditingVehicle(vehicle);
+    setCategory(vehicle.car_type);
+    setMessage("");
+    const form = formRef.current;
+    if (form) {
+      (form.elements.namedItem("brand") as HTMLInputElement).value = vehicle.brand;
+      (form.elements.namedItem("model") as HTMLInputElement).value = vehicle.model;
+      (form.elements.namedItem("vehicle_number") as HTMLInputElement).value = vehicle.vehicle_number;
+      (form.elements.namedItem("fuel_type") as HTMLSelectElement).value = vehicle.fuel_type;
+      (form.elements.namedItem("seats") as HTMLInputElement).value = String(vehicle.seats);
+      form.scrollIntoView({ behavior: "smooth" });
+    }
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    await api.post("/driver/vehicles", { ...payload, car_type: category, seats: Number(payload.seats), photo_urls: [] });
-    setMessage("Vehicle added. Verification can be completed later.");
+    const body = { ...payload, car_type: category, seats: Number(payload.seats), photo_urls: [] };
+    if (editingVehicle) {
+      await api.put(`/driver/vehicles/${editingVehicle.id}`, body);
+      setMessage("Vehicle updated.");
+      setEditingVehicle(null);
+    } else {
+      await api.post("/driver/vehicles", body);
+      setMessage("Vehicle added. Verification can be completed later.");
+    }
+    refetch();
   }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
       <div className="card rounded-3xl p-6 md:p-8">
-        <form onSubmit={submit} className="flex flex-col gap-5">
+        <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5">
           <div>
-            <h1 className="text-3xl font-bold">Add vehicle</h1>
+            <h1 className="text-3xl font-bold">{editingVehicle ? `Edit vehicle ${editingVehicle.vehicle_number}` : "Add vehicle"}</h1>
             <p className="mt-2 text-muted">Add car details passengers can compare before requesting seats.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -82,11 +125,43 @@ export default function AddVehicle() {
             </div>
           </div>
 
-          <button className="btn-primary self-start px-6 py-3 text-base" type="submit">
-            Save vehicle
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button className="btn-primary self-start px-6 py-3 text-base" type="submit">
+              {editingVehicle ? "Update vehicle" : "Save vehicle"}
+            </button>
+            {editingVehicle && (
+              <button type="button" className="btn-outline" onClick={() => setEditingVehicle(null)}>
+                Cancel edit
+              </button>
+            )}
+          </div>
           {message && <p className="alert-success">{message}</p>}
         </form>
+      </div>
+
+      <div className="card mt-6 overflow-hidden rounded-3xl">
+        <div className="border-b border-sand px-5 py-4 font-bold">My vehicles</div>
+        {vehicles?.map((vehicle) => (
+          <div key={vehicle.id} className="flex flex-col gap-2 border-b border-sand-light px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="inline-flex items-center gap-2 font-semibold">
+                <Car size={16} className="text-primary" />
+                {vehicle.brand} {vehicle.model} · {vehicle.vehicle_number}
+              </p>
+              <p className="text-sm text-muted">
+                {vehicle.car_type} · {vehicle.fuel_type} · {vehicle.seats} seats
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="chip">{vehicle.is_verified ? "verified" : "not verified"}</span>
+              <button type="button" className="btn-outline" onClick={() => startEdit(vehicle)}>
+                <Pencil size={14} />
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+        {vehicles?.length === 0 && <p className="px-5 py-4 text-sm text-muted">No vehicles added yet.</p>}
       </div>
     </div>
   );
