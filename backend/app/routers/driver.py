@@ -136,10 +136,23 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 def create_ride(payload: RideCreate, current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> RideOut:
     driver = resolve_demo_driver(db, current_user)
     vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
-    if not vehicle and current_user is None:
+    if not vehicle:
         vehicle = db.query(Vehicle).filter(Vehicle.driver_id == driver.id).first()
     if not vehicle:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+        if not (payload.car_brand and payload.car_model and payload.vehicle_number):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+        vehicle = Vehicle(
+            driver_id=driver.id,
+            brand=payload.car_brand,
+            model=payload.car_model,
+            vehicle_number=payload.vehicle_number.upper(),
+            fuel_type=payload.fuel_type or "petrol",
+            car_type=payload.car_type or "sedan",
+            seats=payload.available_seats,
+            photo_urls="",
+        )
+        db.add(vehicle)
+        db.flush()
     validate_stop_counts(payload)
     apply_vehicle_details(vehicle, payload)
     if payload.available_seats > vehicle.seats:
