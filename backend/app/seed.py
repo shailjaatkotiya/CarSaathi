@@ -103,11 +103,11 @@ def seed_database(db: Session) -> None:
     ensure_default_admin(db)
 
     vehicles = [
-        Vehicle(driver_id=dummy_drivers[0].id, brand="Maruti Suzuki", model="Dzire", vehicle_number="GJ01AA1234", fuel_type="Petrol", car_type="Sedan", seats=4, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[0].id, brand="Hyundai", model="Creta", vehicle_number="GJ01BB5678", fuel_type="Diesel", car_type="SUV", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=dummy_drivers[0].id, brand="Maruti Suzuki", model="Dzire", vehicle_number="GJ01AA1234", fuel_type="Petrol", car_type="Sedan", seats=3, photo_urls="", is_verified=True),
+        Vehicle(driver_id=dummy_drivers[0].id, brand="Hyundai", model="Creta", vehicle_number="GJ01BB5678", fuel_type="Diesel", car_type="SUV", seats=3, photo_urls="", is_verified=True),
         Vehicle(driver_id=dummy_drivers[1].id, brand="Toyota", model="Innova Crysta", vehicle_number="GJ03CC9012", fuel_type="CNG", car_type="7 Seater", seats=6, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[2].id, brand="Honda", model="Amaze", vehicle_number="GJ10DD7890", fuel_type="Petrol", car_type="Sedan", seats=4, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[3].id, brand="Tata", model="Nexon EV", vehicle_number="GJ05EE3456", fuel_type="EV", car_type="SUV", seats=4, photo_urls="", is_verified=True),
+        Vehicle(driver_id=dummy_drivers[2].id, brand="Honda", model="Amaze", vehicle_number="GJ10DD7890", fuel_type="Petrol", car_type="Sedan", seats=3, photo_urls="", is_verified=True),
+        Vehicle(driver_id=dummy_drivers[3].id, brand="Tata", model="Nexon EV", vehicle_number="GJ05EE3456", fuel_type="EV", car_type="SUV", seats=3, photo_urls="", is_verified=True),
     ]
     db.add_all(vehicles)
     db.flush()

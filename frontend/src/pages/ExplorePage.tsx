@@ -5,12 +5,12 @@ const bookSteps = [
   "Open Passenger and search by city, date, time, price, car category, and pickup area like Bopal, Gota, or Iscon.",
   "Check pickup points, final drop points, and in-between stops such as Limbdi or Chotila before booking.",
   "Choose seats, pickup, and drop-off. After confirmation, WhatsApp details are shared with passenger and driver.",
-  "Cancel from Passenger Profile when plans change. A WhatsApp cancellation message is logged for both sides."
+  "Cancel from Booked Rides when plans change. A WhatsApp cancellation message is logged for both sides."
 ];
 
 const publishSteps = [
   "Open Driver and publish a ride without login in MVP demo mode.",
-  "Choose source, destination, date, time, seats, price, vehicle, in-between stops, and passenger instructions.",
+  "Choose source, destination, date, time, seats, price, vehicle, in-between stops, and ride instructions.",
   "Publish only between 3 hours and 10 days before departure.",
   "For the same route, one driver can publish maximum 2 rides per day and 5 rides per week.",
   "Cancel a ride from My Rides. Passengers get a WhatsApp cancellation message."
@@ -21,7 +21,7 @@ const features = [
   "Car category support for Mini, Sedan, SUV, and 7 Seater with fuel type.",
   "Safety instructions: no pets, no extra children, no music, no smoking, no alcohol, no tobacco.",
   "Masked contact details before booking and WhatsApp notification logs after booking or cancellation.",
-  "Passenger Profile shows active booked rides. Driver Profile shows passenger details."
+  "Booked Rides shows active passenger bookings. Published Rides shows every published ride with booked passengers."
 ];
 
 function BulletList({ title, items, icon: Icon }: { title: string; items: string[]; icon: LucideIcon }) {

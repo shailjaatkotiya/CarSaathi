@@ -1,4 +1,5 @@
 import { Armchair, Car, Clock, Fuel, MapPin, Route as RouteIcon, Star } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { Ride } from "../api/client";
 import VerifiedBadge from "./VerifiedBadge";
@@ -11,7 +12,7 @@ function categoryIcon(category: string) {
   return "SED";
 }
 
-export default function RideCard({ ride }: { ride: Ride }) {
+export default function RideCard({ ride, actions, details }: { ride: Ride; actions?: ReactNode; details?: ReactNode }) {
   return (
     <div className="card overflow-hidden p-5 sm:p-6">
       <div className="flex flex-col gap-5">
@@ -44,7 +45,7 @@ export default function RideCard({ ride }: { ride: Ride }) {
           </span>
           <span className="chip-outline">
             <Armchair size={14} />
-            {ride.available_seats} seats left
+            {ride.available_seats} remaining seats
           </span>
           <span className="chip-outline">
             <Star size={14} />
@@ -78,6 +79,14 @@ export default function RideCard({ ride }: { ride: Ride }) {
             </span>
           ))}
         </div>
+
+        {actions && (
+          <div className="flex flex-wrap gap-2 border-t border-sand pt-4">
+            {actions}
+          </div>
+        )}
+
+        {details && <div>{details}</div>}
 
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-bold text-muted">Hosted by {ride.driver_name}</p>

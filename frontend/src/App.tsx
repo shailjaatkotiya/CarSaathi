@@ -6,7 +6,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import CreateRide from "./pages/CreateRide";
-import DriverProfilePage from "./pages/DriverProfilePage";
 import DriverOnboarding from "./pages/DriverOnboarding";
 import ExplorePage from "./pages/ExplorePage";
 import LandingPage from "./pages/LandingPage";
@@ -73,7 +72,7 @@ export default function App() {
           path="/profile/driver"
           element={
             <RequireAuth>
-              <DriverProfilePage />
+              <Navigate to="/my-rides" replace />
             </RequireAuth>
           }
         />

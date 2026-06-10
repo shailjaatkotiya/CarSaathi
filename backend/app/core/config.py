@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     aadhaar_encryption_key: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176,http://localhost:5177,http://127.0.0.1:5177"
+    public_api_base_url: str = "http://localhost:8000/api/v1"
     whatsapp_provider: str = "mock"
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""

@@ -318,16 +318,16 @@ export default function ProfilePage() {
               </span>
             </div>
 
-            <Link to="/profile/driver" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
+            <Link to="/my-rides" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <Car size={22} className="text-primary" />
-              <h3 className="mt-2 font-bold">Driver Profile</h3>
-              <p className="mt-1.5 text-sm text-muted">Passenger details section for rides published by the driver.</p>
+              <h3 className="mt-2 font-bold">Published Rides</h3>
+              <p className="mt-1.5 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
             </Link>
 
             <Link to="/profile/passenger" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <UserIcon size={22} className="text-primary" />
-              <h3 className="mt-2 font-bold">Passenger Profile</h3>
-              <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for the passenger.</p>
+              <h3 className="mt-2 font-bold">Booked Rides</h3>
+              <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
             </Link>
           </div>
         </div>

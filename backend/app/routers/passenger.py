@@ -14,6 +14,10 @@ from app.utils.serializers import ride_to_out
 router = APIRouter(prefix="/passenger", tags=["passenger"])
 
 
+def cap_available_seats(ride: Ride) -> None:
+    ride.available_seats = min(ride.available_seats, ride.total_seats)
+
+
 @router.get("/rides/search", response_model=list[RideOut])
 def search_rides(
     source: str | None = None,
@@ -131,6 +135,7 @@ def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: Use
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
     if booking.status in {BookingStatus.pending, BookingStatus.confirmed}:
         booking.ride.available_seats += booking.seats_booked
+        cap_available_seats(booking.ride)
     booking.status = BookingStatus.cancelled
     booking.cancellation_reason = payload.reason
     db.add(CancellationReason(user_id=passenger.id, booking_id=booking.id, reason=payload.reason))

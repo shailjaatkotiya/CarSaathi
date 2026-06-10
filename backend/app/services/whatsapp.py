@@ -24,7 +24,17 @@ _BODY_TEMPLATES = {
         "Passenger: {passenger_name} ({passenger_whatsapp_number})\n"
         "Seats: {seats_booked}\n"
         "Pickup: {pickup_point}\n"
-        "Drop: {drop_off_point}"
+        "Drop: {drop_off_point}\n"
+        "Approve from WhatsApp: {whatsapp_accept_url}\n"
+        "Reject from WhatsApp: {whatsapp_reject_url}"
+    ),
+    "passenger_driver_cancelled": (
+        "RideSaathi: driver has cancelled the ride for booking {booking_id}.\n"
+        "Please find a new ride through the platform.\n"
+        "Route: {route}\n"
+        "Journey: {journey_date} {journey_time}\n"
+        "Seats: {seats_booked}\n"
+        "Reason: {reason}"
     ),
     "passenger_booking_cancelled": (
         "RideSaathi: booking {booking_id} cancelled by {cancelled_by}.\n"
@@ -90,6 +100,7 @@ def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = 
     driver = ride.driver
     passenger = booking.passenger
     vehicle = ride.vehicle
+    base_url = get_settings().public_api_base_url.rstrip("/")
 
     log_whatsapp(
         db,
@@ -125,6 +136,8 @@ def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = 
                 "pickup_point": booking.pickup_point,
                 "drop_off_point": booking.drop_point,
                 "booking_id": booking.booking_code,
+                "whatsapp_accept_url": f"{base_url}/driver/whatsapp/bookings/{booking.booking_code}/accept",
+                "whatsapp_reject_url": f"{base_url}/driver/whatsapp/bookings/{booking.booking_code}/reject",
             },
         )
 
@@ -144,8 +157,24 @@ def notify_booking_cancelled(db: Session, booking: Booking, reason: str, cancell
         "cancelled_by": cancelled_by,
         "reason": reason,
     }
-    log_whatsapp(db, passenger, booking, "passenger_booking_cancelled", payload)
+    passenger_template = "passenger_driver_cancelled" if cancelled_by == "driver" else "passenger_booking_cancelled"
+    log_whatsapp(db, passenger, booking, passenger_template, payload)
     log_whatsapp(db, driver, booking, "driver_booking_cancelled", payload)
+
+
+def notify_booking_rejected_by_driver(db: Session, booking: Booking, reason: str) -> None:
+    ride = booking.ride
+    payload = {
+        "booking_id": booking.booking_code,
+        "route": f"{ride.source_city} to {ride.destination_city}",
+        "journey_date": ride.journey_date.isoformat(),
+        "journey_time": ride.departure_time.isoformat(),
+        "pickup_point": booking.pickup_point,
+        "drop_off_point": booking.drop_point,
+        "seats_booked": booking.seats_booked,
+        "reason": reason,
+    }
+    log_whatsapp(db, booking.passenger, booking, "passenger_driver_cancelled", payload)
 
 
 def notify_ride_cancelled(db: Session, ride, reason: str) -> None:

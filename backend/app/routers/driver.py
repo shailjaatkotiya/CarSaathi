@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import Booking, BookingStatus, CancellationReason, Ride, RideDropPoint, RidePickupPoint, RideStatus, User, Vehicle
-from app.schemas import BookingOut, CancellationRequest, RideCreate, RideOut, VehicleCreate, VehicleOut
-from app.services.whatsapp import notify_booking_created, notify_ride_cancelled
+from app.schemas import BookingOut, CancellationRequest, DriverBookingOut, RideCreate, RideOut, VehicleCreate, VehicleOut
+from app.services.whatsapp import notify_booking_created, notify_booking_rejected_by_driver, notify_ride_cancelled
 from app.utils.serializers import ride_to_out
 
 router = APIRouter(prefix="/driver", tags=["driver"])
@@ -84,7 +84,7 @@ def generated_vehicle_number(driver: User) -> str:
 
 
 def has_car_details(payload: RideCreate) -> bool:
-    return any(
+    return all(
         clean_optional(value)
         for value in [
             payload.car_brand,
@@ -94,6 +94,17 @@ def has_car_details(payload: RideCreate) -> bool:
             payload.car_type,
         ]
     )
+
+
+def default_available_seats(car_type: str | None) -> int:
+    normalized = (car_type or "").strip().lower()
+    if "7" in normalized:
+        return 6
+    return 3
+
+
+def cap_available_seats(ride: Ride) -> None:
+    ride.available_seats = min(ride.available_seats, ride.total_seats)
 
 
 def apply_vehicle_details(vehicle: Vehicle, payload: RideCreate) -> None:
@@ -114,9 +125,10 @@ def apply_vehicle_details(vehicle: Vehicle, payload: RideCreate) -> None:
 def resolve_ride_vehicle(db: Session, driver: User, payload: RideCreate) -> Vehicle:
     if payload.vehicle_id is not None:
         vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
-        if vehicle:
-            apply_vehicle_details(vehicle, payload)
-            return vehicle
+        if not vehicle:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected vehicle was not found for this driver")
+        apply_vehicle_details(vehicle, payload)
+        return vehicle
 
     vehicle_number = clean_optional(payload.vehicle_number)
     normalized_number = vehicle_number.upper() if vehicle_number else None
@@ -129,29 +141,16 @@ def resolve_ride_vehicle(db: Session, driver: User, payload: RideCreate) -> Vehi
             apply_vehicle_details(existing_vehicle, payload)
             return existing_vehicle
 
-    if has_car_details(payload):
-        vehicle = Vehicle(
-            driver_id=driver.id,
-            brand=clean_optional(payload.car_brand) or "Car details",
-            model=clean_optional(payload.car_model) or "to be added",
-            vehicle_number=normalized_number or generated_vehicle_number(driver),
-            fuel_type=clean_optional(payload.fuel_type) or "To be added",
-            car_type=clean_optional(payload.car_type) or "To be added",
-            seats=payload.car_seats or payload.available_seats,
-            photo_urls="",
-        )
-        db.add(vehicle)
-        db.flush()
-        return vehicle
-
+    if not has_car_details(payload):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Car brand, model, number, fuel type, and category are required before publishing a ride")
     vehicle = Vehicle(
         driver_id=driver.id,
-        brand="Car details",
-        model="to be added",
-        vehicle_number=generated_vehicle_number(driver),
-        fuel_type="To be added",
-        car_type="To be added",
-        seats=payload.available_seats,
+        brand=clean_optional(payload.car_brand) or "",
+        model=clean_optional(payload.car_model) or "",
+        vehicle_number=normalized_number or generated_vehicle_number(driver),
+        fuel_type=clean_optional(payload.fuel_type) or "",
+        car_type=clean_optional(payload.car_type) or "",
+        seats=payload.car_seats or default_available_seats(payload.car_type),
         photo_urls="",
     )
     db.add(vehicle)
@@ -200,8 +199,12 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 def create_ride(payload: RideCreate, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> RideOut:
     validate_stop_counts(payload)
     vehicle = resolve_ride_vehicle(db, driver, payload)
-    if payload.available_seats > vehicle.seats:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Available seats exceed vehicle capacity")
+    max_available_seats = default_available_seats(vehicle.car_type)
+    if payload.available_seats > max_available_seats:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{vehicle.car_type} rides can publish up to {max_available_seats} passenger seats",
+        )
     validate_publish_window(payload)
     route_key = f"{payload.source_city.lower()}:{payload.destination_city.lower()}"
     validate_route_frequency(db, driver, route_key, payload)
@@ -258,12 +261,31 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depen
     return {"message": "Ride cancelled"}
 
 
-@router.get("/rides/{ride_id}/bookings", response_model=list[BookingOut])
-def ride_bookings(ride_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Booking]:
+@router.get("/rides/{ride_id}/bookings", response_model=list[DriverBookingOut])
+def ride_bookings(ride_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[DriverBookingOut]:
     ride = db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver.id).first()
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
-    return ride.bookings
+    return [driver_booking_to_out(booking) for booking in ride.bookings]
+
+
+def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
+    return DriverBookingOut(
+        id=booking.id,
+        booking_code=booking.booking_code,
+        ride_id=booking.ride_id,
+        passenger_id=booking.passenger_id,
+        driver_id=booking.driver_id,
+        driver_name=booking.driver_name,
+        route=booking.route,
+        seats_booked=booking.seats_booked,
+        pickup_point=booking.pickup_point,
+        drop_point=booking.drop_point,
+        status=booking.status,
+        total_amount=booking.total_amount,
+        passenger_name=booking.passenger.full_name,
+        passenger_whatsapp=booking.passenger.whatsapp_number,
+    )
 
 
 @router.get("/bookings/active")
@@ -294,13 +316,35 @@ def active_driver_bookings(driver: User = Depends(get_current_user), db: Session
     ]
 
 
+def apply_booking_acceptance(db: Session, booking: Booking) -> Booking:
+    if booking.status == BookingStatus.confirmed:
+        return booking
+    if booking.status != BookingStatus.pending:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending bookings can be accepted")
+    booking.status = BookingStatus.confirmed
+    notify_booking_created(db, booking, notify_driver=False)
+    return booking
+
+
+def apply_booking_rejection(db: Session, booking: Booking, reason: str) -> Booking:
+    if booking.status in {BookingStatus.rejected, BookingStatus.cancelled}:
+        return booking
+    if booking.status not in {BookingStatus.pending, BookingStatus.confirmed}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only pending or confirmed bookings can be rejected")
+    booking.ride.available_seats += booking.seats_booked
+    cap_available_seats(booking.ride)
+    booking.status = BookingStatus.rejected
+    booking.cancellation_reason = reason
+    notify_booking_rejected_by_driver(db, booking, reason)
+    return booking
+
+
 @router.post("/bookings/{booking_id}/accept", response_model=BookingOut)
 def accept_booking(booking_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
     booking = db.query(Booking).join(Ride).filter(Booking.id == booking_id, Ride.driver_id == driver.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    booking.status = BookingStatus.confirmed
-    notify_booking_created(db, booking, notify_driver=False)
+    apply_booking_acceptance(db, booking)
     db.commit()
     db.refresh(booking)
     return booking
@@ -311,9 +355,29 @@ def reject_booking(booking_id: int, driver: User = Depends(get_current_user), db
     booking = db.query(Booking).join(Ride).filter(Booking.id == booking_id, Ride.driver_id == driver.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    if booking.status in {BookingStatus.pending, BookingStatus.confirmed}:
-        booking.ride.available_seats += booking.seats_booked
-    booking.status = BookingStatus.rejected
+    apply_booking_rejection(db, booking, "Driver rejected the booking from the application")
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+@router.get("/whatsapp/bookings/{booking_code}/accept", response_model=BookingOut)
+def accept_booking_from_whatsapp(booking_code: str, db: Session = Depends(get_db)) -> Booking:
+    booking = db.query(Booking).filter(Booking.booking_code == booking_code).first()
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    apply_booking_acceptance(db, booking)
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
+@router.get("/whatsapp/bookings/{booking_code}/reject", response_model=BookingOut)
+def reject_booking_from_whatsapp(booking_code: str, db: Session = Depends(get_db)) -> Booking:
+    booking = db.query(Booking).filter(Booking.booking_code == booking_code).first()
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    apply_booking_rejection(db, booking, "Driver rejected the booking from WhatsApp")
     db.commit()
     db.refresh(booking)
     return booking

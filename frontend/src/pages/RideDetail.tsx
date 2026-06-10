@@ -23,7 +23,7 @@ export default function RideDetail() {
   const [message, setMessage] = useState("");
   const token = useSessionStore((state) => state.token);
   const navigate = useNavigate();
-  const { data: ride } = useQuery({
+  const { data: ride, refetch } = useQuery({
     queryKey: ["ride", rideId],
     queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
   });
@@ -51,6 +51,7 @@ export default function RideDetail() {
       drop_point: drop || ride.drop_points[0]
     });
     setMessage(`Booking ${data.booking_code} created with ${data.status} status.`);
+    await refetch();
   }
 
   if (!ride) {
@@ -77,9 +78,19 @@ export default function RideDetail() {
                 {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
               </p>
             </div>
-            <div className="min-w-[170px] rounded-xl bg-primary-soft p-4">
-              <p className="text-xs font-bold text-primary">Price per seat</p>
-              <p className="text-3xl font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="min-w-[150px] rounded-xl bg-primary-soft p-4">
+                <p className="text-xs font-bold text-primary">Date</p>
+                <p className="text-2xl font-bold text-primary-dark">{ride.journey_date}</p>
+              </div>
+              <div className="min-w-[150px] rounded-xl bg-primary-soft p-4">
+                <p className="text-xs font-bold text-primary">Time</p>
+                <p className="text-2xl font-bold text-primary-dark">{ride.departure_time.slice(0, 5)}</p>
+              </div>
+              <div className="min-w-[170px] rounded-xl bg-primary-soft p-4">
+                <p className="text-xs font-bold text-primary">Price per seat</p>
+                <p className="text-3xl font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
+              </div>
             </div>
           </div>
 
@@ -128,7 +139,7 @@ export default function RideDetail() {
               </div>
 
               <div className="card p-5 shadow-none">
-                <h3 className="font-bold">Driver instructions</h3>
+                <h3 className="font-bold">Ride instructions</h3>
                 <div className="mt-4 flex flex-col gap-2">
                   {instructionLines.map((instruction) => (
                     <div key={instruction} className="flex items-center gap-2">
@@ -204,7 +215,7 @@ export default function RideDetail() {
                 </button>
                 <hr className="border-sand" />
                 <p className="text-sm text-muted">
-                  {ride.available_seats} seats available. WhatsApp details are shared after confirmation.
+                  {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
                 </p>
                 {message && <p className="alert-success">{message}</p>}
               </div>

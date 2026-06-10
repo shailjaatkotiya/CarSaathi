@@ -202,6 +202,11 @@ class BookingOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class DriverBookingOut(BookingOut):
+    passenger_name: str
+    passenger_whatsapp: str | None = None
+
+
 class CancellationRequest(BaseModel):
     reason: str
 

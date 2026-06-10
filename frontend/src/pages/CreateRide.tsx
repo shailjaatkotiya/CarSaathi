@@ -2,7 +2,7 @@ import { Car, CalendarCheck, ListChecks, Route as RouteIcon } from "lucide-react
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
@@ -18,13 +18,12 @@ const rideRules = [
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
 
-type CarMode = "profile" | "saved" | "new" | "skip";
+type CarMode = "profile" | "saved" | "new";
 
 const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
   { value: "profile", label: "Use car from my profile", hint: "Reuse the personal car saved in your profile" },
   { value: "saved", label: "Pick a saved vehicle", hint: "Choose one of the vehicles you added earlier" },
-  { value: "new", label: "Add new car", hint: "Type fresh car details for this ride" },
-  { value: "skip", label: "Skip for now", hint: "Publish without car details and add them later" }
+  { value: "new", label: "Add new car", hint: "Type fresh car details for this ride" }
 ];
 
 type SavedVehicle = {
@@ -39,6 +38,20 @@ type SavedVehicle = {
 
 function formatRuleLabel(value: string) {
   return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
+}
+
+function defaultAvailableSeats(carType?: string | null) {
+  return carType?.toLowerCase().includes("7") ? 6 : 3;
+}
+
+function isCompleteCar(details?: {
+  brand?: string | null;
+  model?: string | null;
+  number?: string | null;
+  fuel?: string | null;
+  category?: string | null;
+} | null) {
+  return Boolean(details?.brand && details.model && details.number && details.fuel && details.category);
 }
 
 function FormSection({ title, subtitle, icon, children }: { title: string; subtitle: string; icon: ReactNode; children: ReactNode }) {
@@ -60,6 +73,8 @@ export default function CreateRide() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [carMode, setCarMode] = useState<CarMode>("new");
+  const [newCarType, setNewCarType] = useState("Sedan");
+  const [availableSeats, setAvailableSeats] = useState(3);
   const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const token = useSessionStore((state) => state.token);
@@ -90,6 +105,10 @@ export default function CreateRide() {
           seats: me.personal_car_seats || null
         }
       : null;
+  const selectedVehicle = savedVehicles?.find((vehicle) => vehicle.id === selectedVehicleId);
+  const selectedCarType =
+    carMode === "saved" ? selectedVehicle?.car_type : carMode === "profile" ? profileCar?.category : newCarType;
+  const maxAvailableSeats = defaultAvailableSeats(selectedCarType);
   const [extraInstructions, setExtraInstructions] = useState("Please be on time. Call before reaching pickup point.");
   const defaultRideDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const instructionText = [
@@ -100,6 +119,10 @@ export default function CreateRide() {
       .filter(Boolean)
       .map((line) => `- ${line.replace(/^-+\s*/, "")}`)
   ].join("\n");
+
+  useEffect(() => {
+    setAvailableSeats(defaultAvailableSeats(selectedCarType));
+  }, [selectedCarType]);
 
   function toggleRule(value: string, checked: boolean) {
     setSelectedRules((current) => {
@@ -127,6 +150,29 @@ export default function CreateRide() {
       return;
     }
 
+    if (carMode === "profile" && !isCompleteCar(profileCar)) {
+      setError("Your profile car must include brand, model, vehicle number, fuel type, and category before publishing.");
+      return;
+    }
+
+    if (availableSeats > maxAvailableSeats) {
+      setError(`${selectedCarType || "This car"} can publish up to ${maxAvailableSeats} passenger seats.`);
+      return;
+    }
+
+    const newCarDetails = {
+      car_brand: String(payload.car_brand ?? "").trim(),
+      car_model: String(payload.car_model ?? "").trim(),
+      vehicle_number: String(payload.vehicle_number ?? "").trim(),
+      fuel_type: String(payload.fuel_type ?? "").trim(),
+      car_type: newCarType
+    };
+
+    if (carMode === "new" && !Object.values(newCarDetails).every(Boolean)) {
+      setError("Please enter complete car details before publishing the ride.");
+      return;
+    }
+
     const carDetails =
       carMode === "saved" && selectedVehicleId
         ? { vehicle_id: selectedVehicleId }
@@ -137,17 +183,12 @@ export default function CreateRide() {
             vehicle_number: profileCar.number || null,
             fuel_type: profileCar.fuel || null,
             car_type: profileCar.category || null,
-            car_seats: profileCar.seats
+            car_seats: defaultAvailableSeats(profileCar.category)
           }
-        : carMode === "new"
-        ? {
-            car_brand: String(payload.car_brand ?? "").trim() || null,
-            car_model: String(payload.car_model ?? "").trim() || null,
-            vehicle_number: String(payload.vehicle_number ?? "").trim() || null,
-            fuel_type: payload.fuel_type || null,
-            car_type: payload.car_type || null
-          }
-        : {};
+        : {
+            ...newCarDetails,
+            car_seats: defaultAvailableSeats(newCarType)
+          };
 
     try {
       const { data } = await api.post("/driver/rides", {
@@ -157,7 +198,7 @@ export default function CreateRide() {
         distance_km: Number(payload.distance_km),
         journey_date: payload.journey_date,
         departure_time: payload.departure_time,
-        available_seats: Number(payload.available_seats),
+        available_seats: availableSeats,
         price_per_seat: Number(payload.price_per_seat),
         pickup_points: pickupPoints,
         drop_points: dropPoints,
@@ -183,8 +224,8 @@ export default function CreateRide() {
         <div>
           <h1 className="text-3xl font-bold md:text-5xl">Driver - Publish New Ride</h1>
           <p className="mt-2 max-w-3xl text-muted">
-            Fill the labelled fields below. Car details are optional: use the car saved in your profile, add a new one,
-            or skip and publish without them.
+            Fill the labelled fields below. Car details are required: use the car saved in your profile, choose a saved
+            vehicle, or add a new car for this ride.
           </p>
         </div>
         <p className="alert-info">
@@ -192,7 +233,7 @@ export default function CreateRide() {
           required.
         </p>
 
-        <FormSection title="Car details" subtitle="Pick your profile car, add a new one, or skip and publish without car details." icon={<Car size={20} />}>
+        <FormSection title="Car details" subtitle="Pick your profile car, choose a saved vehicle, or add a new car before publishing." icon={<Car size={20} />}>
           <div className="grid gap-3 sm:grid-cols-3">
             {carModeOptions.map((option) => (
               <button
@@ -234,7 +275,12 @@ export default function CreateRide() {
                   <Link to="/profile" className="font-bold underline">
                     Add it in My Profile
                   </Link>{" "}
-                  or pick another option. Publishing still works without car details.
+                  or pick another option.
+                </p>
+              )}
+              {profileCar && !isCompleteCar(profileCar) && (
+                <p className="alert-warning mt-4">
+                  Complete brand, model, vehicle number, fuel type, and category in your profile before using this car.
                 </p>
               )}
             </div>
@@ -281,22 +327,22 @@ export default function CreateRide() {
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <label>
                 <span className="field-label">Car brand</span>
-                <input className="input" name="car_brand" defaultValue="Maruti Suzuki" />
+                <input className="input" name="car_brand" defaultValue="Maruti Suzuki" required />
                 <span className="field-hint">Example: Maruti Suzuki, Hyundai</span>
               </label>
               <label>
                 <span className="field-label">Car model</span>
-                <input className="input" name="car_model" defaultValue="Swift Dzire" />
+                <input className="input" name="car_model" defaultValue="Swift Dzire" required />
                 <span className="field-hint">Example: Swift Dzire, Creta</span>
               </label>
               <label>
                 <span className="field-label">Vehicle number</span>
-                <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
+                <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" required />
                 <span className="field-hint">Shown after confirmed booking</span>
               </label>
               <label>
                 <span className="field-label">Fuel type</span>
-                <select className="input" name="fuel_type" defaultValue="Petrol">
+                <select className="input" name="fuel_type" defaultValue="Petrol" required>
                   <option value="Petrol">Petrol</option>
                   <option value="CNG">CNG</option>
                   <option value="EV">EV</option>
@@ -306,7 +352,7 @@ export default function CreateRide() {
               </label>
               <label>
                 <span className="field-label">Car category</span>
-                <select className="input" name="car_type" defaultValue="Sedan">
+                <select className="input" name="car_type" value={newCarType} onChange={(event) => setNewCarType(event.target.value)} required>
                   <option value="SUV">SUV</option>
                   <option value="Sedan">Sedan</option>
                   <option value="7 Seater">7 Seater</option>
@@ -316,17 +362,21 @@ export default function CreateRide() {
             </div>
           )}
 
-          {carMode === "skip" && (
-            <p className="alert-info mt-4">
-              Ride will publish without car details. You can add the car later from My Profile or the Add Vehicle page.
-            </p>
-          )}
-
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <label>
               <span className="field-label">Available seats</span>
-              <input className="input" name="available_seats" defaultValue="3" />
-              <span className="field-hint">Seats passengers can book</span>
+              <input
+                className="input"
+                name="available_seats"
+                type="number"
+                min={1}
+                max={maxAvailableSeats}
+                value={availableSeats}
+                onChange={(event) => setAvailableSeats(Number(event.target.value))}
+              />
+              <span className="field-hint">
+                {selectedCarType?.toLowerCase().includes("7") ? "7 Seater default is 6 passenger seats" : "Sedan and SUV default is 3 passenger seats"}
+              </span>
             </label>
           </div>
         </FormSection>
@@ -396,7 +446,7 @@ export default function CreateRide() {
           </div>
         </FormSection>
 
-        <FormSection title="Passenger instructions" subtitle="Clear rules reduce friction before booking." icon={<ListChecks size={20} />}>
+        <FormSection title="Ride instructions" subtitle="Clear ride rules reduce friction before booking." icon={<ListChecks size={20} />}>
           <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
             {rideRules.map((rule) => (
               <label key={rule.value} className="flex cursor-pointer items-center gap-2 rounded-xl border border-sand p-3 text-sm font-semibold">
@@ -412,7 +462,7 @@ export default function CreateRide() {
           </div>
           <div className="mt-4 flex flex-col gap-4">
             <label>
-              <span className="field-label">Extra driver instructions</span>
+              <span className="field-label">Extra ride instructions</span>
               <textarea
                 className="input"
                 rows={2}
@@ -422,7 +472,7 @@ export default function CreateRide() {
               <span className="field-hint">Add any extra note passengers must read before booking.</span>
             </label>
             <label>
-              <span className="field-label">Instructions field shown to passengers</span>
+              <span className="field-label">Ride instructions shown to passengers</span>
               <textarea className="input" name="driver_instructions_preview" rows={5} value={instructionText} readOnly />
               <span className="field-hint">Selected passenger instruction pointers are added here as bullet points.</span>
             </label>

@@ -4,9 +4,9 @@ import { useRef, useState } from "react";
 import { api } from "../api/client";
 
 const categories = [
-  { value: "Mini", icon: "M", hint: "Small city-friendly car" },
-  { value: "Sedan", icon: "S", hint: "Comfortable intercity car" },
-  { value: "7 Seater", icon: "7", hint: "Large family/group car" }
+  { value: "Sedan", icon: "S", hint: "Default 3 passenger seats" },
+  { value: "SUV", icon: "SUV", hint: "Default 3 passenger seats" },
+  { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" }
 ];
 
 type Vehicle = {
@@ -21,9 +21,14 @@ type Vehicle = {
   is_verified: boolean;
 };
 
+function defaultPassengerSeats(carType: string) {
+  return carType.toLowerCase().includes("7") ? 6 : 3;
+}
+
 export default function AddVehicle() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Sedan");
+  const [passengerSeats, setPassengerSeats] = useState(defaultPassengerSeats("Sedan"));
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -32,9 +37,15 @@ export default function AddVehicle() {
     queryFn: async () => (await api.get<Vehicle[]>("/driver/vehicles")).data
   });
 
+  function chooseCategory(value: string) {
+    setCategory(value);
+    setPassengerSeats(defaultPassengerSeats(value));
+  }
+
   function startEdit(vehicle: Vehicle) {
     setEditingVehicle(vehicle);
     setCategory(vehicle.car_type);
+    setPassengerSeats(vehicle.seats);
     setMessage("");
     const form = formRef.current;
     if (form) {
@@ -42,7 +53,6 @@ export default function AddVehicle() {
       (form.elements.namedItem("model") as HTMLInputElement).value = vehicle.model;
       (form.elements.namedItem("vehicle_number") as HTMLInputElement).value = vehicle.vehicle_number;
       (form.elements.namedItem("fuel_type") as HTMLSelectElement).value = vehicle.fuel_type;
-      (form.elements.namedItem("seats") as HTMLInputElement).value = String(vehicle.seats);
       form.scrollIntoView({ behavior: "smooth" });
     }
   }
@@ -51,7 +61,7 @@ export default function AddVehicle() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    const body = { ...payload, car_type: category, seats: Number(payload.seats), photo_urls: [] };
+    const body = { ...payload, car_type: category, seats: passengerSeats, photo_urls: [] };
     if (editingVehicle) {
       await api.put(`/driver/vehicles/${editingVehicle.id}`, body);
       setMessage("Vehicle updated.");
@@ -74,19 +84,19 @@ export default function AddVehicle() {
           <div className="grid gap-4 sm:grid-cols-2">
             <label>
               <span className="field-label">Brand</span>
-              <input className="input" name="brand" defaultValue="Maruti Suzuki" />
+              <input className="input" name="brand" defaultValue="Maruti Suzuki" required />
             </label>
             <label>
               <span className="field-label">Model</span>
-              <input className="input" name="model" defaultValue="Swift Dzire" />
+              <input className="input" name="model" defaultValue="Swift Dzire" required />
             </label>
             <label>
               <span className="field-label">Vehicle number</span>
-              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" />
+              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" required />
             </label>
             <label>
               <span className="field-label">Fuel type</span>
-              <select className="input" name="fuel_type" defaultValue="Petrol">
+              <select className="input" name="fuel_type" defaultValue="Petrol" required>
                 <option value="Petrol">Petrol</option>
                 <option value="Diesel">Diesel</option>
                 <option value="CNG">CNG</option>
@@ -94,8 +104,17 @@ export default function AddVehicle() {
               </select>
             </label>
             <label>
-              <span className="field-label">Seats</span>
-              <input className="input" name="seats" defaultValue="4" />
+              <span className="field-label">Passenger seats</span>
+              <input
+                className="input"
+                name="seats"
+                type="number"
+                min={1}
+                max={defaultPassengerSeats(category)}
+                value={passengerSeats}
+                onChange={(event) => setPassengerSeats(Number(event.target.value))}
+              />
+              <span className="field-hint">{category === "7 Seater" ? "7 Seater default is 6" : "Sedan and SUV default is 3"}</span>
             </label>
           </div>
 
@@ -106,7 +125,7 @@ export default function AddVehicle() {
                 <button
                   key={item.value}
                   type="button"
-                  onClick={() => setCategory(item.value)}
+                  onClick={() => chooseCategory(item.value)}
                   className={`rounded-xl border p-4 text-left transition ${
                     category === item.value
                       ? "border-primary bg-primary text-white"
@@ -114,7 +133,7 @@ export default function AddVehicle() {
                   }`}
                 >
                   <p className="font-bold">
-                    {item.icon} · {item.value}
+                    {item.icon} - {item.value}
                   </p>
                   <p className="mt-1 inline-flex items-center gap-1 text-xs">
                     <Fuel size={12} /> Fuel type selected above
@@ -146,10 +165,10 @@ export default function AddVehicle() {
             <div>
               <p className="inline-flex items-center gap-2 font-semibold">
                 <Car size={16} className="text-primary" />
-                {vehicle.brand} {vehicle.model} · {vehicle.vehicle_number}
+                {vehicle.brand} {vehicle.model} - {vehicle.vehicle_number}
               </p>
               <p className="text-sm text-muted">
-                {vehicle.car_type} · {vehicle.fuel_type} · {vehicle.seats} seats
+                {vehicle.car_type} - {vehicle.fuel_type} - {vehicle.seats} passenger seats
               </p>
             </div>
             <div className="flex items-center gap-2">
