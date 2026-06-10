@@ -28,6 +28,12 @@ class BookingStatus(str, enum.Enum):
     completed = "completed"
 
 
+class UserRole(str, enum.Enum):
+    admin = "admin"
+    driver = "driver"
+    passenger = "passenger"
+
+
 class NotificationStatus(str, enum.Enum):
     sent = "sent"
     failed = "failed"
@@ -41,6 +47,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.passenger)
     age: Mapped[int | None] = mapped_column(Integer)
     mobile_number: Mapped[str | None] = mapped_column(String(20))
     whatsapp_number: Mapped[str | None] = mapped_column(String(20))

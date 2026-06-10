@@ -3,7 +3,18 @@ from datetime import date, time, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
-from app.models import AdminUser, DriverProfile, PassengerProfile, Ride, RideDropPoint, RidePickupPoint, User, Vehicle, VerificationStatus
+from app.models import AdminUser, DriverProfile, PassengerProfile, Ride, RideDropPoint, RidePickupPoint, User, UserRole, Vehicle, VerificationStatus
+
+
+DRIVER_DEMO_EMAILS = {
+    "shubham@gmail.com",
+    "aarav.driver@carsaathi.in",
+    "mehul.driver@carsaathi.in",
+    "rohan.driver@carsaathi.in",
+    "nikhil.driver@carsaathi.in",
+}
+
+PASSENGER_DEMO_EMAILS = {"shailja@gmail.com"}
 
 
 def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str) -> str:
@@ -24,30 +35,44 @@ def ensure_default_admin(db: Session) -> None:
             full_name="RideSaathi Admin",
             email="admin@ridesaathi.in",
             password_hash=hash_password("Admin@123"),
+            role=UserRole.admin,
             verification_status=VerificationStatus.verified,
         )
         db.add(admin)
         db.flush()
+    admin.role = UserRole.admin
     if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
         db.add(AdminUser(user_id=admin.id))
-        db.commit()
+    db.commit()
+
+
+def ensure_demo_roles(db: Session) -> None:
+    for user in db.query(User).all():
+        if user.email in DRIVER_DEMO_EMAILS:
+            user.role = UserRole.driver
+        elif user.email in PASSENGER_DEMO_EMAILS:
+            user.role = UserRole.passenger
+    db.commit()
 
 
 def seed_database(db: Session) -> None:
     if db.query(User).first():
         ensure_default_admin(db)
+        ensure_demo_roles(db)
         return
 
     shubham = User(
         full_name="Shubham",
         email="shubham@gmail.com",
         password_hash=hash_password("driver@123"),
+        role=UserRole.driver,
         verification_status=VerificationStatus.pending,
     )
     shailja = User(
         full_name="Shailja",
         email="shailja@gmail.com",
         password_hash=hash_password("passenger@123"),
+        role=UserRole.passenger,
         verification_status=VerificationStatus.pending,
     )
     dummy_drivers = [
@@ -55,6 +80,7 @@ def seed_database(db: Session) -> None:
             full_name="Aarav Patel",
             email="aarav.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.8,
             rating_count=26,
@@ -63,6 +89,7 @@ def seed_database(db: Session) -> None:
             full_name="Mehul Shah",
             email="mehul.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.6,
             rating_count=19,
@@ -71,6 +98,7 @@ def seed_database(db: Session) -> None:
             full_name="Rohan Trivedi",
             email="rohan.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.9,
             rating_count=34,
@@ -79,6 +107,7 @@ def seed_database(db: Session) -> None:
             full_name="Nikhil Desai",
             email="nikhil.driver@carsaathi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.7,
             rating_count=22,
@@ -88,7 +117,7 @@ def seed_database(db: Session) -> None:
     db.add_all(users)
     db.flush()
 
-    for driver in [shubham, shailja, *dummy_drivers]:
+    for driver in [shubham, *dummy_drivers]:
         db.add(
             DriverProfile(
                 user_id=driver.id,
@@ -99,7 +128,7 @@ def seed_database(db: Session) -> None:
                 total_earnings=0 if driver is shubham else 22000 + driver.id * 1200,
             )
         )
-        db.add(PassengerProfile(user_id=driver.id))
+    db.add(PassengerProfile(user_id=shailja.id))
     ensure_default_admin(db)
 
     vehicles = [

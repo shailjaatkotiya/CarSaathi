@@ -2,7 +2,7 @@ from datetime import date, time
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models import BookingStatus, RideStatus, VerificationStatus
+from app.models import BookingStatus, RideStatus, UserRole, VerificationStatus
 
 
 class TokenResponse(BaseModel):
@@ -15,6 +15,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     whatsapp_number: str | None = None
+    role: UserRole = UserRole.passenger
 
     @field_validator("full_name")
     @classmethod
@@ -37,10 +38,18 @@ class RegisterRequest(BaseModel):
         value = value.strip()
         return value or None
 
+    @field_validator("role")
+    @classmethod
+    def reject_public_admin_registration(cls, value: UserRole) -> UserRole:
+        if value == UserRole.admin:
+            raise ValueError("Admin accounts cannot be created from public signup")
+        return value
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    role: UserRole | None = None
 
     @field_validator("email")
     @classmethod
@@ -52,6 +61,7 @@ class UserOut(BaseModel):
     id: int
     full_name: str
     email: EmailStr
+    role: UserRole
     age: int | None
     whatsapp_number: str | None
     personal_car_brand: str | None

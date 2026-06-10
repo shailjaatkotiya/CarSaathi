@@ -23,6 +23,7 @@ def ensure_runtime_schema() -> None:
     if not settings.database_url.startswith("sqlite"):
         return
     user_columns = {
+        "role": "VARCHAR(20) DEFAULT 'passenger'",
         "age": "INTEGER",
         "personal_car_brand": "VARCHAR(80)",
         "personal_car_model": "VARCHAR(80)",
@@ -31,16 +32,11 @@ def ensure_runtime_schema() -> None:
         "personal_car_category": "VARCHAR(40)",
         "personal_car_seats": "INTEGER",
     }
-    # Columns removed from the User model; old DB files may still carry them
-    # with NOT NULL constraints that break inserts.
-    legacy_user_columns = {"role"}
     with engine.begin() as connection:
         existing_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(users)"))}
         for column_name, column_type in user_columns.items():
             if column_name not in existing_columns:
                 connection.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
-        for column_name in legacy_user_columns & existing_columns:
-            connection.execute(text(f"ALTER TABLE users DROP COLUMN {column_name}"))
 
 
 def get_db() -> Generator[Session, None, None]:

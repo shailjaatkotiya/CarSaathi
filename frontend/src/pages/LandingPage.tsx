@@ -1,7 +1,6 @@
 import { ArrowRight, BadgeCheck, Car, Map, Shield, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const heroImage = "https://commons.wikimedia.org/wiki/Special:FilePath/2019_Honda_City_E_(Indonesia)_front_view.jpg?width=1400";
+import CarScene from "../components/CarScene";
 
 const routes = [
   { route: "Ahmedabad to Rajkot", price: "Rs. 300-350", distance: "220-250 km", points: "Iscon, SG Highway, Bopal" },
@@ -57,18 +56,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="card overflow-hidden rounded-3xl">
-            <div
-              className="relative min-h-[260px] bg-cover bg-center md:min-h-[390px]"
-              style={{
-                backgroundImage: `linear-gradient(180deg, rgba(44,51,36,0.03), rgba(44,51,36,0.28)), url("${heroImage}")`
-              }}
-            >
-              <span className="absolute left-4 top-4 rounded-full bg-cream/90 px-3 py-1 text-xs font-bold backdrop-blur">
-                Honda City style sedan
-              </span>
+          <div className="overflow-hidden rounded-3xl">
+            <div className="relative min-h-[260px] overflow-hidden rounded-t-3xl md:min-h-[390px]">
+              <CarScene />
             </div>
-            <div className="flex flex-col gap-3 p-5">
+            {/* <div className="flex flex-col gap-3 p-5">
               {routes.map((item) => (
                 <div key={item.route} className="rounded-xl border border-sand p-4">
                   <div className="flex justify-between gap-4">
@@ -80,7 +72,7 @@ export default function LandingPage() {
                   </p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import require_driver
 from app.models import Booking, BookingStatus, CancellationReason, Ride, RideDropPoint, RidePickupPoint, RideStatus, User, Vehicle
 from app.schemas import BookingOut, CancellationRequest, DriverBookingOut, RideCreate, RideOut, VehicleCreate, VehicleOut
 from app.services.whatsapp import notify_booking_created, notify_booking_rejected_by_driver, notify_ride_cancelled
@@ -159,7 +159,7 @@ def resolve_ride_vehicle(db: Session, driver: User, payload: RideCreate) -> Vehi
 
 
 @router.post("/vehicles", response_model=VehicleOut)
-def add_vehicle(payload: VehicleCreate, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Vehicle:
+def add_vehicle(payload: VehicleCreate, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> Vehicle:
     vehicle = Vehicle(
         driver_id=driver.id,
         brand=payload.brand,
@@ -177,12 +177,12 @@ def add_vehicle(payload: VehicleCreate, driver: User = Depends(get_current_user)
 
 
 @router.get("/vehicles", response_model=list[VehicleOut])
-def list_vehicles(driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Vehicle]:
+def list_vehicles(driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> list[Vehicle]:
     return db.query(Vehicle).filter(Vehicle.driver_id == driver.id).all()
 
 
 @router.put("/vehicles/{vehicle_id}", response_model=VehicleOut)
-def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Vehicle:
+def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> Vehicle:
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id, Vehicle.driver_id == driver.id).first()
     if not vehicle:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
@@ -196,7 +196,7 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 
 
 @router.post("/rides", response_model=RideOut)
-def create_ride(payload: RideCreate, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> RideOut:
+def create_ride(payload: RideCreate, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> RideOut:
     if not (driver.whatsapp_number and driver.whatsapp_number.strip()):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -204,6 +204,8 @@ def create_ride(payload: RideCreate, driver: User = Depends(get_current_user), d
         )
     validate_stop_counts(payload)
     vehicle = resolve_ride_vehicle(db, driver, payload)
+    if payload.available_seats < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Minimum 1 seat must be available before publishing")
     max_available_seats = default_available_seats(vehicle.car_type)
     if payload.available_seats > max_available_seats:
         raise HTTPException(
@@ -242,13 +244,13 @@ def create_ride(payload: RideCreate, driver: User = Depends(get_current_user), d
 
 
 @router.get("/rides", response_model=list[RideOut])
-def my_rides(driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[RideOut]:
+def my_rides(driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> list[RideOut]:
     rides = db.query(Ride).filter(Ride.driver_id == driver.id).order_by(Ride.journey_date.desc()).all()
     return [ride_to_out(ride) for ride in rides]
 
 
 @router.post("/rides/{ride_id}/cancel")
-def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> dict:
     ride = db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver.id).first()
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
@@ -267,7 +269,7 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depen
 
 
 @router.get("/rides/{ride_id}/bookings", response_model=list[DriverBookingOut])
-def ride_bookings(ride_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[DriverBookingOut]:
+def ride_bookings(ride_id: int, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> list[DriverBookingOut]:
     ride = db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver.id).first()
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
@@ -294,7 +296,7 @@ def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
 
 
 @router.get("/bookings/active")
-def active_driver_bookings(driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[dict]:
+def active_driver_bookings(driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> list[dict]:
     bookings = (
         db.query(Booking)
         .join(Ride)
@@ -345,7 +347,7 @@ def apply_booking_rejection(db: Session, booking: Booking, reason: str) -> Booki
 
 
 @router.post("/bookings/{booking_id}/accept", response_model=BookingOut)
-def accept_booking(booking_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
+def accept_booking(booking_id: int, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> Booking:
     booking = db.query(Booking).join(Ride).filter(Booking.id == booking_id, Ride.driver_id == driver.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -356,7 +358,7 @@ def accept_booking(booking_id: int, driver: User = Depends(get_current_user), db
 
 
 @router.post("/bookings/{booking_id}/reject", response_model=BookingOut)
-def reject_booking(booking_id: int, driver: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
+def reject_booking(booking_id: int, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> Booking:
     booking = db.query(Booking).join(Ride).filter(Booking.id == booking_id, Ride.driver_id == driver.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")

@@ -59,7 +59,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             </span>
             <span>
               <span className="block text-lg font-bold leading-none">RideSaathi</span>
-              <span className="block text-xs text-muted">Gujarat intercity carpooling</span>
             </span>
           </Link>
 

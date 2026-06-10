@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import require_passenger
 from app.models import Booking, BookingStatus, CancellationReason, Review, Ride, RideStatus, User
 from app.schemas import BookingCreate, BookingOut, CancellationRequest, ReportCreate, ReviewCreate, RideOut
 from app.services.whatsapp import notify_booking_cancelled, notify_booking_created
@@ -94,7 +94,7 @@ def ride_detail(ride_id: int, db: Session = Depends(get_db)) -> RideOut:
 
 
 @router.post("/rides/{ride_id}/book", response_model=BookingOut)
-def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
+def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> Booking:
     if not (passenger.whatsapp_number and passenger.whatsapp_number.strip()):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -134,7 +134,7 @@ def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(ge
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Booking:
+def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> Booking:
     booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -151,7 +151,7 @@ def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: Use
 
 
 @router.get("/bookings", response_model=list[BookingOut])
-def booking_history(passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[Booking]:
+def booking_history(passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> list[Booking]:
     return (
         db.query(Booking)
         .filter(Booking.passenger_id == passenger.id, Booking.status != BookingStatus.completed)
@@ -161,7 +161,7 @@ def booking_history(passenger: User = Depends(get_current_user), db: Session = D
 
 
 @router.post("/bookings/{booking_id}/review")
-def rate_driver(booking_id: int, payload: ReviewCreate, passenger: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+def rate_driver(booking_id: int, payload: ReviewCreate, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> dict:
     booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -176,7 +176,7 @@ def rate_driver(booking_id: int, payload: ReviewCreate, passenger: User = Depend
 
 
 @router.post("/reports")
-def report_user(payload: ReportCreate, reporter: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+def report_user(payload: ReportCreate, reporter: User = Depends(require_passenger), db: Session = Depends(get_db)) -> dict:
     from app.models import ReportedUser
 
     db.add(ReportedUser(reporter_id=reporter.id, reported_user_id=payload.reported_user_id, ride_id=payload.ride_id, reason=payload.reason))

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
+import RequireRole from "./components/RequireRole";
 import AddVehicle from "./pages/AddVehicle";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
@@ -35,17 +36,17 @@ export default function App() {
         <Route
           path="/driver/vehicle"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <AddVehicle />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/driver/create-ride"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <CreateRide />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route path="/search" element={<SearchRides />} />
@@ -55,9 +56,9 @@ export default function App() {
         <Route
           path="/my-rides"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <MyRides />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
@@ -71,17 +72,17 @@ export default function App() {
         <Route
           path="/profile/driver"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <Navigate to="/my-rides" replace />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/profile/passenger"
           element={
-            <RequireAuth>
+            <RequireRole role="passenger">
               <PassengerProfilePage />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route path="/admin" element={<AdminDashboard />} />
