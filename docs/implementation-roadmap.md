@@ -55,8 +55,8 @@ Next:
 - Mask Aadhaar and phone numbers where details are not confirmed
 - Store Aadhaar as encrypted value plus one-way token
 - Use JWT auth with bcrypt password hashing
-- Move secrets to AWS Secrets Manager in production
-- Use S3 signed URLs for Aadhaar, license, and car photos
+- Keep secrets outside the repository and never commit `.env`
+- Store uploaded document and vehicle-photo paths through the app database when those uploads are added
 - Add rate limits to auth, booking, verification, report, and OTP endpoints
 - Add immutable audit logs for admin verification and user blocking
 
@@ -67,7 +67,7 @@ Next:
 3. Passenger demand: search, filters, detail, booking
 4. Trust and safety: ratings, reports, masked contact details, admin moderation
 5. Notifications: mock WhatsApp logs, then Twilio or WhatsApp Business API
-6. Production hardening: Alembic migrations, Redis locks, observability, CI/CD, Docker deployment
+6. Production hardening: Alembic migrations, transaction-safe bookings, app logs, and manual release checks
 
 ## Sample Seed Data
 
@@ -103,10 +103,4 @@ Frontend:
 cd frontend
 npm.cmd install
 npm.cmd run dev
-```
-
-Docker:
-
-```powershell
-docker compose up --build
 ```

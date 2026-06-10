@@ -1,18 +1,10 @@
 import json
-import logging
 
-from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models import Booking, NotificationLog, NotificationStatus, User
-
-logger = logging.getLogger("ridesaathi.whatsapp")
-
-# Session.info key holding sends queued during the current transaction.
-# Drained by the after_commit listener so the Celery worker can never pick up
-# a task before its NotificationLog row is committed.
-_PENDING_KEY = "whatsapp_pending_dispatch"
+from app.services.twilio_client import send_via_twilio
 
 _BODY_TEMPLATES = {
     "passenger_booking_confirmation": (
@@ -59,20 +51,6 @@ def _content_sid_for(template_name: str) -> str | None:
     return getattr(get_settings(), f"twilio_content_sid_{template_name}", "") or None
 
 
-@event.listens_for(Session, "after_commit")
-def _dispatch_after_commit(session: Session) -> None:
-    pending = session.info.pop(_PENDING_KEY, None)
-    if not pending:
-        return
-    from app.tasks.whatsapp_tasks import send_whatsapp_message
-
-    for kwargs in pending:
-        try:
-            send_whatsapp_message.delay(**kwargs)
-        except Exception:  # noqa: BLE001 - broker outage must not break the request
-            logger.exception("failed to enqueue whatsapp task log_id=%s", kwargs.get("log_id"))
-
-
 def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, payload: dict) -> NotificationLog:
     settings = get_settings()
     recipient = user.whatsapp_number or "missing"
@@ -83,7 +61,12 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
     elif recipient == "missing":
         status = NotificationStatus.failed
     else:
-        status = NotificationStatus.queued
+        status = send_via_twilio(
+            recipient,
+            _render_body(template_name, payload),
+            _content_sid_for(template_name),
+            {key: str(value) for key, value in payload.items()},
+        )
 
     log = NotificationLog(
         user_id=user.id,
@@ -95,17 +78,6 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
     )
     db.add(log)
 
-    if status == NotificationStatus.queued:
-        db.flush()  # assign log.id before enqueueing
-        db.info.setdefault(_PENDING_KEY, []).append(
-            {
-                "log_id": log.id,
-                "recipient": recipient,
-                "body": _render_body(template_name, payload),
-                "content_sid": _content_sid_for(template_name),
-                "content_variables": {key: str(value) for key, value in payload.items()},
-            }
-        )
     return log
 
 

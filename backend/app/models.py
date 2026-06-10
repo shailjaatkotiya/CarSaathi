@@ -35,7 +35,6 @@ class BookingStatus(str, enum.Enum):
 
 
 class NotificationStatus(str, enum.Enum):
-    queued = "queued"
     sent = "sent"
     failed = "failed"
     mocked = "mocked"

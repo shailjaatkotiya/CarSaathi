@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     app_name: str = "RideSaathi API"
     environment: str = "local"
     database_url: str = "sqlite:///./ridesaathi.db"
-    redis_url: str = "redis://localhost:6379/0"
     jwt_secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
