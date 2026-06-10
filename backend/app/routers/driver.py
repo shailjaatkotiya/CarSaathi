@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -135,19 +136,22 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
 @router.post("/rides", response_model=RideOut)
 def create_ride(payload: RideCreate, current_user: User | None = Depends(get_optional_current_user), db: Session = Depends(get_db)) -> RideOut:
     driver = resolve_demo_driver(db, current_user)
-    vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
+    vehicle = None
+    if payload.vehicle_id is not None:
+        vehicle = db.query(Vehicle).filter(Vehicle.id == payload.vehicle_id, Vehicle.driver_id == driver.id).first()
     if not vehicle:
         vehicle = db.query(Vehicle).filter(Vehicle.driver_id == driver.id).first()
     if not vehicle:
-        if not (payload.car_brand and payload.car_model and payload.vehicle_number):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+        # Car details are optional at publish time; create a placeholder vehicle
+        # the driver can fill in later. vehicle_number is unique, so generate one.
+        placeholder_number = f"TBD-{driver.id}-{uuid4().hex[:6].upper()}"
         vehicle = Vehicle(
             driver_id=driver.id,
-            brand=payload.car_brand,
-            model=payload.car_model,
-            vehicle_number=payload.vehicle_number.upper(),
-            fuel_type=payload.fuel_type or "petrol",
-            car_type=payload.car_type or "sedan",
+            brand=payload.car_brand or "Car details",
+            model=payload.car_model or "to be added",
+            vehicle_number=(payload.vehicle_number or placeholder_number).upper(),
+            fuel_type=payload.fuel_type or "Petrol",
+            car_type=payload.car_type or "Sedan",
             seats=payload.available_seats,
             photo_urls="",
         )
