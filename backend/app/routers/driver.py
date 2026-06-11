@@ -4,6 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core import cache
 from app.database import get_db
 from app.dependencies import require_driver
 from app.models import Booking, BookingStatus, CancellationReason, Ride, RideDropPoint, RidePickupPoint, RideStatus, User, Vehicle
@@ -208,6 +209,7 @@ def create_ride(payload: RideCreate, driver: User = Depends(require_driver), db:
     db.add_all([RideDropPoint(ride_id=ride.id, name=name) for name in payload.drop_points])
     db.commit()
     db.refresh(ride)
+    cache.bump_rides_version()
     return ride_to_out(ride)
 
 
@@ -233,6 +235,7 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depen
             booking.cancellation_reason = f"Driver cancelled ride: {payload.reason}"
     db.add(CancellationReason(user_id=driver.id, ride_id=ride.id, reason=payload.reason))
     db.commit()
+    cache.bump_rides_version()
     return {"message": "Ride cancelled"}
 
 
@@ -333,6 +336,7 @@ def reject_booking(booking_id: int, driver: User = Depends(require_driver), db: 
     apply_booking_rejection(db, booking, "Driver rejected the booking from the application")
     db.commit()
     db.refresh(booking)
+    cache.bump_rides_version()
     return booking
 
 
@@ -355,4 +359,5 @@ def reject_booking_from_whatsapp(booking_code: str, db: Session = Depends(get_db
     apply_booking_rejection(db, booking, "Driver rejected the booking from WhatsApp")
     db.commit()
     db.refresh(booking)
+    cache.bump_rides_version()
     return booking

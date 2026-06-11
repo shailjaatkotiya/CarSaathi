@@ -11,3 +11,4 @@ email-validator==2.2.0
 python-multipart==0.0.20
 cryptography==44.0.0
 twilio==9.4.1
+redis==5.2.1
