@@ -219,7 +219,7 @@ export default function CreateRide() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <form onSubmit={submit} className="flex flex-col gap-5">
         <div>
           <h1 className="text-3xl font-bold md:text-5xl">Driver - Publish New Ride</h1>

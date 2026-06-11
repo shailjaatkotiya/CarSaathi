@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, Ride } from "../api/client";
@@ -20,6 +20,7 @@ export default function SearchRides() {
   const [acAvailable, setAcAvailable] = useState("");
   const [sortBy, setSortBy] = useState("date_time");
   const [seats, setSeats] = useState(1);
+  const [showAllFilters, setShowAllFilters] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -65,7 +66,7 @@ export default function SearchRides() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <div className="flex flex-col gap-6">
         <div className="card rounded-3xl p-5 md:p-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row">
@@ -95,6 +96,26 @@ export default function SearchRides() {
               <input className="input" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Rajkot" />
             </label>
             <label>
+              <span className="field-label">Journey date</span>
+              <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Seats needed</span>
+              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
+            </label>
+          </div>
+
+          <button
+            type="button"
+            className="mt-4 flex items-center gap-1.5 text-sm font-bold text-primary sm:hidden"
+            onClick={() => setShowAllFilters((current) => !current)}
+          >
+            {showAllFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {showAllFilters ? "Hide extra filters" : "More filters"}
+          </button>
+
+          <div className={`mt-4 gap-4 sm:mt-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 ${showAllFilters ? "grid" : "hidden"}`}>
+            <label>
               <span className="field-label">Pickup area</span>
               <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
             </label>
@@ -103,20 +124,12 @@ export default function SearchRides() {
               <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
             </label>
             <label>
-              <span className="field-label">Journey date</span>
-              <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
-            </label>
-            <label>
               <span className="field-label">Departure after</span>
               <input className="input" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} />
             </label>
             <label>
               <span className="field-label">Departure before</span>
               <input className="input" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Seats needed</span>
-              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
             </label>
             <label>
               <span className="field-label">Minimum price</span>

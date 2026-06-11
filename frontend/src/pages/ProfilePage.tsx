@@ -138,7 +138,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
         <p className="alert-info">Loading your profile...</p>
       </div>
     );
@@ -146,7 +146,7 @@ export default function ProfilePage() {
 
   if (isError || !data) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
         <div className="flex flex-col gap-4">
           <p className="alert-warning">
             Please login to view and update your profile. Profile data is saved separately for each logged-in user.
@@ -160,7 +160,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <div className="flex flex-col gap-5">
         <div className="card overflow-hidden rounded-3xl p-6 md:p-8">
           <div className="flex flex-col justify-between gap-5 md:flex-row">

@@ -50,16 +50,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
+    <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-40 border-b border-sand bg-cream/85 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-[72px] w-full max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-white shadow-soft">
+        <div className="mx-auto flex min-h-[64px] w-full max-w-6xl items-center justify-between gap-2 px-4 md:min-h-[72px] md:gap-4">
+          <Link to="/" className="flex shrink-0 items-center gap-2 md:gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-white shadow-soft md:h-11 md:w-11">
               <Car size={22} />
             </span>
-            <span>
-              <span className="block text-lg font-bold leading-none">Carthi</span>
-            </span>
+            <span className="text-lg font-bold leading-none">Carthi</span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
@@ -79,15 +77,17 @@ export default function Layout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Link to={token ? "/profile" : "/auth"} className="btn-outline">
+          <div className="flex min-w-0 items-center gap-2">
+            <Link to={token ? "/profile" : "/auth"} className="btn-outline px-4 md:px-5">
               <UserIcon size={18} />
-              {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
+              <span className="max-w-[5.5rem] truncate sm:max-w-none">
+                {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
+              </span>
             </Link>
             {token && (
-              <button type="button" className="btn-primary" onClick={handleLogout}>
+              <button type="button" className="btn-primary px-4 md:px-5" onClick={handleLogout} aria-label="Logout">
                 <LogOut size={18} />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             )}
           </div>
@@ -96,13 +96,13 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       <main>{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-sand bg-cream/95 backdrop-blur-xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-sand bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-bold transition ${
+              `flex min-h-[48px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-bold transition ${
                 isActive ? "text-primary" : "text-muted"
               }`
             }

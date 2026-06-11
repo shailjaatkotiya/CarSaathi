@@ -4,14 +4,6 @@ import { Link } from "react-router-dom";
 import type { Ride } from "../api/client";
 import VerifiedBadge from "./VerifiedBadge";
 
-function categoryIcon(category: string) {
-  const normalized = category.toLowerCase();
-  if (normalized.includes("7")) return "7";
-  if (normalized.includes("mini")) return "M";
-  if (normalized.includes("suv")) return "SUV";
-  return "SED";
-}
-
 export default function RideCard({ ride, actions, details }: { ride: Ride; actions?: ReactNode; details?: ReactNode }) {
   return (
     <div className="card overflow-hidden p-5 sm:p-6">
@@ -37,7 +29,7 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
         <div className="flex flex-wrap gap-2">
           <span className="chip">
             <Car size={14} />
-            {categoryIcon(ride.vehicle.car_type)} · {ride.vehicle.car_type}
+            {ride.vehicle.car_type}
           </span>
           <span className="chip-outline">
             <Fuel size={14} />

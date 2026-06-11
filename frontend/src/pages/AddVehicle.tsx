@@ -74,7 +74,7 @@ export default function AddVehicle() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
       <div className="card rounded-3xl p-6 md:p-8">
         <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5">
           <div>

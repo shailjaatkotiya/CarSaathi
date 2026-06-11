@@ -13,7 +13,7 @@ export default function VerificationPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-8 pb-24 md:py-14">
+    <div className="mx-auto w-full max-w-xl px-4 py-8 md:py-14">
       <div className="card rounded-3xl p-6 md:p-8">
         <form onSubmit={submit} className="flex flex-col gap-5">
           <Shield size={42} className="text-primary" />

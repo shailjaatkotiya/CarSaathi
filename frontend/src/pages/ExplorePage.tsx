@@ -47,7 +47,7 @@ function BulletList({ title, items, icon: Icon }: { title: string; items: string
 
 export default function ExplorePage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-4 pb-16 md:py-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 md:py-6">
       <div className="flex flex-col gap-3">
         <div className="card-soft rounded-2xl p-4 md:p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Carthi guide</p>
