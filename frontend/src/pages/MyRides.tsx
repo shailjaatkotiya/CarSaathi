@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronDown, ChevronUp, MessageCircle, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, Ride } from "../api/client";
@@ -45,13 +45,6 @@ function RideBookings({
     onRideChanged();
   }
 
-  async function approveFromWhatsapp(bookingCode: string) {
-    await api.get(`/driver/whatsapp/bookings/${bookingCode}/accept`);
-    onMessage("Booking approved through the WhatsApp approval link.");
-    await refetch();
-    onRideChanged();
-  }
-
   if (isLoading) return <p className="text-sm text-muted">Loading bookings...</p>;
   if (!bookings?.length) return <p className="alert-info">No bookings on this ride yet.</p>;
 
@@ -75,10 +68,6 @@ function RideBookings({
                 <button type="button" className="btn-primary" onClick={() => acceptBooking(booking.id)}>
                   <CheckCircle2 size={16} />
                   Accept
-                </button>
-                <button type="button" className="btn-outline" onClick={() => approveFromWhatsapp(booking.booking_code)}>
-                  <MessageCircle size={16} />
-                  WhatsApp approve
                 </button>
                 <button type="button" className="btn-danger" onClick={() => rejectBooking(booking.id)}>
                   <XCircle size={16} />
@@ -132,7 +121,7 @@ export default function MyRides() {
                   {ride.status !== "cancelled" && (
                     <button type="button" className="btn-danger self-start" onClick={() => cancelRide(ride.id)}>
                       <XCircle size={16} />
-                      Cancel ride and notify passengers on WhatsApp
+                      Cancel Ride
                     </button>
                   )}
                 </>

@@ -25,8 +25,7 @@ _BODY_TEMPLATES = {
         "Seats: {seats_booked}\n"
         "Pickup: {pickup_point}\n"
         "Drop: {drop_off_point}\n"
-        "Approve from WhatsApp: {whatsapp_accept_url}\n"
-        "Reject from WhatsApp: {whatsapp_reject_url}"
+        "Use the WhatsApp quick reply buttons: Accept or Reject."
     ),
     "passenger_driver_cancelled": (
         "RideSaathi: driver has cancelled the ride for booking {booking_id}.\n"
@@ -103,7 +102,6 @@ def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = 
     driver = ride.driver
     passenger = booking.passenger
     vehicle = ride.vehicle
-    base_url = get_settings().public_api_base_url.rstrip("/")
 
     log_whatsapp(
         db,
@@ -139,8 +137,6 @@ def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = 
                 "pickup_point": booking.pickup_point,
                 "drop_off_point": booking.drop_point,
                 "booking_id": booking.booking_code,
-                "whatsapp_accept_url": f"{base_url}/driver/whatsapp/bookings/{booking.booking_code}/accept",
-                "whatsapp_reject_url": f"{base_url}/driver/whatsapp/bookings/{booking.booking_code}/reject",
             },
         )
 
