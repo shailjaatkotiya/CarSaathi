@@ -8,7 +8,7 @@ export default function BookingConfirmation() {
           <MessageCircle size={52} className="text-primary" />
           <h1 className="text-3xl font-bold md:text-4xl">Booking request sent</h1>
           <p className="text-muted">
-            Once the driver confirms, RideSaathi sends both passenger and driver details through WhatsApp with pickup,
+            Once the driver confirms, Carthi sends both passenger and driver details through WhatsApp with pickup,
             drop, seat count, and booking ID.
           </p>
         </div>

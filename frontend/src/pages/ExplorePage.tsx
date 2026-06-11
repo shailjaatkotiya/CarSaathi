@@ -50,7 +50,7 @@ export default function ExplorePage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
       <div className="flex flex-col gap-6">
         <div className="card-soft rounded-3xl p-6 md:p-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary">RideSaathi guide</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary">Carthi guide</p>
           <h1 className="mt-1 text-3xl font-bold md:text-5xl">Explore how to use the app easily</h1>
           <p className="mt-2 max-w-3xl text-muted">
             Book comfortable carpool seats, publish your own intercity ride, manage cancellations, and compare stops

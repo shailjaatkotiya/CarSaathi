@@ -8,7 +8,7 @@ from app.services.twilio_client import send_via_twilio
 
 _BODY_TEMPLATES = {
     "passenger_booking_confirmation": (
-        "RideSaathi: booking {booking_status}!\n"
+        "Carthi: booking {booking_status}!\n"
         "Booking: {booking_id}\n"
         "Route: {route}\n"
         "Driver: {driver_name} ({driver_whatsapp_number})\n"
@@ -20,7 +20,7 @@ _BODY_TEMPLATES = {
         "Amount: Rs. {total_amount}"
     ),
     "driver_booking_request": (
-        "RideSaathi: new booking {booking_id}.\n"
+        "Carthi: new booking {booking_id}.\n"
         "Passenger: {passenger_name} ({passenger_whatsapp_number})\n"
         "Seats: {seats_booked}\n"
         "Pickup: {pickup_point}\n"
@@ -28,7 +28,7 @@ _BODY_TEMPLATES = {
         "Use the WhatsApp quick reply buttons: Accept or Reject."
     ),
     "passenger_driver_cancelled": (
-        "RideSaathi: driver has cancelled the ride for booking {booking_id}.\n"
+        "Carthi: driver has cancelled the ride for booking {booking_id}.\n"
         "Please find a new ride through the platform.\n"
         "Route: {route}\n"
         "Journey: {journey_date} {journey_time}\n"
@@ -36,14 +36,14 @@ _BODY_TEMPLATES = {
         "Reason: {reason}"
     ),
     "passenger_booking_cancelled": (
-        "RideSaathi: booking {booking_id} cancelled by {cancelled_by}.\n"
+        "Carthi: booking {booking_id} cancelled by {cancelled_by}.\n"
         "Route: {route}\n"
         "Journey: {journey_date} {journey_time}\n"
         "Seats: {seats_booked}\n"
         "Reason: {reason}"
     ),
     "driver_booking_cancelled": (
-        "RideSaathi: booking {booking_id} cancelled by {cancelled_by}.\n"
+        "Carthi: booking {booking_id} cancelled by {cancelled_by}.\n"
         "Route: {route}\n"
         "Journey: {journey_date} {journey_time}\n"
         "Pickup: {pickup_point}, drop: {drop_off_point}\n"
@@ -56,7 +56,7 @@ _BODY_TEMPLATES = {
 def _render_body(template_name: str, payload: dict) -> str:
     template = _BODY_TEMPLATES.get(template_name)
     if not template:
-        return f"RideSaathi notification ({template_name}): {json.dumps(payload)}"
+        return f"Carthi notification ({template_name}): {json.dumps(payload)}"
     return template.format(**payload)
 
 

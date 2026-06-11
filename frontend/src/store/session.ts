@@ -15,7 +15,7 @@ export const useSessionStore = create<SessionState>()(
       logout: () => set({ token: null })
     }),
     {
-      name: "ridesaathi-session",
+      name: "carthi-session",
       storage: createJSONStorage(() => sessionStorage)
     }
   )

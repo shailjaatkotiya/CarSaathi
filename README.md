@@ -1,8 +1,8 @@
-# RideSaathi
+# Carthi
 
-RideSaathi is a scalable intercity carpooling MVP for Gujarat routes. It connects verified personal-car drivers with verified passengers for affordable city-to-city rides.
+Carthi is a scalable intercity carpooling MVP for Gujarat routes. It connects verified personal-car drivers with verified passengers for affordable city-to-city rides.
 
-Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and flexible halts with RideSaathi.**
+Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and flexible halts with Carthi.**
 
 ## What Is Included
 
@@ -36,9 +36,9 @@ API docs:
 
 Seeded demo users:
 
-- Admin: `admin@ridesaathi.in` / `Admin@123`
-- Driver: `driver@ridesaathi.in` / `Driver@123`
-- Passenger: `passenger@ridesaathi.in` / `Passenger@123`
+- Admin: `admin@carthi.in` / `Admin@123`
+- Driver: `driver@carthi.in` / `Driver@123`
+- Passenger: `passenger@carthi.in` / `Passenger@123`
 
 ## Local Frontend Setup
 

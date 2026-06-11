@@ -8,7 +8,7 @@ import logging
 from app.core.config import get_settings
 from app.models import NotificationStatus
 
-logger = logging.getLogger("ridesaathi.whatsapp.twilio")
+logger = logging.getLogger("carthi.whatsapp.twilio")
 
 
 def e164(number: str) -> str:

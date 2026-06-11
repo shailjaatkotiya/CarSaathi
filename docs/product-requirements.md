@@ -1,10 +1,10 @@
-# RideSaathi Product Requirement Document
+# Carthi Product Requirement Document
 
 ## Product Vision
 
-RideSaathi helps people travel between cities within the same state by connecting verified car drivers with verified passengers. Drivers already travelling by personal car can list seats and recover fuel costs. Passengers can compare and book affordable, safer, more flexible car rides instead of buses or private taxis.
+Carthi helps people travel between cities within the same state by connecting verified car drivers with verified passengers. Drivers already travelling by personal car can list seats and recover fuel costs. Passengers can compare and book affordable, safer, more flexible car rides instead of buses or private taxis.
 
-Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and flexible halts with RideSaathi.**
+Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and flexible halts with Carthi.**
 
 ## Initial Market
 

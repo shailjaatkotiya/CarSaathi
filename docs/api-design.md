@@ -1,4 +1,4 @@
-# RideSaathi REST API Design
+# Carthi REST API Design
 
 Base URL: `/api/v1`
 

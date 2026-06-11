@@ -1,4 +1,4 @@
-# RideSaathi Implementation Roadmap
+# Carthi Implementation Roadmap
 
 ## Frontend Component Structure
 

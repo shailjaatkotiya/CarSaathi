@@ -32,7 +32,7 @@ def startup() -> None:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "RideSaathi API"}
+    return {"status": "ok", "service": "Carthi API"}
 
 
 app.include_router(auth.router, prefix="/api/v1")
