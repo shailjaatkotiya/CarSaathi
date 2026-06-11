@@ -112,7 +112,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-10 pb-24 md:py-16">
+    <div className="mx-auto w-full max-w-xl px-4 py-4 pb-4 md:py-4">
       <div className="card rounded-3xl p-6 md:p-10">
         {token && currentUser && currentUser.role !== authRole ? (
           <div className="flex flex-col gap-4">

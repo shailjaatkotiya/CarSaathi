@@ -23,8 +23,8 @@ const stats = [
 export default function LandingPage() {
   return (
     <>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:pb-16 md:pt-16">
-        <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+      <div className="mx-auto w-full max-w-6xl px-4 md:pb-8 md:pt-8">
+        <div className="grid items-center gap-5 md:grid-cols-2 md:gap-12">
           <div className="flex flex-col gap-6">
             <span className="chip-solid self-start px-4 py-1.5">
               <BadgeCheck size={15} />
@@ -77,7 +77,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24">
+      <div className="mx-auto w-full max-w-6xl px-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map(([Icon, title, copy]) => (
             <div key={title} className="card h-full p-5 shadow-none">
