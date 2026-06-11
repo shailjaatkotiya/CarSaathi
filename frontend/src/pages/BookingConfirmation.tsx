@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 
 export default function BookingConfirmation() {
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-10 pb-24 md:py-16">
+    <div className="mx-auto w-full max-w-xl px-4 py-10 md:py-16">
       <div className="card rounded-3xl p-8 text-center md:p-12">
         <div className="flex flex-col items-center gap-4">
           <MessageCircle size={52} className="text-primary" />

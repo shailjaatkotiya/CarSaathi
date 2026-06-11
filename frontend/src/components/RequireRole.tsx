@@ -24,7 +24,7 @@ export default function RequireRole({ role, children }: { role: Role; children: 
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 md:py-10">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
         <p className="alert-info">Checking your account role...</p>
       </div>
     );

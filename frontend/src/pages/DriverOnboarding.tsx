@@ -1,6 +1,6 @@
 export default function DriverOnboarding() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <div className="card rounded-3xl p-6 md:p-8">
         <h1 className="text-3xl font-bold">Driver onboarding</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-3">

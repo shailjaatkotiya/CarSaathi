@@ -1,11 +1,9 @@
 import { ArrowRight, BadgeCheck, Car, Map, Shield, Users } from "lucide-react";
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import CarScene from "../components/CarScene";
 
-const routes = [
-  { route: "Ahmedabad to Rajkot", price: "Rs. 300-350", distance: "220-250 km", points: "Iscon, SG Highway, Bopal" },
-  { route: "Rajkot to Jamnagar", price: "Rs. 150-250", distance: "90-100 km", points: "Bus Stand, Kalawad Road" }
-];
+// Lazy-loaded so three.js stays out of the main bundle for non-landing pages.
+const CarScene = lazy(() => import("../components/CarScene"));
 
 const features = [
   [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
@@ -23,7 +21,7 @@ const stats = [
 export default function LandingPage() {
   return (
     <>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:pb-4 md:pt-4">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:py-4">
         <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
           <div className="flex flex-col gap-6">
             <span className="chip-solid self-start px-4 py-1.5">
@@ -56,23 +54,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-3xl">
-            <div className="relative min-h-[260px] overflow-hidden rounded-t-3xl md:min-h-[390px]">
+          <div className="relative min-h-[260px] overflow-hidden rounded-3xl md:min-h-[390px]">
+            <Suspense fallback={null}>
               <CarScene />
-            </div>
-            {/* <div className="flex flex-col gap-3 p-5">
-              {routes.map((item) => (
-                <div key={item.route} className="rounded-xl border border-sand p-4">
-                  <div className="flex justify-between gap-4">
-                    <p className="font-bold">{item.route}</p>
-                    <p className="font-bold text-primary">{item.price}</p>
-                  </div>
-                  <p className="mt-1 text-sm text-muted">
-                    {item.distance} · {item.points}
-                  </p>
-                </div>
-              ))}
-            </div> */}
+            </Suspense>
           </div>
         </div>
       </div>

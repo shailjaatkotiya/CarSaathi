@@ -97,7 +97,7 @@ export default function MyRides() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <div className="flex flex-col gap-5">
         <div className="card-soft rounded-3xl p-6 md:p-8">
           <h1 className="text-3xl font-bold">Published Rides</h1>

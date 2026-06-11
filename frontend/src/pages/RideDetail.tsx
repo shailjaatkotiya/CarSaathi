@@ -77,7 +77,7 @@ export default function RideDetail() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-4 pb-16 md:py-6">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 md:py-6">
       <div className="card rounded-2xl p-4 md:p-5">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">

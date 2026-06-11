@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { RenderPass } from "three/examples/jsm/Addons.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export default function CarScene() {
@@ -30,9 +29,6 @@ export default function CarScene() {
     );
     camera.position.set(0, 1.35, 5.4);
 
-    const renderPass = new RenderPass(scene, camera);
-    renderPass.clearAlpha = 0;
-    renderPass.clear = true;
     scene.add(new THREE.AmbientLight(0xfff5e7, 0.95));
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.45);
     keyLight.position.set(5, 7, 4);
@@ -80,18 +76,17 @@ export default function CarScene() {
 
     renderer.setAnimationLoop(animate);
 
-    const onResize = () => {
+    const resizeObserver = new ResizeObserver(() => {
       const width = mount.clientWidth || 420;
       const height = mount.clientHeight || 360;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-    };
-
-    window.addEventListener("resize", onResize);
+    });
+    resizeObserver.observe(mount);
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
       renderer.setAnimationLoop(null);
       renderer.dispose();
       mount.removeChild(renderer.domElement);
