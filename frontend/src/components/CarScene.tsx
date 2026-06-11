@@ -3,11 +3,7 @@ import * as THREE from "three";
 import { RenderPass } from "three/examples/jsm/Addons.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-export default function CarScene({
-  className = "h-[260px] w-full md:h-[390px]",
-}: {
-  className?: string;
-}) {
+export default function CarScene() {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -18,7 +14,7 @@ export default function CarScene({
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(mount.clientWidth || 500, mount.clientHeight || 500);
+    renderer.setSize(mount.clientWidth || 420, mount.clientHeight || 360);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0xffffff, 0);
     renderer.domElement.style.background = "transparent";
@@ -52,7 +48,7 @@ export default function CarScene({
     const loader = new GLTFLoader();
 
     loader.load(
-      "/car1.glb",
+      "/car.glb",
       (gltf: { scene: THREE.Group }) => {
         const model = gltf.scene;
         model.traverse((child: THREE.Object3D) => {
@@ -62,9 +58,9 @@ export default function CarScene({
             mesh.receiveShadow = true;
           }
         });
-        model.scale.set(200, 200, 200);
-        model.position.set(-1, 0, 0);
-        model.rotation.y = Math.PI / 12;
+        model.scale.set(0.001, 0.001, 0.001);
+        model.position.y = -0.05;
+        model.rotation.y = Math.PI / 9;
         group.add(model);
       },
       undefined,
@@ -77,7 +73,7 @@ export default function CarScene({
     const animate = () => {
       frame += 1;
       if (group.children.length > 0) {
-        group.rotation.y = Math.sin(frame * 0.025) * 0.15 + Math.PI / 7;
+        group.rotation.y = Math.sin(frame * 0.0025) * 0.15 + Math.PI / 7;
       }
       renderer.render(scene, camera);
     };
@@ -103,5 +99,5 @@ export default function CarScene({
     };
   }, []);
 
-  return <div ref={mountRef} className={className} />;
+  return <div ref={mountRef} className="h-[260px] w-full md:h-[390px]" />;
 }
