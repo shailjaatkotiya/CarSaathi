@@ -191,8 +191,16 @@ class RideOut(BaseModel):
 
 class BookingCreate(BaseModel):
     seats_booked: int = Field(ge=1, le=8)
-    pickup_point: str
-    drop_point: str
+    pickup_point: str = Field(min_length=1)
+    drop_point: str = Field(min_length=1)
+
+    @field_validator("pickup_point", "drop_point")
+    @classmethod
+    def require_selected_point(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Please select pickup and drop points")
+        return value
 
 
 class BookingOut(BaseModel):

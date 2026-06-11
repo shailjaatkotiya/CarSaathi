@@ -34,37 +34,6 @@ def validate_publish_window(payload: RideCreate) -> None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ride can be published maximum 10 days before departure")
 
 
-def validate_route_frequency(db: Session, driver: User, route_key: str, payload: RideCreate) -> None:
-    day_count = (
-        db.query(Ride)
-        .filter(
-            Ride.driver_id == driver.id,
-            Ride.route_key == route_key,
-            Ride.journey_date == payload.journey_date,
-            Ride.status != RideStatus.cancelled,
-        )
-        .count()
-    )
-    if day_count >= 2:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 2 rides per day are allowed for the same route")
-
-    week_start = payload.journey_date - timedelta(days=payload.journey_date.weekday())
-    week_end = week_start + timedelta(days=7)
-    week_count = (
-        db.query(Ride)
-        .filter(
-            Ride.driver_id == driver.id,
-            Ride.route_key == route_key,
-            Ride.journey_date >= week_start,
-            Ride.journey_date < week_end,
-            Ride.status != RideStatus.cancelled,
-        )
-        .count()
-    )
-    if week_count >= 5:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum 5 rides per week are allowed for the same route")
-
-
 def validate_stop_counts(payload: RideCreate) -> None:
     if len(payload.pickup_points) < 5:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add minimum 5 pickup points")
@@ -214,7 +183,6 @@ def create_ride(payload: RideCreate, driver: User = Depends(require_driver), db:
         )
     validate_publish_window(payload)
     route_key = f"{payload.source_city.lower()}:{payload.destination_city.lower()}"
-    validate_route_frequency(db, driver, route_key, payload)
     ride = Ride(
         driver_id=driver.id,
         vehicle_id=vehicle.id,

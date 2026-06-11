@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime, time
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -189,7 +189,6 @@ class RideDropPoint(Base):
 
 class Booking(Base):
     __tablename__ = "bookings"
-    __table_args__ = (UniqueConstraint("ride_id", "passenger_id", "pickup_point", "drop_point", name="uq_booking_route_passenger_point"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     booking_code: Mapped[str] = mapped_column(String(40), unique=True, index=True)
