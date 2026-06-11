@@ -1,1 +1,1 @@
-"""RideSaathi backend package."""
+"""Carthi backend package."""

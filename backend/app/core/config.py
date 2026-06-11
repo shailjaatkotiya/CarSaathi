@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "RideSaathi API"
+    app_name: str = "Carthi API"
     environment: str = "local"
-    database_url: str = "sqlite:///./ridesaathi.db"
+    database_url: str = "sqlite:///./carthi.db"
     jwt_secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60

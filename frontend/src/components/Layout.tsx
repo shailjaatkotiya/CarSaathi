@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <Car size={22} />
             </span>
             <span>
-              <span className="block text-lg font-bold leading-none">RideSaathi</span>
+              <span className="block text-lg font-bold leading-none">Carthi</span>
             </span>
           </Link>
 

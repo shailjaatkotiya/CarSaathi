@@ -1,4 +1,4 @@
-# RideSaathi System Architecture
+# Carthi System Architecture
 
 ## High-Level Architecture
 

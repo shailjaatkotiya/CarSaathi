@@ -31,7 +31,7 @@ export default function LandingPage() {
               Verified Gujarat intercity carpooling
             </span>
             <div>
-              <h1 className="text-5xl font-bold leading-none md:text-7xl">RideSaathi</h1>
+              <h1 className="text-5xl font-bold leading-none md:text-7xl">Carthi</h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
                 Bored going alone in a bus? Choose a friendly car ride, flexible halts, and a homely intercity travel
                 experience.

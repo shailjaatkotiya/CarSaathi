@@ -35,7 +35,7 @@ type AdminTab = "users" | "rides" | "bookings" | "reports";
 
 function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
   const setToken = useSessionStore((state) => state.setToken);
-  const [email, setEmail] = useState("admin@ridesaathi.in");
+  const [email, setEmail] = useState("admin@carthi.in");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 

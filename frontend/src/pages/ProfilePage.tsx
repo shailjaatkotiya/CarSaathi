@@ -173,7 +173,7 @@ export default function ProfilePage() {
                   <h1 className="text-3xl font-bold">{data?.full_name || "My Profile"}</h1>
                   {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
                 </div>
-                <p className="mt-1 text-muted">RideSaathi account</p>
+                <p className="mt-1 text-muted">Carthi account</p>
               </div>
             </div>
 

@@ -8,10 +8,10 @@ from app.models import AdminUser, DriverProfile, PassengerProfile, Ride, RideDro
 
 DRIVER_DEMO_EMAILS = {
     "shubham@gmail.com",
-    "aarav.driver@carsaathi.in",
-    "mehul.driver@carsaathi.in",
-    "rohan.driver@carsaathi.in",
-    "nikhil.driver@carsaathi.in",
+    "aarav.driver@carthi.in",
+    "mehul.driver@carthi.in",
+    "rohan.driver@carthi.in",
+    "nikhil.driver@carthi.in",
 }
 
 PASSENGER_DEMO_EMAILS = {"shailja@gmail.com"}
@@ -29,11 +29,11 @@ def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driv
 
 
 def ensure_default_admin(db: Session) -> None:
-    admin = db.query(User).filter(User.email == "admin@ridesaathi.in").first()
+    admin = db.query(User).filter(User.email == "admin@carthi.in").first()
     if not admin:
         admin = User(
-            full_name="RideSaathi Admin",
-            email="admin@ridesaathi.in",
+            full_name="Carthi Admin",
+            email="admin@carthi.in",
             password_hash=hash_password("Admin@123"),
             role=UserRole.admin,
             verification_status=VerificationStatus.verified,
@@ -78,7 +78,7 @@ def seed_database(db: Session) -> None:
     dummy_drivers = [
         User(
             full_name="Aarav Patel",
-            email="aarav.driver@carsaathi.in",
+            email="aarav.driver@carthi.in",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
             verification_status=VerificationStatus.verified,
@@ -87,7 +87,7 @@ def seed_database(db: Session) -> None:
         ),
         User(
             full_name="Mehul Shah",
-            email="mehul.driver@carsaathi.in",
+            email="mehul.driver@carthi.in",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
             verification_status=VerificationStatus.verified,
@@ -96,7 +96,7 @@ def seed_database(db: Session) -> None:
         ),
         User(
             full_name="Rohan Trivedi",
-            email="rohan.driver@carsaathi.in",
+            email="rohan.driver@carthi.in",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
             verification_status=VerificationStatus.verified,
@@ -105,7 +105,7 @@ def seed_database(db: Session) -> None:
         ),
         User(
             full_name="Nikhil Desai",
-            email="nikhil.driver@carsaathi.in",
+            email="nikhil.driver@carthi.in",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
             verification_status=VerificationStatus.verified,
