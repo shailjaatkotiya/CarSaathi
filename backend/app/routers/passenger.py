@@ -4,6 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.core import cache
 from app.database import get_db
 from app.dependencies import require_passenger
 from app.models import Booking, BookingStatus, CancellationReason, Review, Ride, RideStatus, User
@@ -39,6 +40,29 @@ def search_rides(
     ac_available: bool | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[RideOut]:
+    search_params = {
+        "source": source,
+        "destination": destination,
+        "journey_date": journey_date,
+        "min_price": min_price,
+        "max_price": max_price,
+        "seats": seats,
+        "departure_after": departure_after,
+        "departure_before": departure_before,
+        "pickup_point": pickup_point,
+        "drop_point": drop_point,
+        "source_area": source_area,
+        "destination_area": destination_area,
+        "driver_rating": driver_rating,
+        "car_type": car_type,
+        "fuel_type": fuel_type,
+        "sort_by": sort_by,
+        "ac_available": ac_available,
+    }
+    cached = cache.get_cached_ride_search(search_params)
+    if cached is not None:
+        return cached
+
     query = db.query(Ride).filter(Ride.status == RideStatus.active, Ride.available_seats >= seats)
     if source:
         query = query.filter(Ride.source_city.ilike(f"%{source}%"))
@@ -79,10 +103,13 @@ def search_rides(
             continue
         results.append(output)
     if sort_by == "time":
-        return sorted(results, key=lambda item: (item.departure_time, item.journey_date))
-    if sort_by == "price":
-        return sorted(results, key=lambda item: item.price_per_seat)
-    return sorted(results, key=lambda item: (item.journey_date, item.departure_time))
+        results = sorted(results, key=lambda item: (item.departure_time, item.journey_date))
+    elif sort_by == "price":
+        results = sorted(results, key=lambda item: item.price_per_seat)
+    else:
+        results = sorted(results, key=lambda item: (item.journey_date, item.departure_time))
+    cache.set_cached_ride_search(search_params, [ride.model_dump(mode="json") for ride in results])
+    return results
 
 
 @router.get("/rides/{ride_id}", response_model=RideOut)
@@ -130,6 +157,7 @@ def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(re
     notify_booking_created(db, booking)
     db.commit()
     db.refresh(booking)
+    cache.bump_rides_version()
     return booking
 
 
@@ -147,6 +175,7 @@ def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: Use
     notify_booking_cancelled(db, booking, payload.reason, "passenger")
     db.commit()
     db.refresh(booking)
+    cache.bump_rides_version()
     return booking
 
 

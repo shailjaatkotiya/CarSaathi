@@ -1,0 +1,46 @@
+# Production stack on EC2. Postgres lives in RDS (DATABASE_URL in .env),
+# Redis runs as a local container (free, vs ~$12+/mo for ElastiCache).
+#
+# Required on the host, next to this file:
+#   .env  — BACKEND_IMAGE, FRONTEND_IMAGE, DATABASE_URL, JWT_SECRET_KEY,
+#           CORS_ORIGINS, PUBLIC_API_BASE_URL, ENVIRONMENT=production, ...
+#
+# Run: docker compose -f docker-compose.prod.yml up -d
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
