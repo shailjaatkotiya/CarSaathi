@@ -77,58 +77,57 @@ export default function RideDetail() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
-      <div className="card rounded-3xl p-5 md:p-8">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 pb-16 md:py-6">
+      <div className="card rounded-2xl p-4 md:p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-bold md:text-5xl">
+                <h1 className="text-xl font-bold md:text-2xl">
                   {ride.source_city} to {ride.destination_city}
                 </h1>
                 <VerifiedBadge verified={ride.driver_verified} />
               </div>
-              <p className="mt-2 text-muted">
+              <p className="mt-0.5 text-sm text-muted">
                 {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="min-w-[150px] rounded-xl bg-primary-soft p-4">
-                <p className="text-xs font-bold text-primary">Date</p>
-                <p className="text-2xl font-bold text-primary-dark">{ride.journey_date}</p>
+            <div className="flex flex-wrap gap-2">
+              <div className="rounded-lg bg-primary-soft px-3 py-2">
+                <p className="text-[11px] font-bold text-primary">Date</p>
+                <p className="text-sm font-bold text-primary-dark">{ride.journey_date}</p>
               </div>
-              <div className="min-w-[150px] rounded-xl bg-primary-soft p-4">
-                <p className="text-xs font-bold text-primary">Time</p>
-                <p className="text-2xl font-bold text-primary-dark">{ride.departure_time.slice(0, 5)}</p>
+              <div className="rounded-lg bg-primary-soft px-3 py-2">
+                <p className="text-[11px] font-bold text-primary">Time</p>
+                <p className="text-sm font-bold text-primary-dark">{ride.departure_time.slice(0, 5)}</p>
               </div>
-              <div className="min-w-[170px] rounded-xl bg-primary-soft p-4">
-                <p className="text-xs font-bold text-primary">Price per seat</p>
-                <p className="text-3xl font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
+              <div className="rounded-lg bg-primary-soft px-3 py-2">
+                <p className="text-[11px] font-bold text-primary">Price per seat</p>
+                <p className="text-sm font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-            <div className="flex flex-col gap-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="card p-5 shadow-none">
-                  <h3 className="font-bold">Driver</h3>
-                  <p className="mt-1 text-muted">
+          <div className="grid gap-4 lg:grid-cols-[1fr_330px]">
+            <div className="flex flex-col gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="card p-3.5 shadow-none">
+                  <h3 className="text-sm font-bold">Driver</h3>
+                  <p className="mt-0.5 text-sm text-muted">
                     {ride.driver_name} · {ride.driver_rating} rating
                   </p>
                 </div>
-                <div className="card p-5 shadow-none">
-                  <h3 className="font-bold">Car details</h3>
-                  <p className="mt-1 text-muted">
-                    {ride.vehicle.brand} {ride.vehicle.model}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                <div className="card p-3.5 shadow-none">
+                  <h3 className="text-sm font-bold">
+                    Car details · <span className="font-normal text-muted">{ride.vehicle.brand} {ride.vehicle.model}</span>
+                  </h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="chip">
-                      <Car size={14} />
+                      <Car size={12} />
                       {ride.vehicle.car_type}
                     </span>
                     <span className="chip-outline">
-                      <Fuel size={14} />
+                      <Fuel size={12} />
                       {ride.vehicle.fuel_type}
                     </span>
                     <span className="chip-outline">{ride.ac_available ? "AC" : "Non-AC"}</span>
@@ -136,55 +135,55 @@ export default function RideDetail() {
                 </div>
               </div>
 
-              <div className="card p-5 shadow-none">
-                <h3 className="font-bold">Pickup, stops, and drop points</h3>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="card p-3.5 shadow-none">
+                <h3 className="text-sm font-bold">Pickup, stops, and drop points</h3>
+                <div className="mt-2 grid gap-2 md:grid-cols-3">
                   {[
                     ["Pickup", ride.pickup_points.join(", ")],
                     ["In-between stops", ride.route_stops.length ? ride.route_stops.join(", ") : "No stops added"],
                     ["Drop", ride.drop_points.join(", ")]
                   ].map(([label, value]) => (
-                    <div key={label} className="rounded-xl bg-cream p-4">
-                      <p className="text-xs font-bold text-muted">{label}</p>
-                      <p className="mt-1.5 text-sm">{value}</p>
+                    <div key={label} className="rounded-lg bg-cream p-2.5">
+                      <p className="text-[11px] font-bold text-muted">{label}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed">{value}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="card p-5 shadow-none">
-                <h3 className="font-bold">Ride instructions</h3>
-                <div className="mt-4 flex flex-col gap-2">
+              <div className="card p-3.5 shadow-none">
+                <h3 className="text-sm font-bold">Ride instructions</h3>
+                <div className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
                   {instructionLines.map((instruction) => (
                     <div key={instruction} className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                      <p className="text-sm">{instruction}</p>
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-primary" />
+                      <p className="text-xs">{instruction}</p>
                     </div>
                   ))}
                 </div>
-                {ride.route_notes && <p className="mt-4 text-sm text-muted">Route note: {ride.route_notes}</p>}
+                {ride.route_notes && <p className="mt-2 text-xs text-muted">Route note: {ride.route_notes}</p>}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <span className="chip-solid">
-                  <ShieldCheck size={14} />
+                  <ShieldCheck size={12} />
                   Verified badge
                 </span>
                 <span className="chip-outline">
-                  <AlertTriangle size={14} />
+                  <AlertTriangle size={12} />
                   Report user option
                 </span>
                 <span className="chip-outline">
-                  <Share2 size={14} />
+                  <Share2 size={12} />
                   Ride sharing link
                 </span>
               </div>
             </div>
 
-            <div className="card self-start p-5 shadow-none lg:sticky lg:top-24">
-              <h2 className="text-xl font-bold">Book this ride</h2>
-              <p className="mt-1.5 text-sm text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
-              <div className="mt-5 flex flex-col gap-4">
+            <div className="card self-start p-3.5 shadow-none lg:sticky lg:top-24">
+              <h2 className="text-base font-bold">Book this ride</h2>
+              <p className="mt-0.5 text-xs text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
+              <div className="mt-3 flex flex-col gap-2.5">
                 <label>
                   <span className="field-label">Seats</span>
                   <input
@@ -232,12 +231,11 @@ export default function RideDetail() {
                     first.
                   </p>
                 )}
-                <button type="button" className="btn-primary py-3" onClick={book} disabled={missingContactNumber}>
-                  <MessageCircle size={18} />
+                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber}>
+                  <MessageCircle size={16} />
                   Book ride · Rs. {paymentAmount}
                 </button>
-                <hr className="border-sand" />
-                <p className="text-sm text-muted">
+                <p className="text-xs text-muted">
                   {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
                 </p>
                 {message && <p className="alert-success">{message}</p>}

@@ -26,18 +26,18 @@ const features = [
 
 function BulletList({ title, items, icon: Icon }: { title: string; items: string[]; icon: LucideIcon }) {
   return (
-    <div className="card h-full p-6">
-      <div className="flex items-center gap-3">
+    <div className="card h-full p-4">
+      <div className="flex items-center gap-2.5">
         <span className="icon-tile">
-          <Icon size={20} />
+          <Icon size={16} />
         </span>
-        <h3 className="font-bold">{title}</h3>
+        <h3 className="text-sm font-bold">{title}</h3>
       </div>
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-3 flex flex-col gap-1.5">
         {items.map((item) => (
-          <div key={item} className="flex items-start gap-2.5">
-            <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-primary" />
-            <p className="text-sm text-muted">{item}</p>
+          <div key={item} className="flex items-start gap-2">
+            <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-primary" />
+            <p className="text-xs leading-relaxed text-muted">{item}</p>
           </div>
         ))}
       </div>
@@ -47,38 +47,42 @@ function BulletList({ title, items, icon: Icon }: { title: string; items: string
 
 export default function ExplorePage() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:py-10">
-      <div className="flex flex-col gap-6">
-        <div className="card-soft rounded-3xl p-6 md:p-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary">Carthi guide</p>
-          <h1 className="mt-1 text-3xl font-bold md:text-5xl">Explore how to use the app easily</h1>
-          <p className="mt-2 max-w-3xl text-muted">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 pb-16 md:py-6">
+      <div className="flex flex-col gap-3">
+        <div className="card-soft rounded-2xl p-4 md:p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Carthi guide</p>
+          <h1 className="mt-0.5 text-xl font-bold md:text-2xl">Explore how to use the app easily</h1>
+          <p className="mt-1 max-w-3xl text-sm text-muted">
             Book comfortable carpool seats, publish your own intercity ride, manage cancellations, and compare stops
             before choosing a driver.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-3">
           <BulletList title="How to book a ride" items={bookSteps} icon={Search} />
           <BulletList title="How to publish a ride" items={publishSteps} icon={Car} />
           <BulletList title="Other functionality" items={features} icon={Compass} />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="card p-6">
-            <ShieldCheck size={24} className="text-primary" />
-            <h3 className="mt-2 font-bold">Safety-first ride rules</h3>
-            <p className="mt-1.5 text-sm text-muted">
-              Drivers can publish clear ride instructions before passengers book, so expectations are set early.
-            </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="card flex items-start gap-3 p-4">
+            <ShieldCheck size={18} className="mt-0.5 shrink-0 text-primary" />
+            <div>
+              <h3 className="text-sm font-bold">Safety-first ride rules</h3>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted">
+                Drivers can publish clear ride instructions before passengers book, so expectations are set early.
+              </p>
+            </div>
           </div>
-          <div className="card p-6">
-            <MessageCircle size={24} className="text-primary" />
-            <h3 className="mt-2 font-bold">WhatsApp-ready updates</h3>
-            <p className="mt-1.5 text-sm text-muted">
-              Booking, passenger cancellation, and driver ride cancellation all create WhatsApp notification logs in the
-              MVP.
-            </p>
+          <div className="card flex items-start gap-3 p-4">
+            <MessageCircle size={18} className="mt-0.5 shrink-0 text-primary" />
+            <div>
+              <h3 className="text-sm font-bold">WhatsApp-ready updates</h3>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted">
+                Booking, passenger cancellation, and driver ride cancellation all create WhatsApp notification logs in
+                the MVP.
+              </p>
+            </div>
           </div>
         </div>
       </div>
