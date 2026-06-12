@@ -100,8 +100,12 @@ export default function SearchRides() {
               <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Seats needed</span>
-              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
+              <span className="field-label">Sort rides</span>
+              <select className="input" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                <option value="date_time">Sort by date</option>
+                <option value="time">Sort by time</option>
+                <option value="price">Sort by price</option>
+              </select>
             </label>
           </div>
 
@@ -115,6 +119,10 @@ export default function SearchRides() {
           </button>
 
           <div className={`mt-4 gap-4 sm:mt-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 ${showAllFilters ? "grid" : "hidden"}`}>
+            <label>
+              <span className="field-label">Seats needed</span>
+              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
+            </label>
             <label>
               <span className="field-label">Pickup area</span>
               <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
@@ -175,21 +183,20 @@ export default function SearchRides() {
                 <option value="false">Non-AC only</option>
               </select>
             </label>
-            <label>
-              <span className="field-label">Sort rides</span>
-              <select className="input" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="date_time">Sort by date</option>
-                <option value="time">Sort by time</option>
-                <option value="price">Sort by price</option>
-              </select>
-            </label>
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
           {isLoading && <p className="alert-info">Loading rides...</p>}
           {data?.map((ride) => <RideCard key={ride.id} ride={ride} />)}
-          {data?.length === 0 && <p className="alert-warning">No rides found for this route.</p>}
+          {data?.length === 0 &&
+            (journeyDate ? (
+              <p className="alert-warning">
+                No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
+              </p>
+            ) : (
+              <p className="alert-warning">No rides found for this route.</p>
+            ))}
         </div>
       </div>
     </div>

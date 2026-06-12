@@ -54,6 +54,27 @@ a {
     @apply w-full rounded-xl border border-sand bg-cream px-3 py-2.5 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
   }
 
+  /* native date/time inputs: match text-input height, align value left, keep picker icon on the right */
+  input.input[type="date"],
+  input.input[type="time"] {
+    @apply h-[46px] appearance-none md:h-[42px];
+  }
+
+  input.input[type="date"]::-webkit-datetime-edit,
+  input.input[type="time"]::-webkit-datetime-edit {
+    @apply py-0 text-ink;
+  }
+
+  input.input[type="date"]::-webkit-calendar-picker-indicator,
+  input.input[type="time"]::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer rounded opacity-70 transition hover:opacity-100;
+  }
+
+  input.input[type="date"]::-webkit-inner-spin-button,
+  input.input[type="time"]::-webkit-inner-spin-button {
+    @apply hidden;
+  }
+
   /* 44px minimum touch target on mobile per iOS/Android guidelines */
   .btn {
     @apply inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[40px];

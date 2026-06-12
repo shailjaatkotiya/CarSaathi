@@ -9,6 +9,26 @@ const categories = [
   { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" }
 ];
 
+const carBrands = [
+  "Maruti Suzuki",
+  "Hyundai",
+  "Tata",
+  "Mahindra",
+  "Toyota",
+  "Honda",
+  "Kia",
+  "Renault",
+  "Nissan",
+  "Volkswagen",
+  "Skoda",
+  "MG",
+  "Ford",
+  "Chevrolet",
+  "Mercedes-Benz",
+  "BMW",
+  "Audi"
+];
+
 type Vehicle = {
   id: number;
   brand: string;
@@ -29,6 +49,8 @@ export default function AddVehicle() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Sedan");
   const [passengerSeats, setPassengerSeats] = useState(defaultPassengerSeats("Sedan"));
+  const [brand, setBrand] = useState("Maruti Suzuki");
+  const [customBrand, setCustomBrand] = useState("");
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -46,10 +68,16 @@ export default function AddVehicle() {
     setEditingVehicle(vehicle);
     setCategory(vehicle.car_type);
     setPassengerSeats(vehicle.seats);
+    if (carBrands.includes(vehicle.brand)) {
+      setBrand(vehicle.brand);
+      setCustomBrand("");
+    } else {
+      setBrand("Other");
+      setCustomBrand(vehicle.brand);
+    }
     setMessage("");
     const form = formRef.current;
     if (form) {
-      (form.elements.namedItem("brand") as HTMLInputElement).value = vehicle.brand;
       (form.elements.namedItem("model") as HTMLInputElement).value = vehicle.model;
       (form.elements.namedItem("vehicle_number") as HTMLInputElement).value = vehicle.vehicle_number;
       (form.elements.namedItem("fuel_type") as HTMLSelectElement).value = vehicle.fuel_type;
@@ -61,7 +89,8 @@ export default function AddVehicle() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    const body = { ...payload, car_type: category, seats: passengerSeats, photo_urls: [] };
+    const resolvedBrand = brand === "Other" ? customBrand.trim() : brand;
+    const body = { ...payload, brand: resolvedBrand, car_type: category, seats: passengerSeats, photo_urls: [] };
     if (editingVehicle) {
       await api.put(`/driver/vehicles/${editingVehicle.id}`, body);
       setMessage("Vehicle updated.");
@@ -84,7 +113,23 @@ export default function AddVehicle() {
           <div className="grid gap-4 sm:grid-cols-2">
             <label>
               <span className="field-label">Brand</span>
-              <input className="input" name="brand" defaultValue="Maruti Suzuki" required />
+              <select className="input" value={brand} onChange={(event) => setBrand(event.target.value)} required>
+                {carBrands.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+                <option value="Other">Other</option>
+              </select>
+              {brand === "Other" && (
+                <input
+                  className="input mt-2"
+                  value={customBrand}
+                  onChange={(event) => setCustomBrand(event.target.value)}
+                  placeholder="Enter brand name"
+                  required
+                />
+              )}
             </label>
             <label>
               <span className="field-label">Model</span>
