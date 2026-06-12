@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
+import { carBrands } from "../data/carBrands";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 type VerificationStatus = {
@@ -76,6 +77,7 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
+  const [brandOther, setBrandOther] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -93,6 +95,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (data && !isEditing) {
       setForm(formFromUser(data));
+      const brand = data.personal_car_brand || "";
+      setBrandOther(Boolean(brand) && !carBrands.includes(brand));
     }
   }, [data, isEditing]);
 
@@ -253,7 +257,36 @@ export default function ProfilePage() {
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <label>
                     <span className="field-label">Car brand optional</span>
-                    <input className="input" value={form.personal_car_brand} onChange={(event) => setField("personal_car_brand", event.target.value)} placeholder="Honda, Hyundai, Maruti Suzuki" />
+                    <select
+                      className="input"
+                      value={brandOther ? "__other__" : form.personal_car_brand}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        if (value === "__other__") {
+                          setBrandOther(true);
+                          setField("personal_car_brand", "");
+                        } else {
+                          setBrandOther(false);
+                          setField("personal_car_brand", value);
+                        }
+                      }}
+                    >
+                      <option value="">Not added</option>
+                      {carBrands.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                      <option value="__other__">Other</option>
+                    </select>
+                    {brandOther && (
+                      <input
+                        className="input mt-2"
+                        value={form.personal_car_brand}
+                        onChange={(event) => setField("personal_car_brand", event.target.value)}
+                        placeholder="Enter brand name"
+                      />
+                    )}
                   </label>
                   <label>
                     <span className="field-label">Car model optional</span>

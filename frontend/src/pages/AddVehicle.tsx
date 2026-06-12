@@ -2,31 +2,12 @@ import { Car, Fuel, Pencil } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api } from "../api/client";
+import { carBrands } from "../data/carBrands";
 
 const categories = [
   { value: "Sedan", icon: "S", hint: "Default 3 passenger seats" },
   { value: "SUV", icon: "SUV", hint: "Default 3 passenger seats" },
   { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" }
-];
-
-const carBrands = [
-  "Maruti Suzuki",
-  "Hyundai",
-  "Tata",
-  "Mahindra",
-  "Toyota",
-  "Honda",
-  "Kia",
-  "Renault",
-  "Nissan",
-  "Volkswagen",
-  "Skoda",
-  "MG",
-  "Ford",
-  "Chevrolet",
-  "Mercedes-Benz",
-  "BMW",
-  "Audi"
 ];
 
 type Vehicle = {
