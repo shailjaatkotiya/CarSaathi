@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
+import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
 const rideRules = [
@@ -74,6 +75,8 @@ export default function CreateRide() {
   const [error, setError] = useState("");
   const [carMode, setCarMode] = useState<CarMode>("new");
   const [newCarType, setNewCarType] = useState("Sedan");
+  const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
+  const [newCarBrandOther, setNewCarBrandOther] = useState("");
   const [availableSeats, setAvailableSeats] = useState(3);
   const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
@@ -160,8 +163,9 @@ export default function CreateRide() {
       return;
     }
 
+    const resolvedNewBrand = newCarBrand === "Other" ? newCarBrandOther.trim() : newCarBrand;
     const newCarDetails = {
-      car_brand: String(payload.car_brand ?? "").trim(),
+      car_brand: resolvedNewBrand,
       car_model: String(payload.car_model ?? "").trim(),
       vehicle_number: String(payload.vehicle_number ?? "").trim(),
       fuel_type: String(payload.fuel_type ?? "").trim(),
@@ -336,7 +340,23 @@ export default function CreateRide() {
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <label>
                 <span className="field-label">Car brand</span>
-                <input className="input" name="car_brand" defaultValue="Maruti Suzuki" required />
+                <select className="input" value={newCarBrand} onChange={(event) => setNewCarBrand(event.target.value)} required>
+                  {carBrands.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                  <option value="Other">Other</option>
+                </select>
+                {newCarBrand === "Other" && (
+                  <input
+                    className="input mt-2"
+                    value={newCarBrandOther}
+                    onChange={(event) => setNewCarBrandOther(event.target.value)}
+                    placeholder="Enter brand name"
+                    required
+                  />
+                )}
                 <span className="field-hint">Example: Maruti Suzuki, Hyundai</span>
               </label>
               <label>
