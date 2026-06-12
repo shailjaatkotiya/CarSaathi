@@ -58,9 +58,16 @@ jobs:
           script: |
             set -e
             cd /opt/carthi
-            # instance role grants ECR pull — no AWS keys stored on the box
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-              | docker login --username AWS --password-stdin ${{ needs.build-and-push.outputs.registry }}
+            REGION="${{ secrets.AWS_REGION }}"
+            # Derive the ECR registry on the box (instance role grants ECR pull).
+            # Avoids relying on a cross-job output that can arrive empty and make
+            # docker login default to Docker Hub, poisoning ~/.docker/config.json.
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+            # Clear any stale/corrupt auth before logging in fresh.
+            rm -f ~/.docker/config.json
+            aws ecr get-login-password --region "$REGION" \
+              | docker login --username AWS --password-stdin "$REGISTRY"
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
             docker image prune -f
