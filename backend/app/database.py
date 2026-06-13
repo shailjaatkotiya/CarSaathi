@@ -19,9 +19,25 @@ class Base(DeclarativeBase):
     pass
 
 
+# Additive columns introduced after the original create_all run. create_all
+# never ALTERs existing tables, so these are applied at startup on every engine.
+PAYMENT_COLUMNS: dict[str, dict[str, str]] = {
+    "bookings": {"payment_method": "VARCHAR(20) DEFAULT 'cash'"},
+    "payments": {
+        "method": "VARCHAR(20) DEFAULT 'cash'",
+        "razorpay_order_id": "VARCHAR(120)",
+    },
+}
+
+
 def ensure_runtime_schema() -> None:
-    if not settings.database_url.startswith("sqlite"):
-        return
+    if settings.database_url.startswith("sqlite"):
+        _ensure_sqlite_schema()
+    else:
+        _ensure_postgres_schema()
+
+
+def _ensure_sqlite_schema() -> None:
     user_columns = {
         "role": "VARCHAR(20) DEFAULT 'passenger'",
         "age": "INTEGER",
@@ -37,7 +53,22 @@ def ensure_runtime_schema() -> None:
         for column_name, column_type in user_columns.items():
             if column_name not in existing_columns:
                 connection.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
+        for table, columns in PAYMENT_COLUMNS.items():
+            existing = {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}
+            for column_name, column_type in columns.items():
+                if column_name not in existing:
+                    connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type}"))
         remove_booking_point_limit(connection)
+
+
+def _ensure_postgres_schema() -> None:
+    # Postgres supports ADD COLUMN IF NOT EXISTS, so no introspection needed.
+    with engine.begin() as connection:
+        for table, columns in PAYMENT_COLUMNS.items():
+            for column_name, column_type in columns.items():
+                connection.execute(
+                    text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column_name} {column_type}")
+                )
 
 
 def sqlite_identifier(value: str) -> str:

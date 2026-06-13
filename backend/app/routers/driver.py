@@ -261,6 +261,8 @@ def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
         drop_point=booking.drop_point,
         status=booking.status,
         total_amount=booking.total_amount,
+        payment_method=booking.payment_method,
+        payment_status=booking.payment_status,
         passenger_name=booking.passenger.full_name,
         passenger_whatsapp=booking.passenger.whatsapp_number,
     )
@@ -284,6 +286,8 @@ def active_driver_bookings(driver: User = Depends(require_driver), db: Session =
             "pickup_point": booking.pickup_point,
             "drop_point": booking.drop_point,
             "total_amount": booking.total_amount,
+            "payment_method": booking.payment_method,
+            "payment_status": booking.payment_status,
             "passenger_name": booking.passenger.full_name,
             "passenger_whatsapp": booking.passenger.whatsapp_number,
             "route": f"{booking.ride.source_city} to {booking.ride.destination_city}",

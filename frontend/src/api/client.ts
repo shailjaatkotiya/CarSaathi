@@ -60,6 +60,57 @@ export type Ride = {
   };
 };
 
+export type Booking = {
+  id: number;
+  booking_code: string;
+  ride_id: number;
+  passenger_id: number;
+  driver_id: number;
+  driver_name: string;
+  route: string;
+  seats_booked: number;
+  pickup_point: string;
+  drop_point: string;
+  status: string;
+  total_amount: number;
+  payment_method: "cash" | "online";
+  payment_status: string;
+};
+
+export type PaymentInit = {
+  razorpay_order_id: string;
+  razorpay_key_id: string;
+  amount: number; // paise
+  currency: string;
+  booking_code: string;
+};
+
+export type BookingActionResponse = {
+  booking: Booking;
+  payment: PaymentInit | null;
+};
+
+const RAZORPAY_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
+
+// Loads the Razorpay Checkout script once and resolves when window.Razorpay is ready.
+export function loadRazorpayCheckout(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${RAZORPAY_SCRIPT_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true));
+      existing.addEventListener("error", () => resolve(false));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = RAZORPAY_SCRIPT_SRC;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export type User = {
   id: number;
   full_name: string;

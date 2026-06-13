@@ -1,9 +1,9 @@
-import { AlertTriangle, Car, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Banknote, Car, CreditCard, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, Ride, User } from "../api/client";
+import { api, BookingActionResponse, loadRazorpayCheckout, Ride, User } from "../api/client";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useSessionStore } from "../store/session";
 
@@ -21,8 +21,10 @@ export default function RideDetail() {
   const [seats, setSeats] = useState(1);
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "online">("cash");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [paying, setPaying] = useState(false);
   const token = useSessionStore((state) => state.token);
   const navigate = useNavigate();
   const { data: ride, refetch } = useQuery({
@@ -55,17 +57,69 @@ export default function RideDetail() {
     }
     setMessage("");
     setError("");
+    setPaying(true);
     try {
-      const { data } = await api.post(`/passenger/rides/${ride.id}/book`, {
+      const { data } = await api.post<BookingActionResponse>(`/passenger/rides/${ride.id}/book`, {
         seats_booked: seats,
         pickup_point: pickup || ride.pickup_points[0],
-        drop_point: drop || ride.drop_points[0]
+        drop_point: drop || ride.drop_points[0],
+        payment_method: paymentMethod
       });
-      setMessage(`Booking ${data.booking_code} created with ${data.status} status.`);
+      if (data.payment) {
+        await payWithRazorpay(data);
+      } else {
+        setMessage(`Booking ${data.booking.booking_code} created (${data.booking.status}). Pay cash to the driver at the end of the ride.`);
+      }
     } catch (err) {
       const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
       setError(detail || "Could not book the ride. Please try again.");
+    } finally {
+      setPaying(false);
     }
+  }
+
+  async function payWithRazorpay(data: BookingActionResponse) {
+    const init = data.payment!;
+    const ready = await loadRazorpayCheckout();
+    if (!ready) {
+      setError("Could not load the payment window. Check your connection and try again.");
+      return;
+    }
+    const rzp = new (window as any).Razorpay({
+      key: init.razorpay_key_id,
+      amount: init.amount,
+      currency: init.currency,
+      order_id: init.razorpay_order_id,
+      name: "Carthi",
+      description: `Booking ${init.booking_code}`,
+      prefill: { name: me?.full_name, contact: me?.whatsapp_number ?? "" },
+      theme: { color: "#0f766e" },
+      handler: async (resp: {
+        razorpay_order_id: string;
+        razorpay_payment_id: string;
+        razorpay_signature: string;
+      }) => {
+        try {
+          const { data: confirmed } = await api.post("/passenger/payments/verify", {
+            booking_id: data.booking.id,
+            razorpay_order_id: resp.razorpay_order_id,
+            razorpay_payment_id: resp.razorpay_payment_id,
+            razorpay_signature: resp.razorpay_signature
+          });
+          setMessage(`Payment successful. Booking ${confirmed.booking_code} is ${confirmed.status}.`);
+        } catch (err) {
+          const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
+          setError(detail || "Payment could not be verified. If money was deducted it will be refunded.");
+        }
+      },
+      modal: {
+        ondismiss: () => setError("Payment cancelled. Your seats are held briefly - try again to confirm.")
+      }
+    });
+    rzp.on("payment.failed", (resp: { error?: { description?: string } }) => {
+      setError(resp.error?.description || "Payment failed. Please try again.");
+    });
+    rzp.open();
   }
 
   if (!ride) {
@@ -222,6 +276,40 @@ export default function RideDetail() {
                     ))}
                   </select>
                 </label>
+                <div>
+                  <span className="field-label">Payment method</span>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("cash")}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                        paymentMethod === "cash"
+                          ? "border-primary bg-primary-soft text-primary-dark"
+                          : "border-gray-200 text-muted"
+                      }`}
+                    >
+                      <Banknote size={14} />
+                      Pay by cash
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("online")}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                        paymentMethod === "online"
+                          ? "border-primary bg-primary-soft text-primary-dark"
+                          : "border-gray-200 text-muted"
+                      }`}
+                    >
+                      <CreditCard size={14} />
+                      Pay online
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {paymentMethod === "cash"
+                      ? "Pay the driver in cash at the end of the ride."
+                      : "Pay now via UPI, card, or netbanking. Seat is confirmed after payment."}
+                  </p>
+                </div>
                 {missingContactNumber && (
                   <p className="alert-warning">
                     A WhatsApp contact number is required to book.{" "}
@@ -231,9 +319,9 @@ export default function RideDetail() {
                     first.
                   </p>
                 )}
-                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber}>
-                  <MessageCircle size={16} />
-                  Book ride · Rs. {paymentAmount}
+                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying}>
+                  {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
+                  {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
                 </button>
                 <p className="text-xs text-muted">
                   {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.

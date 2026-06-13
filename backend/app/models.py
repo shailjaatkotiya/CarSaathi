@@ -199,6 +199,7 @@ class Booking(Base):
     drop_point: Mapped[str] = mapped_column(String(120))
     status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.pending)
     total_amount: Mapped[int] = mapped_column(Integer)
+    payment_method: Mapped[str] = mapped_column(String(20), default="cash")
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -218,6 +219,10 @@ class Booking(Base):
     def route(self) -> str:
         return f"{self.ride.source_city} to {self.ride.destination_city}"
 
+    @property
+    def payment_status(self) -> str:
+        return self.payment.status if self.payment else "unpaid"
+
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -225,7 +230,11 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.id"), unique=True)
     amount: Mapped[int] = mapped_column(Integer)
+    # cash bookings: status="pending_cash" (collected at end of ride).
+    # online bookings: "created" -> "paid" / "failed".
+    method: Mapped[str] = mapped_column(String(20), default="cash")
     status: Mapped[str] = mapped_column(String(40), default="not_required_mvp")
+    razorpay_order_id: Mapped[str | None] = mapped_column(String(120))
     provider_reference: Mapped[str | None] = mapped_column(String(120))
 
     booking: Mapped[Booking] = relationship(back_populates="payment")

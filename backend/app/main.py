@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.database import Base, SessionLocal, engine, ensure_runtime_schema
-from app.routers import admin, auth, driver, passenger, profile
+from app.routers import admin, auth, driver, passenger, payments, profile
 from app.seed import seed_database
 
 settings = get_settings()
@@ -39,4 +39,5 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(profile.router, prefix="/api/v1")
 app.include_router(driver.router, prefix="/api/v1")
 app.include_router(passenger.router, prefix="/api/v1")
+app.include_router(payments.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
