@@ -5,12 +5,26 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core import cache
+from app.core.config import get_settings
 from app.database import get_db
 from app.dependencies import require_passenger
-from app.models import Booking, BookingStatus, CancellationReason, Review, Ride, RideStatus, User
-from app.schemas import BookingCreate, BookingOut, CancellationRequest, ReportCreate, ReviewCreate, RideOut
+from app.models import Booking, BookingStatus, CancellationReason, Payment, Review, Ride, RideStatus, User
+from app.schemas import (
+    BookingActionOut,
+    BookingCreate,
+    BookingOut,
+    CancellationRequest,
+    PaymentInitOut,
+    PaymentVerifyRequest,
+    ReportCreate,
+    ReviewCreate,
+    RideOut,
+)
+from app.services import razorpay_client
 from app.services.whatsapp import notify_booking_cancelled, notify_booking_created
 from app.utils.serializers import ride_to_out
+
+settings = get_settings()
 
 router = APIRouter(prefix="/passenger", tags=["passenger"])
 
@@ -120,12 +134,17 @@ def ride_detail(ride_id: int, db: Session = Depends(get_db)) -> RideOut:
     return ride_to_out(ride)
 
 
-@router.post("/rides/{ride_id}/book", response_model=BookingOut)
-def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> Booking:
+@router.post("/rides/{ride_id}/book", response_model=BookingActionOut)
+def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> BookingActionOut:
     if not (passenger.whatsapp_number and passenger.whatsapp_number.strip()):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Please add your WhatsApp contact number in My Profile before booking a ride",
+        )
+    if payload.payment_method == "online" and not razorpay_client.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Online payment is not available right now. Please choose Pay by cash.",
         )
     ride = db.query(Ride).filter(Ride.id == ride_id).with_for_update().first()
     if not ride or ride.status != RideStatus.active:
@@ -140,8 +159,18 @@ def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(re
     if payload.pickup_point not in valid_pickups or payload.drop_point not in valid_drops:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid pickup or drop point")
 
-    status_value = BookingStatus.confirmed if ride.auto_confirm_bookings else BookingStatus.pending
+    total_amount = payload.seats_booked * ride.price_per_seat
     ride.available_seats -= payload.seats_booked
+
+    if payload.payment_method == "online":
+        # Reserve seats but keep the booking unconfirmed until payment succeeds.
+        # The driver is notified only after the money is verified (see verify_payment).
+        booking_status = BookingStatus.pending
+        payment = Payment(method="online", status="created", amount=total_amount)
+    else:
+        booking_status = BookingStatus.confirmed if ride.auto_confirm_bookings else BookingStatus.pending
+        payment = Payment(method="cash", status="pending_cash", amount=total_amount)
+
     booking = Booking(
         booking_code=f"RS-{uuid4().hex[:8].upper()}",
         ride_id=ride.id,
@@ -149,11 +178,60 @@ def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(re
         seats_booked=payload.seats_booked,
         pickup_point=payload.pickup_point,
         drop_point=payload.drop_point,
-        status=status_value,
-        total_amount=payload.seats_booked * ride.price_per_seat,
+        status=booking_status,
+        total_amount=total_amount,
+        payment_method=payload.payment_method,
     )
+    booking.payment = payment
     db.add(booking)
     db.flush()
+
+    payment_init: PaymentInitOut | None = None
+    if payload.payment_method == "online":
+        try:
+            order = razorpay_client.create_order(total_amount, receipt=booking.booking_code)
+        except Exception as exc:  # noqa: BLE001 - surface a clean error, roll back the reservation
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Could not start the payment. Please try again.",
+            ) from exc
+        payment.razorpay_order_id = order["id"]
+        payment_init = PaymentInitOut(
+            razorpay_order_id=order["id"],
+            razorpay_key_id=settings.razorpay_key_id,
+            amount=order["amount"],
+            currency=order["currency"],
+            booking_code=booking.booking_code,
+        )
+    else:
+        # Cash: keep the existing flow - notify the driver right away.
+        notify_booking_created(db, booking)
+
+    db.commit()
+    db.refresh(booking)
+    cache.bump_rides_version()
+    return BookingActionOut(booking=BookingOut.model_validate(booking), payment=payment_init)
+
+
+@router.post("/payments/verify", response_model=BookingOut)
+def verify_payment(payload: PaymentVerifyRequest, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> Booking:
+    booking = db.query(Booking).filter(Booking.id == payload.booking_id, Booking.passenger_id == passenger.id).first()
+    if not booking or not booking.payment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    payment = booking.payment
+    if payment.method != "online" or payment.razorpay_order_id != payload.razorpay_order_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment does not match this booking")
+    if payment.status == "paid":
+        return booking  # idempotent: already confirmed (e.g. webhook arrived first)
+    if not razorpay_client.verify_payment_signature(
+        payload.razorpay_order_id, payload.razorpay_payment_id, payload.razorpay_signature
+    ):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment verification failed")
+
+    payment.status = "paid"
+    payment.provider_reference = payload.razorpay_payment_id
+    booking.status = BookingStatus.confirmed if booking.ride.auto_confirm_bookings else BookingStatus.pending
     notify_booking_created(db, booking)
     db.commit()
     db.refresh(booking)

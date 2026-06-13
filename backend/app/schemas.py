@@ -1,4 +1,5 @@
 from datetime import date, time
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -193,6 +194,7 @@ class BookingCreate(BaseModel):
     seats_booked: int = Field(ge=1, le=8)
     pickup_point: str = Field(min_length=1)
     drop_point: str = Field(min_length=1)
+    payment_method: Literal["cash", "online"] = "cash"
 
     @field_validator("pickup_point", "drop_point")
     @classmethod
@@ -216,8 +218,34 @@ class BookingOut(BaseModel):
     drop_point: str
     status: BookingStatus
     total_amount: int
+    payment_method: str
+    payment_status: str
 
     model_config = {"from_attributes": True}
+
+
+class PaymentInitOut(BaseModel):
+    """Razorpay order details returned to the browser to open Checkout."""
+
+    razorpay_order_id: str
+    razorpay_key_id: str
+    amount: int  # in paise
+    currency: str
+    booking_code: str
+
+
+class BookingActionOut(BaseModel):
+    """Result of booking. ``payment`` is present only for online bookings."""
+
+    booking: BookingOut
+    payment: PaymentInitOut | None = None
+
+
+class PaymentVerifyRequest(BaseModel):
+    booking_id: int
+    razorpay_order_id: str = Field(min_length=1)
+    razorpay_payment_id: str = Field(min_length=1)
+    razorpay_signature: str = Field(min_length=1)
 
 
 class DriverBookingOut(BookingOut):
