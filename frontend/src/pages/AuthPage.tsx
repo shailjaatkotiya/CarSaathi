@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 
-type AuthRole = "driver" | "passenger";
+type AuthRole = "passenger" | "driver" | "admin";
 
 function authErrorMessage(err: unknown) {
   if (!axios.isAxiosError(err)) {
@@ -131,20 +131,15 @@ export default function AuthPage() {
 
           {mode === "register" && (
             <>
-              <div className="grid gap-2 rounded-2xl bg-sand-light p-1 sm:grid-cols-2">
-                {(["passenger", "driver"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setRegisterRole(value)}
-                    className={`rounded-xl px-4 py-3 text-sm font-bold capitalize transition ${
-                      registerRole === value ? "bg-primary text-white" : "text-muted hover:text-ink"
-                    }`}
-                  >
-                    {value}
-                  </button>
-                ))}
-              </div>
+              <label>
+                <span className="field-label">Register as</span>
+                <select className="input" value={registerRole} onChange={(event) => setRegisterRole(event.target.value as AuthRole)}>
+                  <option value="passenger">Passenger</option>
+                  <option value="driver">Driver</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <span className="field-hint">Passenger is selected by default for new accounts.</span>
+              </label>
               <label>
                 <span className="field-label">Full name</span>
                 <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />

@@ -220,6 +220,14 @@ class Booking(Base):
         return f"{self.ride.source_city} to {self.ride.destination_city}"
 
     @property
+    def journey_date(self):
+        return self.ride.journey_date
+
+    @property
+    def departure_time(self):
+        return self.ride.departure_time
+
+    @property
     def payment_status(self) -> str:
         return self.payment.status if self.payment else "unpaid"
 

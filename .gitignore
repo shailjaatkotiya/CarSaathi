@@ -21,3 +21,6 @@ frontend/.env
 Thumbs.db
 .vscode/
 .idea/
+
+carthi-key.pem
+global-bundle.pem

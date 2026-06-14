@@ -1,4 +1,4 @@
-import { Flag, MapPin, Star, XCircle } from "lucide-react";
+import { Calendar, Clock, Flag, MapPin, Star, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import axios from "axios";
@@ -20,12 +20,22 @@ type Booking = {
   driver_id: number;
   driver_name: string;
   route: string;
+  journey_date: string;
+  departure_time: string;
   seats_booked: number;
   pickup_point: string;
   drop_point: string;
   status: string;
   total_amount: number;
 };
+
+function formatRideDate(value: string) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+}
 
 function ReviewForm({ booking, onDone }: { booking: Booking; onDone: (message: string) => void }) {
   const [rating, setRating] = useState(5);
@@ -144,11 +154,27 @@ export default function PassengerProfilePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <MapPin size={18} className="text-primary" />
-                  <h3 className="font-bold">{booking.route.replace(/\s+to\s+/i, " → ")}</h3>
+                  <h3 className="font-bold">{booking.route.replace(/\s+to\s+/i, " -> ")}</h3>
                 </div>
                 <p className="text-sm text-muted">driver {booking.driver_name}</p>
-                <p className="text-sm text-muted">
-                  {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
+                <div className="mt-3 grid gap-2 rounded-2xl border border-primary-light bg-primary-soft p-3 sm:grid-cols-2">
+                  <span className="flex items-center gap-2">
+                    <Calendar size={17} className="text-primary" />
+                    <span>
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-primary-dark">Travel Date</span>
+                      <span className="font-bold text-ink">{formatRideDate(booking.journey_date)}</span>
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Clock size={17} className="text-primary" />
+                    <span>
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-primary-dark">Time</span>
+                      <span className="font-bold text-ink">{booking.departure_time.slice(0, 5)}</span>
+                    </span>
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-muted">
+                  {booking.seats_booked} seats - {booking.pickup_point} to {booking.drop_point}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="chip">{STATUS_LABEL[booking.status] ?? booking.status}</span>

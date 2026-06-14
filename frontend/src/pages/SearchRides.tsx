@@ -1,17 +1,18 @@
-import { ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
 import RideCard from "../components/RideCard";
+import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 
 export default function SearchRides() {
   const [searchParams] = useSearchParams();
-  const [source, setSource] = useState(searchParams.get("source") || "Ahmedabad");
-  const [destination, setDestination] = useState(searchParams.get("destination") || "Rajkot");
+  const [source, setSource] = useState(searchParams.get("source") || "");
+  const [destination, setDestination] = useState(searchParams.get("destination") || "");
   const [sourceArea, setSourceArea] = useState("");
   const [destinationArea, setDestinationArea] = useState("");
-  const [journeyDate, setJourneyDate] = useState(searchParams.get("date") || "");
+  const [journeyDate, setJourneyDate] = useState(clampTravelDate(searchParams.get("date")));
   const [departureAfter, setDepartureAfter] = useState("");
   const [departureBefore, setDepartureBefore] = useState("");
   const [carType, setCarType] = useState("");
@@ -22,7 +23,8 @@ export default function SearchRides() {
   const [acAvailable, setAcAvailable] = useState("");
   const [sortBy, setSortBy] = useState("date_time");
   const [seats, setSeats] = useState(1);
-  const [showAllFilters, setShowAllFilters] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -46,8 +48,8 @@ export default function SearchRides() {
     queryFn: async () => {
       const response = await api.get<Ride[]>("/passenger/rides/search", {
         params: {
-          source,
-          destination,
+          source: source.trim() || undefined,
+          destination: destination.trim() || undefined,
           source_area: sourceArea || undefined,
           destination_area: destinationArea || undefined,
           journey_date: journeyDate || undefined,
@@ -71,56 +73,75 @@ export default function SearchRides() {
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
       <div className="flex flex-col gap-6">
         <div className="card rounded-3xl p-5 md:p-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row">
-            <div>
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal size={26} className="text-primary" />
                 <h1 className="text-3xl font-bold md:text-4xl">Passenger ride search</h1>
               </div>
-              <p className="mt-2 max-w-3xl text-muted">
-                Compare friendly car rides by city, local area, date, time, price, rating, fuel, AC, seats, and car
-                category.
+              <p className="mt-2 max-w-xl text-sm text-muted md:whitespace-nowrap">
+                Pickup, drop off, date. Seat-hunting made simple.
               </p>
             </div>
-            <button type="button" className="btn-primary self-stretch md:self-center" onClick={() => refetch()}>
-              <Search size={18} />
-              Search rides
-            </button>
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-[460px]">
+              <button type="button" className="btn-outline w-full justify-between px-4" onClick={() => setShowSort((current) => !current)}>
+                <span className="inline-flex items-center gap-2">
+                  <ArrowUpDown size={18} />
+                  Sort rides
+                </span>
+                {showSort ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              <button type="button" className="btn-outline w-full justify-between px-4" onClick={() => setShowFilters((current) => !current)}>
+                <span className="inline-flex items-center gap-2">
+                  <SlidersHorizontal size={18} />
+                  Filter rides
+                </span>
+                {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              <button type="button" className="btn-primary w-full justify-center px-4" onClick={() => refetch()}>
+                <span className="inline-flex items-center gap-2">
+                  <Search size={18} />
+                  Search rides
+                </span>
+              </button>
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_220px]">
             <label>
-              <span className="field-label">Source city</span>
-              <input className="input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="Ahmedabad" />
+              <span className="field-label">Pickup</span>
+              <input className="input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="Enter pickup city" />
             </label>
             <label>
-              <span className="field-label">Destination city</span>
-              <input className="input" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Rajkot" />
+              <span className="field-label">Drop off</span>
+              <input className="input" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Enter drop off city" />
             </label>
-            <label>
-              <span className="field-label">Journey date</span>
-              <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
-            </label>
-            <label>
+            <TravelDatePicker value={journeyDate} onChange={setJourneyDate} />
+          </div>
+
+          {showSort && (
+            <div className="mt-4 rounded-2xl border border-sand bg-cream p-3">
               <span className="field-label">Sort rides</span>
-              <select className="input" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="date_time">Sort by date</option>
-                <option value="time">Sort by time</option>
-                <option value="price">Sort by price</option>
-              </select>
-            </label>
-          </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {[
+                  ["date_time", "Date"],
+                  ["time", "Time"],
+                  ["price", "Price"]
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={sortBy === value ? "btn-primary" : "btn-outline"}
+                    onClick={() => setSortBy(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-          <button
-            type="button"
-            className="mt-4 flex items-center gap-1.5 text-sm font-bold text-primary sm:hidden"
-            onClick={() => setShowAllFilters((current) => !current)}
-          >
-            {showAllFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            {showAllFilters ? "Hide extra filters" : "More filters"}
-          </button>
-
-          <div className={`mt-4 gap-4 sm:mt-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 ${showAllFilters ? "grid" : "hidden"}`}>
+          <div className={`mt-4 gap-4 rounded-2xl border border-sand bg-cream p-4 sm:grid-cols-2 lg:grid-cols-4 ${showFilters ? "grid" : "hidden"}`}>
             <label>
               <span className="field-label">Seats needed</span>
               <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />

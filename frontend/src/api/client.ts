@@ -68,6 +68,8 @@ export type Booking = {
   driver_id: number;
   driver_name: string;
   route: string;
+  journey_date: string;
+  departure_time: string;
   seats_booked: number;
   pickup_point: string;
   drop_point: string;

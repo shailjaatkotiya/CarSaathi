@@ -256,6 +256,8 @@ def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
         driver_id=booking.driver_id,
         driver_name=booking.driver_name,
         route=booking.route,
+        journey_date=booking.journey_date,
+        departure_time=booking.departure_time,
         seats_booked=booking.seats_booked,
         pickup_point=booking.pickup_point,
         drop_point=booking.drop_point,

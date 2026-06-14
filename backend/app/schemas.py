@@ -39,14 +39,6 @@ class RegisterRequest(BaseModel):
         value = value.strip()
         return value or None
 
-    @field_validator("role")
-    @classmethod
-    def reject_public_admin_registration(cls, value: UserRole) -> UserRole:
-        if value == UserRole.admin:
-            raise ValueError("Admin accounts cannot be created from public signup")
-        return value
-
-
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -213,6 +205,8 @@ class BookingOut(BaseModel):
     driver_id: int
     driver_name: str
     route: str
+    journey_date: date
+    departure_time: time
     seats_booked: int
     pickup_point: str
     drop_point: str
