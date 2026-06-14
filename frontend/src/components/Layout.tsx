@@ -6,11 +6,16 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 
-const navItems = [
-  { to: "/driver/create-ride", label: "Driver", icon: Car },
-  { to: "/search", label: "Passenger", icon: Search },
-  { to: "/explore", label: "Explore", icon: Compass }
-];
+const driverNav = { to: "/driver/create-ride", label: "Driver", icon: Car };
+const passengerNav = { to: "/search", label: "Passenger", icon: Search };
+const exploreNav = { to: "/explore", label: "Explore", icon: Compass };
+
+// Show only the tab that matches the account role; guests see both.
+function navForRole(role?: string) {
+  if (role === "driver") return [driverNav, exploreNav];
+  if (role === "passenger") return [passengerNav, exploreNav];
+  return [driverNav, passengerNav, exploreNav];
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -38,6 +43,8 @@ export default function Layout({ children }: { children: ReactNode }) {
     enabled: Boolean(token),
     retry: false
   });
+
+  const navItems = navForRole(user?.role);
 
   async function handleLogout() {
     try {

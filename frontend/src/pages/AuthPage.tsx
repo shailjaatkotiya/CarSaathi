@@ -25,85 +25,71 @@ function authErrorMessage(err: unknown) {
   return "Could not continue. Please check your details and try again.";
 }
 
+// Where to land after auth, based on the detected account role.
+function homeForRole(role: string) {
+  if (role === "driver") return "/driver/create-ride";
+  if (role === "admin") return "/admin";
+  return "/search";
+}
+
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
-  const requestedRole = searchParams.get("role") === "driver" ? "driver" : "passenger";
+  // ?switch=driver lets a logged-in passenger sign into a driver account instead.
+  const switchRole = searchParams.get("switch") === "driver" ? "driver" : null;
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [authRole, setAuthRole] = useState<AuthRole>(requestedRole);
-  const [email, setEmail] = useState(requestedRole === "driver" ? "shubham@gmail.com" : "shailja@gmail.com");
-  const [password, setPassword] = useState(requestedRole === "driver" ? "driver@123" : "passenger@123");
-  const [fullName, setFullName] = useState(requestedRole === "driver" ? "Shubham" : "Shailja");
+  const [registerRole, setRegisterRole] = useState<AuthRole>(switchRole ?? "passenger");
+  const [email, setEmail] = useState(switchRole === "driver" ? "shubham@gmail.com" : "shailja@gmail.com");
+  const [password, setPassword] = useState(switchRole === "driver" ? "driver@123" : "passenger@123");
+  const [fullName, setFullName] = useState("Shailja");
   const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const token = useSessionStore((state) => state.token);
   const setToken = useSessionStore((state) => state.setToken);
-  const logout = useSessionStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const from = (location.state as { from?: string } | null)?.from || (authRole === "driver" ? "/driver/create-ride" : "/search");
+  const from = (location.state as { from?: string } | null)?.from || null;
 
+  // Already signed in? Send them to their role home — unless they came here to
+  // switch accounts (e.g. a passenger choosing to publish a ride as a driver).
   useEffect(() => {
-    setAuthRole(requestedRole);
-    setEmail(requestedRole === "driver" ? "shubham@gmail.com" : "shailja@gmail.com");
-    setPassword(requestedRole === "driver" ? "driver@123" : "passenger@123");
-    setFullName(requestedRole === "driver" ? "Shubham" : "Shailja");
-  }, [requestedRole]);
-
-  useEffect(() => {
-    if (!token) {
-      setCurrentUser(null);
-      return;
-    }
+    if (!token || switchRole) return;
     api
       .get<User>("/auth/me")
-      .then(({ data }) => {
-        setCurrentUser(data);
-        if (data.role === authRole) {
-          navigate(from, { replace: true });
-        }
-      })
-      .catch(() => setCurrentUser(null));
-  }, [authRole, from, navigate, token]);
-
-  async function switchAccount() {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      logout();
-      queryClient.clear();
-      setCurrentUser(null);
-      setMessage(`Logged out. Please login as ${authRole}.`);
-    }
-  }
+      .then(({ data }) => navigate(from || homeForRole(data.role), { replace: true }))
+      .catch(() => {
+        /* invalid token handled by interceptor */
+      });
+  }, [from, navigate, token, switchRole]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
     const normalizedEmail = email.trim().toLowerCase();
     const payload =
       mode === "login"
-        ? { email: normalizedEmail, password: password.trim(), role: authRole }
+        ? { email: normalizedEmail, password: password.trim() }
         : {
             full_name: fullName.trim(),
             email: normalizedEmail,
             password: password.trim(),
             whatsapp_number: whatsappNumber.trim() || null,
-            role: authRole
+            role: registerRole
           };
 
     setIsSubmitting(true);
     setError("");
     setMessage("");
     try {
+      const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
       const { data } = await api.post(endpoint, payload);
       setToken(data.access_token);
       await queryClient.invalidateQueries({ queryKey: ["me"] });
+      // Detect the role from the account and route accordingly.
+      const me = (await api.get<User>("/auth/me")).data;
       setMessage("Logged in successfully.");
-      navigate(from, { replace: true });
+      navigate(from || homeForRole(me.role), { replace: true });
     } catch (err) {
       setError(authErrorMessage(err));
     } finally {
@@ -114,42 +100,18 @@ export default function AuthPage() {
   return (
     <div className="mx-auto w-full max-w-xl px-4 py-6">
       <div className="card rounded-3xl p-6 md:p-10">
-        {token && currentUser && currentUser.role !== authRole ? (
-          <div className="flex flex-col gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Login as {authRole}</h1>
-              <p className="mt-2 text-muted">
-                You are currently logged in as {currentUser.role}. Switch accounts to continue as {authRole}.
-              </p>
-            </div>
-            <button type="button" className="btn-primary self-start" onClick={switchAccount}>
-              Logout and login as {authRole}
-            </button>
-          </div>
-        ) : (
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div>
             <h1 className="text-3xl font-bold">
-              {mode === "login" ? "Login" : "Register"} as {authRole === "driver" ? "Driver" : "Passenger"}
+              {switchRole ? "Login as a driver to publish" : mode === "login" ? "Login" : "Create your account"}
             </h1>
             <p className="mt-2 text-muted">
-              Passenger accounts book rides. Driver accounts publish rides and manage car details.
+              {switchRole
+                ? "Publishing a ride needs a driver account. Login as a driver, or register a new driver account, to continue."
+                : mode === "login"
+                ? "Enter your email and password. We detect your driver or passenger account automatically."
+                : "Passenger accounts book rides. Driver accounts publish rides and manage car details."}
             </p>
-          </div>
-
-          <div className="grid gap-2 rounded-2xl bg-sand-light p-1 sm:grid-cols-2">
-            {(["passenger", "driver"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => navigate(`/auth?role=${value}`, { replace: true, state: location.state })}
-                className={`rounded-xl px-4 py-3 text-sm font-bold capitalize transition ${
-                  authRole === value ? "bg-primary text-white" : "text-muted hover:text-ink"
-                }`}
-              >
-                {value}
-              </button>
-            ))}
           </div>
 
           <div className="flex rounded-full bg-sand-light p-1">
@@ -169,6 +131,20 @@ export default function AuthPage() {
 
           {mode === "register" && (
             <>
+              <div className="grid gap-2 rounded-2xl bg-sand-light p-1 sm:grid-cols-2">
+                {(["passenger", "driver"] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRegisterRole(value)}
+                    className={`rounded-xl px-4 py-3 text-sm font-bold capitalize transition ${
+                      registerRole === value ? "bg-primary text-white" : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
               <label>
                 <span className="field-label">Full name</span>
                 <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
@@ -203,7 +179,6 @@ export default function AuthPage() {
           {message && <p className="alert-success">{message}</p>}
           {error && <p className="alert-error">{error}</p>}
         </form>
-        )}
       </div>
     </div>
   );

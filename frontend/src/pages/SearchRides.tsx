@@ -1,15 +1,17 @@
 import { ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
 import RideCard from "../components/RideCard";
 
 export default function SearchRides() {
-  const [source, setSource] = useState("Ahmedabad");
-  const [destination, setDestination] = useState("Rajkot");
+  const [searchParams] = useSearchParams();
+  const [source, setSource] = useState(searchParams.get("source") || "Ahmedabad");
+  const [destination, setDestination] = useState(searchParams.get("destination") || "Rajkot");
   const [sourceArea, setSourceArea] = useState("");
   const [destinationArea, setDestinationArea] = useState("");
-  const [journeyDate, setJourneyDate] = useState("");
+  const [journeyDate, setJourneyDate] = useState(searchParams.get("date") || "");
   const [departureAfter, setDepartureAfter] = useState("");
   const [departureBefore, setDepartureBefore] = useState("");
   const [carType, setCarType] = useState("");

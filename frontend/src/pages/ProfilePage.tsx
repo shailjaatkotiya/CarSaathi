@@ -148,6 +148,9 @@ export default function ProfilePage() {
     );
   }
 
+  const isDriver = data?.role === "driver";
+  const isPassenger = data?.role === "passenger";
+
   if (isError || !data) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
@@ -246,6 +249,7 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {isDriver && (
             <div className="card p-5 md:p-6">
               <h2 className="text-xl font-bold">Personal car details optional</h2>
               <p className="mt-1.5 text-sm text-muted">
@@ -331,9 +335,11 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-5">
+            {isDriver && (
             <div className="card p-5 md:p-6">
               <div className="flex items-center gap-2.5">
                 <Shield size={22} className="text-primary" />
@@ -350,18 +356,23 @@ export default function ProfilePage() {
                 {data?.verification_status === "verified" ? "Verified profile" : "Verification pending"}
               </span>
             </div>
+            )}
 
+            {isDriver && (
             <Link to="/my-rides" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <Car size={22} className="text-primary" />
               <h3 className="mt-2 font-bold">Published Rides</h3>
               <p className="mt-1.5 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
             </Link>
+            )}
 
+            {isPassenger && (
             <Link to="/profile/passenger" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <UserIcon size={22} className="text-primary" />
               <h3 className="mt-2 font-bold">Booked Rides</h3>
               <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
             </Link>
+            )}
           </div>
         </div>
       </div>
