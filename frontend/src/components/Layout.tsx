@@ -1,28 +1,14 @@
-import { Car, Compass, LogOut, Search, User as UserIcon } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Car, User as UserIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 
-const driverNav = { to: "/driver/create-ride", label: "Driver", icon: Car };
-const passengerNav = { to: "/search", label: "Passenger", icon: Search };
-const exploreNav = { to: "/explore", label: "Explore", icon: Compass };
-
-// Show only the tab that matches the account role; guests see both.
-function navForRole(role?: string) {
-  if (role === "driver") return [driverNav, exploreNav];
-  if (role === "passenger") return [passengerNav, exploreNav];
-  return [driverNav, passengerNav, exploreNav];
-}
-
 export default function Layout({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const token = useSessionStore((state) => state.token);
   const setToken = useSessionStore((state) => state.setToken);
-  const logout = useSessionStore((state) => state.logout);
 
   useEffect(() => {
     // Exchange the stored token for a fresh one on app load so an open tab
@@ -44,20 +30,8 @@ export default function Layout({ children }: { children: ReactNode }) {
     retry: false
   });
 
-  const navItems = navForRole(user?.role);
-
-  async function handleLogout() {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      logout();
-      queryClient.clear();
-      navigate("/auth", { replace: true });
-    }
-  }
-
   return (
-    <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-sand bg-cream/85 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[64px] w-full max-w-6xl items-center justify-between gap-2 px-4 md:min-h-[72px] md:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2 md:gap-3">
@@ -67,58 +41,21 @@ export default function Layout({ children }: { children: ReactNode }) {
             <span className="text-lg font-bold leading-none">Carthi</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${
-                    isActive ? "bg-primary text-white" : "text-muted hover:bg-primary-soft hover:text-primary-dark"
-                  }`
-                }
-              >
-                <item.icon size={18} />
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="flex min-w-0 items-center gap-2">
-            <Link to={token ? "/profile" : "/auth"} className="btn-outline px-4 md:px-5">
+          {token ? (
+            <Link to="/profile" className="btn-outline px-4 md:px-5">
               <UserIcon size={18} />
-              <span className="max-w-[5.5rem] truncate sm:max-w-none">
-                {token ? user?.full_name?.split(" ")[0] || "Profile" : "Login"}
-              </span>
+              <span className="max-w-[8rem] truncate sm:max-w-none">{user?.full_name?.split(" ")[0] || "Profile"}</span>
             </Link>
-            {token && (
-              <button type="button" className="btn-primary px-4 md:px-5" onClick={handleLogout} aria-label="Logout">
-                <LogOut size={18} />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            )}
-          </div>
+          ) : (
+            <Link to="/auth" className="btn-primary px-5 md:px-6">
+              <UserIcon size={18} />
+              Login
+            </Link>
+          )}
         </div>
       </header>
 
       <main>{children}</main>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-sand bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex min-h-[48px] flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-bold transition ${
-                isActive ? "text-primary" : "text-muted"
-              }`
-            }
-          >
-            <item.icon size={20} />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
     </div>
   );
 }

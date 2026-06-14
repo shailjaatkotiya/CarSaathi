@@ -1,8 +1,17 @@
-import { Flag, Star, Ticket, XCircle } from "lucide-react";
+import { Flag, MapPin, Star, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import axios from "axios";
 import { api } from "../api/client";
+
+// Booking status mirrors the driver's action: confirmed = driver accepted.
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  confirmed: "Accepted",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
+  completed: "Completed"
+};
 
 type Booking = {
   id: number;
@@ -40,7 +49,7 @@ function ReviewForm({ booking, onDone }: { booking: Booking; onDone: (message: s
       <div className="mt-2 flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((value) => (
           <button key={value} type="button" onClick={() => setRating(value)} aria-label={`${value} stars`}>
-            <Star size={22} className={value <= rating ? "fill-amber-400 text-amber-400" : "text-muted"} />
+            <Star size={22} className={value <= rating ? "fill-ink text-ink" : "text-muted"} />
           </button>
         ))}
         <span className="ml-2 text-sm text-muted">{rating}/5</span>
@@ -134,52 +143,56 @@ export default function PassengerProfilePage() {
             <div className="flex flex-col justify-between gap-4 sm:flex-row">
               <div>
                 <div className="flex items-center gap-2">
-                  <Ticket size={18} className="text-primary" />
-                  <h3 className="font-bold">{booking.booking_code}</h3>
+                  <MapPin size={18} className="text-primary" />
+                  <h3 className="font-bold">{booking.route.replace(/\s+to\s+/i, " → ")}</h3>
                 </div>
-                <p className="text-sm text-muted">
-                  {booking.route} · driver {booking.driver_name}
-                </p>
+                <p className="text-sm text-muted">driver {booking.driver_name}</p>
                 <p className="text-sm text-muted">
                   {booking.seats_booked} seats · {booking.pickup_point} to {booking.drop_point}
                 </p>
-                <span className="chip mt-2">
-                  {booking.status} · Rs. {booking.total_amount}
-                </span>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="chip">{STATUS_LABEL[booking.status] ?? booking.status}</span>
+                  <span className="chip-outline">{booking.booking_code}</span>
+                  <span className="chip-outline">Rs. {booking.total_amount}</span>
+                </div>
               </div>
               <div className="flex flex-col gap-2 sm:items-end">
-                {["pending", "confirmed"].includes(booking.status) && (
+                {/* Cancel only after the driver approves (confirmed = accepted). */}
+                {booking.status === "confirmed" && (
                   <button type="button" className="btn-danger" onClick={() => cancelBooking(booking.id)}>
                     <XCircle size={16} />
                     Cancel
                   </button>
                 )}
-                {["confirmed", "completed"].includes(booking.status) && (
-                  <button
-                    type="button"
-                    className="btn-outline"
-                    onClick={() =>
-                      setOpenForm((current) =>
-                        current?.bookingId === booking.id && current.type === "review" ? null : { bookingId: booking.id, type: "review" }
-                      )
-                    }
-                  >
-                    <Star size={16} />
-                    Rate driver
-                  </button>
+                {/* Rate and report only after the ride is completed. */}
+                {booking.status === "completed" && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-outline"
+                      onClick={() =>
+                        setOpenForm((current) =>
+                          current?.bookingId === booking.id && current.type === "review" ? null : { bookingId: booking.id, type: "review" }
+                        )
+                      }
+                    >
+                      <Star size={16} />
+                      Rate driver
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-outline"
+                      onClick={() =>
+                        setOpenForm((current) =>
+                          current?.bookingId === booking.id && current.type === "report" ? null : { bookingId: booking.id, type: "report" }
+                        )
+                      }
+                    >
+                      <Flag size={16} />
+                      Report driver
+                    </button>
+                  </>
                 )}
-                <button
-                  type="button"
-                  className="btn-outline"
-                  onClick={() =>
-                    setOpenForm((current) =>
-                      current?.bookingId === booking.id && current.type === "report" ? null : { bookingId: booking.id, type: "report" }
-                    )
-                  }
-                >
-                  <Flag size={16} />
-                  Report driver
-                </button>
               </div>
             </div>
             {openForm?.bookingId === booking.id && openForm.type === "review" && <ReviewForm booking={booking} onDone={handleFormDone} />}

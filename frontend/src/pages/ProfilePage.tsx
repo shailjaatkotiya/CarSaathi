@@ -1,11 +1,12 @@
-import { Car, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
+import { Car, LogOut, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { carBrands } from "../data/carBrands";
+import { useSessionStore } from "../store/session";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 type VerificationStatus = {
@@ -75,6 +76,8 @@ function DetailTile({ label, value, icon }: { label: string; value?: string | nu
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const logout = useSessionStore((state) => state.logout);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [brandOther, setBrandOther] = useState(false);
@@ -131,6 +134,16 @@ export default function ProfilePage() {
 
   function setField(field: keyof ProfileForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function handleLogout() {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      logout();
+      queryClient.clear();
+      navigate("/auth", { replace: true });
+    }
   }
 
   function cancelEdit() {
@@ -190,10 +203,16 @@ export default function ProfilePage() {
                 Rating {data?.rating_average || 0} from {data?.rating_count || 0} reviews
               </p>
               {!isEditing ? (
-                <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
-                  <Pencil size={16} />
-                  Edit profile
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
+                    <Pencil size={16} />
+                    Edit profile
+                  </button>
+                  <button type="button" className="btn-danger" onClick={handleLogout}>
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <button type="button" className="btn-outline" onClick={cancelEdit}>

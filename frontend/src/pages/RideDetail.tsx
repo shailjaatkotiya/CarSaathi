@@ -93,7 +93,7 @@ export default function RideDetail() {
       name: "Carthi",
       description: `Booking ${init.booking_code}`,
       prefill: { name: me?.full_name, contact: me?.whatsapp_number ?? "" },
-      theme: { color: "#0f766e" },
+      theme: { color: "#171717" },
       handler: async (resp: {
         razorpay_order_id: string;
         razorpay_payment_id: string;

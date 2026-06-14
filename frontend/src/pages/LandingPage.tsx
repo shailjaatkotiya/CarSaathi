@@ -1,12 +1,14 @@
 import { ArrowRight, BadgeCheck, Calendar, Car, ListChecks, Map, MapPin, Search, Shield, Users } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
+import RideFlow from "../components/RideFlow";
 
-// Lazy-loaded so three.js stays out of the main bundle for non-landing pages.
-const CarScene = lazy(() => import("../components/CarScene"));
+// Techy digital car dashboard / cockpit shot for the hero visuals.
+const DASHBOARD_IMG =
+  "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1400&q=80";
 
 const features = [
   [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
@@ -81,8 +83,8 @@ function RideSearchBar() {
 function GuestLanding() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 md:pt-8">
-      <section className="relative overflow-hidden rounded-[2rem] bg-neutral-950 px-5 pt-10 text-white shadow-2xl md:rounded-[2.5rem] md:px-12 md:pt-14">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-neutral-800/40 via-transparent to-neutral-950" />
+      <section className="relative rounded-[2rem] bg-neutral-950 px-5 pb-8 pt-10 text-white shadow-2xl md:rounded-[2.5rem] md:px-12 md:pb-12 md:pt-14">
+        <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-b from-neutral-800/40 via-transparent to-neutral-950 md:rounded-[2.5rem]" />
 
         <div className="relative flex flex-col items-center text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-bold tracking-wide text-neutral-200">
@@ -96,17 +98,20 @@ function GuestLanding() {
             Bored going alone in a bus? Choose a friendly car ride, flexible halts, and a homely intercity travel
             experience.
           </p>
-
-          <div className="mt-2 h-[220px] w-full md:h-[320px]">
-            <Suspense fallback={null}>
-              <CarScene />
-            </Suspense>
-          </div>
         </div>
 
-        {/* Search / booking bar */}
-        <div className="relative -mb-6 translate-y-6 md:-mb-8 md:translate-y-8">
-          <RideSearchBar />
+        {/* Techy car dashboard with the ride search inside it */}
+        <div className="relative mt-8 overflow-hidden rounded-2xl border border-white/10 md:rounded-3xl">
+          <img
+            src={DASHBOARD_IMG}
+            alt="Car dashboard"
+            className="h-[260px] w-full object-cover grayscale md:h-[360px]"
+            loading="lazy"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-3 md:p-5">
+            <RideSearchBar />
+          </div>
         </div>
       </section>
 
@@ -123,10 +128,10 @@ function GuestLanding() {
             <ArrowRight size={18} />
           </Link>
           <Link
-            to="/explore"
+            to="/search"
             className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white px-7 text-sm font-bold text-ink transition hover:border-neutral-950"
           >
-            Explore rides
+            Search rides
           </Link>
         </div>
       </div>
@@ -164,6 +169,11 @@ function GuestLanding() {
             <p className="mt-1.5 text-sm text-muted">{copy}</p>
           </div>
         ))}
+      </div>
+
+      {/* How it works (from the old Explore page) */}
+      <div className="mt-12">
+        <RideFlow />
       </div>
     </div>
   );
@@ -255,10 +265,13 @@ function HomeForUser({ user }: { user?: User }) {
             </div>
           </div>
 
-          <div className="relative min-h-[260px] overflow-hidden rounded-3xl md:min-h-[390px]">
-            <Suspense fallback={null}>
-              <CarScene />
-            </Suspense>
+          <div className="overflow-hidden rounded-3xl border border-sand">
+            <img
+              src={DASHBOARD_IMG}
+              alt="Car dashboard"
+              className="h-[260px] w-full object-cover grayscale md:h-[390px]"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
@@ -282,6 +295,10 @@ function HomeForUser({ user }: { user?: User }) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6">
+        <RideFlow role={user?.role} />
       </div>
     </>
   );
