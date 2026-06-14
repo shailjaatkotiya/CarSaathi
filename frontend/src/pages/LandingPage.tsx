@@ -6,9 +6,17 @@ import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 import RideFlow from "../components/RideFlow";
 import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
+import PixelSlideshow from "../components/PixelSlideshow";
 
-// Monochrome car-dashboard illustration with an Ahmedabad -> Rajkot nav map.
-const DASHBOARD_IMG = "/car-dashboard.svg";
+// Monochrome car-dashboard illustrations (different intercity routes) that the
+// hero cycles through with a pixelate dissolve.
+const DASHBOARD_IMAGES = [
+  "/car-dashboard-1.svg",
+  "/car-dashboard-2.svg",
+  "/car-dashboard-3.svg",
+  "/car-dashboard-4.svg",
+  "/car-dashboard-5.svg"
+];
 
 const features = [
   [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
@@ -156,12 +164,7 @@ function HomeForUser({ user }: { user?: User }) {
           </div>
 
           <div className="overflow-hidden rounded-3xl border border-sand">
-            <img
-              src={DASHBOARD_IMG}
-              alt="Car dashboard"
-              className="h-[260px] w-full object-cover md:h-[390px]"
-              loading="lazy"
-            />
+            <PixelSlideshow images={DASHBOARD_IMAGES} className="block h-[260px] w-full md:h-[390px]" />
           </div>
         </div>
       </div>

@@ -1,0 +1,70 @@
+<svg viewBox="0 0 1400 820" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Car dashboard navigation map from Ahmedabad to Gandhinagar">
+  <defs>
+    <linearGradient id="dash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101012"/><stop offset="0.55" stop-color="#0a0a0b"/><stop offset="1" stop-color="#050506"/></linearGradient>
+    <linearGradient id="hood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1c20"/><stop offset="1" stop-color="#0d0d0f"/></linearGradient>
+    <linearGradient id="map" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfbfb"/><stop offset="1" stop-color="#e9e9ec"/></linearGradient>
+    <radialGradient id="amb" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#3a3a42" stop-opacity="0.9"/><stop offset="0.6" stop-color="#15151a" stop-opacity="0"/></radialGradient>
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fafafa"/><stop offset="0.5" stop-color="#9a9a9f"/><stop offset="1" stop-color="#d8d8dc"/></linearGradient>
+  </defs>
+  <rect width="1400" height="820" fill="url(#dash)"/>
+  <rect width="1400" height="430" fill="url(#amb)"/>
+  <rect x="120" y="40" width="1160" height="3" rx="1.5" fill="#33333b" opacity="0.5"/>
+  <path d="M0 470 Q700 360 1400 470 L1400 820 L0 820 Z" fill="url(#hood)"/>
+  <path d="M0 470 Q700 360 1400 470" fill="none" stroke="#2a2a31" stroke-width="3"/>
+  <path d="M120 540 Q700 452 1280 540" fill="none" stroke="#3a3a42" stroke-width="2" stroke-dasharray="8 10" opacity="0.7"/>
+  <g transform="translate(250 300)">
+    <rect x="-180" y="-150" width="360" height="320" rx="28" fill="#16161a" stroke="#2a2a31" stroke-width="3"/>
+    <path d="M-110 110 A150 150 0 1 1 110 110" fill="none" stroke="#26262d" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-110 110 A150 150 0 0 1 70 -120" fill="none" stroke="#f5f5f5" stroke-width="16" stroke-linecap="round"/>
+    <text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="78" font-weight="700" fill="#ffffff">46</text>
+    <text x="0" y="46" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" letter-spacing="3" fill="#8a8a92">KM / H</text>
+    <text x="0" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" letter-spacing="2" fill="#6f6f78">D &#183; ECO &#183; 28 KM LEFT</text>
+  </g>
+  <g transform="translate(540 150)">
+    <rect x="-18" y="-18" width="636" height="436" rx="26" fill="#141417" stroke="#2c2c33" stroke-width="3"/>
+    <rect x="0" y="0" width="600" height="400" rx="16" fill="url(#map)"/>
+    <clipPath id="mc"><rect x="0" y="0" width="600" height="400" rx="16"/></clipPath>
+    <g clip-path="url(#mc)">
+      <g stroke="#d7d7dc" stroke-width="2"><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="150" x2="600" y2="150"/><line x1="0" y1="230" x2="600" y2="230"/><line x1="0" y1="310" x2="600" y2="310"/><line x1="90" y1="0" x2="90" y2="400"/><line x1="200" y1="0" x2="200" y2="400"/><line x1="330" y1="0" x2="330" y2="400"/><line x1="450" y1="0" x2="450" y2="400"/></g>
+      <path d="M-20 360 L420 -20" stroke="#cdcdd3" stroke-width="6" fill="none"/>
+      <path d="M120 420 L640 120" stroke="#cdcdd3" stroke-width="6" fill="none"/>
+      <path d="M470 250 q60 -30 130 10 l0 160 l-160 0 z" fill="#dfe3e7"/>
+      <path d="M120 330 C 210 300, 250 230, 320 210 S 420 150, 470 120" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round"/>
+      <path d="M120 330 C 210 300, 250 230, 320 210 S 420 150, 470 120" fill="none" stroke="#111114" stroke-width="11" stroke-linecap="round"/>
+      <circle cx="120" cy="330" r="15" fill="#111114"/><circle cx="120" cy="330" r="6" fill="#ffffff"/>
+      <path d="M470 82 C 448 82 432 98 432 120 C 432 148 470 180 470 180 C 470 180 508 148 508 120 C 508 98 492 82 470 82 Z" fill="#111114"/>
+      <circle cx="470" cy="118" r="12" fill="#ffffff"/>
+    </g>
+    <g font-family="Arial, sans-serif" font-weight="700">
+      <rect x="20" y="350" width="129" height="34" rx="17" fill="#111114"/>
+      <text x="84.5" y="373" text-anchor="middle" font-size="19" fill="#ffffff">Ahmedabad</text>
+      <rect x="411" y="20" width="151" height="34" rx="17" fill="#111114"/>
+      <text x="486.5" y="43" text-anchor="middle" font-size="19" fill="#ffffff">Gandhinagar</text>
+    </g>
+    <g transform="translate(0 -18)">
+      <rect x="150" y="-58" width="300" height="52" rx="26" fill="#111114"/>
+      <path d="M188 -32 l22 -14 l0 8 l16 0 l0 12 l-16 0 l0 8 z" fill="#ffffff"/>
+      <text x="250" y="-26" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">28 km</text>
+      <text x="360" y="-26" font-family="Arial, sans-serif" font-size="20" fill="#b8b8bf">&#183; 40 min</text>
+    </g>
+  </g>
+  <g transform="translate(540 600)" font-family="Arial, sans-serif">
+    <rect x="-18" y="0" width="636" height="92" rx="20" fill="#161619" stroke="#262630" stroke-width="2"/>
+    <circle cx="60" cy="46" r="22" fill="none" stroke="#3a3a44" stroke-width="3"/><text x="60" y="53" text-anchor="middle" font-size="20" fill="#dadade">A/C</text>
+    <circle cx="160" cy="46" r="22" fill="none" stroke="#3a3a44" stroke-width="3"/><text x="160" y="53" text-anchor="middle" font-size="18" fill="#dadade">22&#176;</text>
+    <rect x="250" y="30" width="320" height="10" rx="5" fill="#2c2c35"/><rect x="250" y="30" width="190" height="10" rx="5" fill="#f0f0f2"/><circle cx="440" cy="35" r="11" fill="#ffffff"/>
+    <text x="250" y="68" font-size="16" letter-spacing="2" fill="#6f6f78">MEDIA &#183; NAVIGATION</text>
+  </g>
+  <g transform="translate(1200 250)">
+    <rect x="0" y="0" width="150" height="120" rx="18" fill="#161619" stroke="#2a2a33" stroke-width="2"/>
+    <g stroke="#3c3c46" stroke-width="6" stroke-linecap="round"><line x1="22" y1="28" x2="128" y2="28"/><line x1="22" y1="52" x2="128" y2="52"/><line x1="22" y1="76" x2="128" y2="76"/><line x1="22" y1="100" x2="128" y2="100"/></g>
+  </g>
+  <g transform="translate(700 880)">
+    <ellipse cx="0" cy="0" rx="300" ry="270" fill="none" stroke="#1b1b20" stroke-width="46"/>
+    <ellipse cx="0" cy="0" rx="300" ry="270" fill="none" stroke="#0c0c0f" stroke-width="20"/>
+    <rect x="-86" y="-150" width="172" height="92" rx="26" fill="#17171b" stroke="#2c2c34" stroke-width="3"/>
+    <g transform="translate(0 -104)"><ellipse cx="0" cy="0" rx="46" ry="30" fill="none" stroke="url(#chrome)" stroke-width="6"/><path d="M-26 8 Q-6 -18 22 -8" fill="none" stroke="url(#chrome)" stroke-width="9" stroke-linecap="round" transform="rotate(-18)"/></g>
+    <rect x="-150" y="-86" width="80" height="22" rx="11" fill="#17171b"/><rect x="70" y="-86" width="80" height="22" rx="11" fill="#17171b"/>
+  </g>
+  <rect width="1400" height="820" fill="url(#amb)" opacity="0.25"/>
+</svg>
