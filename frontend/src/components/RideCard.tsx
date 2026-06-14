@@ -47,15 +47,18 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
 
         <hr className="border-sand" />
 
-        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:flex-wrap md:gap-5">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-lg font-bold text-ink">
           <span className="flex items-center gap-2">
-            <Calendar size={16} />
+            <Calendar size={18} className="text-primary" />
             {formatRideDate(ride.journey_date)}
           </span>
           <span className="flex items-center gap-2">
-            <Clock size={16} />
+            <Clock size={18} className="text-primary" />
             {ride.departure_time.slice(0, 5)}
           </span>
+        </div>
+
+        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:flex-wrap md:gap-5">
           <span className="flex items-center gap-2">
             <MapPin size={16} />
             {ride.distance_km} km

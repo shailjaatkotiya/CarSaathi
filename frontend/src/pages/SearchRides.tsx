@@ -80,29 +80,23 @@ export default function SearchRides() {
                 <h1 className="text-3xl font-bold md:text-4xl">Passenger ride search</h1>
               </div>
               <p className="mt-2 max-w-xl text-sm text-muted md:whitespace-nowrap">
-                Pickup, drop off, date. Seat-hunting made simple.
+                Pickup, drop-off, date - your shotgun seat is a search away.
               </p>
             </div>
-            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-[460px]">
-              <button type="button" className="btn-outline w-full justify-between px-4" onClick={() => setShowSort((current) => !current)}>
-                <span className="inline-flex items-center gap-2">
-                  <ArrowUpDown size={18} />
-                  Sort rides
-                </span>
+            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto">
+              <button type="button" className="btn-outline w-full justify-center gap-2 px-4" onClick={() => setShowSort((current) => !current)}>
+                <ArrowUpDown size={18} />
+                Sort
                 {showSort ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
-              <button type="button" className="btn-outline w-full justify-between px-4" onClick={() => setShowFilters((current) => !current)}>
-                <span className="inline-flex items-center gap-2">
-                  <SlidersHorizontal size={18} />
-                  Filter rides
-                </span>
+              <button type="button" className="btn-outline w-full justify-center gap-2 px-4" onClick={() => setShowFilters((current) => !current)}>
+                <SlidersHorizontal size={18} />
+                Filter
                 {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
-              <button type="button" className="btn-primary w-full justify-center px-4" onClick={() => refetch()}>
-                <span className="inline-flex items-center gap-2">
-                  <Search size={18} />
-                  Search rides
-                </span>
+              <button type="button" className="btn-primary col-span-2 w-full justify-center gap-2 px-4 sm:col-span-1" onClick={() => refetch()}>
+                <Search size={18} />
+                Search rides
               </button>
             </div>
           </div>
