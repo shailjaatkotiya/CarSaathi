@@ -34,22 +34,6 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
           </div>
         </div>
 
-        <div className="grid gap-3 rounded-2xl border border-primary-light bg-primary-soft p-3 sm:grid-cols-[1fr_auto] sm:items-center">
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">
-              <Calendar size={17} />
-            </span>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-primary-dark">Travel Date</p>
-              <p className="text-lg font-bold text-ink">{formatRideDate(ride.journey_date)}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-primary-dark">
-            <Clock size={16} />
-            <span className="text-lg font-bold">{ride.departure_time.slice(0, 5)}</span>
-          </div>
-        </div>
-
         <div className="flex flex-wrap gap-2">
           <span className="chip-outline">
             <Armchair size={14} />
@@ -63,7 +47,15 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
 
         <hr className="border-sand" />
 
-        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:gap-5">
+        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:flex-wrap md:gap-5">
+          <span className="flex items-center gap-2">
+            <Calendar size={16} />
+            {formatRideDate(ride.journey_date)}
+          </span>
+          <span className="flex items-center gap-2">
+            <Clock size={16} />
+            {ride.departure_time.slice(0, 5)}
+          </span>
           <span className="flex items-center gap-2">
             <MapPin size={16} />
             {ride.distance_km} km
