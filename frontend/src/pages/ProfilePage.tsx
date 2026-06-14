@@ -1,11 +1,12 @@
-import { Car, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
+import { Car, LogOut, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
 import { carBrands } from "../data/carBrands";
+import { useSessionStore } from "../store/session";
 import VerifiedBadge from "../components/VerifiedBadge";
 
 type VerificationStatus = {
@@ -75,6 +76,8 @@ function DetailTile({ label, value, icon }: { label: string; value?: string | nu
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const logout = useSessionStore((state) => state.logout);
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [brandOther, setBrandOther] = useState(false);
@@ -133,6 +136,16 @@ export default function ProfilePage() {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  async function handleLogout() {
+    try {
+      await api.post("/auth/logout");
+    } finally {
+      logout();
+      queryClient.clear();
+      navigate("/auth", { replace: true });
+    }
+  }
+
   function cancelEdit() {
     setIsEditing(false);
     setError("");
@@ -147,6 +160,9 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const isDriver = data?.role === "driver";
+  const isPassenger = data?.role === "passenger";
 
   if (isError || !data) {
     return (
@@ -187,10 +203,16 @@ export default function ProfilePage() {
                 Rating {data?.rating_average || 0} from {data?.rating_count || 0} reviews
               </p>
               {!isEditing ? (
-                <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
-                  <Pencil size={16} />
-                  Edit profile
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
+                    <Pencil size={16} />
+                    Edit profile
+                  </button>
+                  <button type="button" className="btn-danger" onClick={handleLogout}>
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <button type="button" className="btn-outline" onClick={cancelEdit}>
@@ -246,6 +268,7 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {isDriver && (
             <div className="card p-5 md:p-6">
               <h2 className="text-xl font-bold">Personal car details optional</h2>
               <p className="mt-1.5 text-sm text-muted">
@@ -331,9 +354,11 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-5">
+            {isDriver && (
             <div className="card p-5 md:p-6">
               <div className="flex items-center gap-2.5">
                 <Shield size={22} className="text-primary" />
@@ -350,18 +375,23 @@ export default function ProfilePage() {
                 {data?.verification_status === "verified" ? "Verified profile" : "Verification pending"}
               </span>
             </div>
+            )}
 
+            {isDriver && (
             <Link to="/my-rides" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <Car size={22} className="text-primary" />
               <h3 className="mt-2 font-bold">Published Rides</h3>
               <p className="mt-1.5 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
             </Link>
+            )}
 
+            {isPassenger && (
             <Link to="/profile/passenger" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
               <UserIcon size={22} className="text-primary" />
               <h3 className="mt-2 font-bold">Booked Rides</h3>
               <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
             </Link>
+            )}
           </div>
         </div>
       </div>

@@ -15,7 +15,6 @@ import {
   XCircle
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Link } from "react-router-dom";
 
 type FlowStep = {
   title: string;
@@ -39,7 +38,7 @@ const appSteps: FlowStep[] = [
   },
   {
     title: "Choose a role",
-    body: "Use Driver to publish a journey, or Passenger to search and book an available ride.",
+    body: "Drivers publish a journey; passengers search and book an available ride.",
     icon: Compass,
     tag: "Role"
   }
@@ -47,28 +46,22 @@ const appSteps: FlowStep[] = [
 
 const driverSteps: FlowStep[] = [
   {
-    title: "Driver",
-    body: "Open the Driver flow after login and role setup.",
-    icon: Car,
-    tag: "1"
-  },
-  {
     title: "Add car to profile",
     body: "Use your profile car, pick a saved vehicle, or add a new car for this ride.",
     icon: ShieldCheck,
-    tag: "2"
+    tag: "1"
   },
   {
     title: "Add ride details",
     body: "Enter route, date, time, seats, price, pickup points, drops, stops, and ride rules.",
     icon: Route,
-    tag: "3"
+    tag: "2"
   },
   {
     title: "Publish ride",
     body: "Publish between 3 hours and 10 days before departure, then manage it from Published Rides.",
     icon: CheckCircle2,
-    tag: "4"
+    tag: "3"
   }
 ];
 
@@ -92,32 +85,26 @@ const driverLoopSteps: FlowStep[] = [
 
 const passengerSteps: FlowStep[] = [
   {
-    title: "Passenger",
-    body: "Open Passenger when you want to find a seat in someone else's car.",
-    icon: UserRound,
-    tag: "1"
-  },
-  {
     title: "Search for ride",
     body: "Filter by city, local pickup area, stop or drop area, date, time, price, rating, fuel, AC, seats, and car category.",
     icon: Search,
-    tag: "2"
+    tag: "1"
   },
   {
     title: "Book a ride",
     body: "Open ride details, choose seats, pickup point, and drop or in-between stop.",
     icon: CheckCircle2,
-    tag: "3"
+    tag: "2"
   },
   {
     title: "Cancel booking",
     body: "Use Booked Rides if plans change. The cancellation is logged for WhatsApp updates.",
     icon: XCircle,
-    tag: "4"
+    tag: "3"
   }
 ];
 
-const ruleCards = [
+const ruleCards: FlowStep[] = [
   {
     title: "Driver approval loop",
     body: "Passenger bookings stay visible to the driver, who can accept or reject each request from Published Rides.",
@@ -133,7 +120,7 @@ const ruleCards = [
     body: "Ride publishing is limited to the active travel window and includes pickup, drop, and in-between stops.",
     icon: Clock3
   }
-] satisfies FlowStep[];
+];
 
 function StepCard({ step, compact = false }: { step: FlowStep; compact?: boolean }) {
   const Icon = step.icon;
@@ -204,82 +191,18 @@ function SectionHeader({
   );
 }
 
-export default function ExplorePage() {
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-5 md:py-8">
+// Role-aware "how it works" guide, lifted from the old Explore page.
+// driver -> publishing + approval loop; passenger -> search/book/cancel;
+// guest/undefined -> account setup overview plus both side summaries.
+export default function RideFlow({ role }: { role?: string }) {
+  if (role === "driver") {
+    return (
       <div className="flex flex-col gap-5">
-        <section className="overflow-hidden rounded-2xl border border-sand bg-white shadow-card">
-          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="bg-primary p-6 text-white md:p-8">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary-soft">Carthi / RideSaathi flow</p>
-              <h1 className="mt-2 text-3xl font-bold leading-tight md:text-5xl">Explore the complete ride journey</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-primary-soft md:text-base">
-                This section turns the hand-drawn app flow into a visual guide: profile setup, driver publishing,
-                passenger booking, approvals, rejections, and cancellations.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link to="/driver/create-ride" className="btn bg-white text-primary hover:bg-primary-soft">
-                  Start as driver
-                  <ArrowRight size={17} />
-                </Link>
-                <Link to="/search" className="btn border border-white/40 bg-primary-dark text-white hover:bg-primary">
-                  Search as passenger
-                </Link>
-              </div>
-            </div>
-            <div className="grid gap-3 bg-primary-soft p-5 md:p-6">
-              <div className="rounded-2xl border border-sand bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">Core app map</p>
-                <div className="mt-4 flex flex-col gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="icon-tile">
-                      <Car size={18} />
-                    </span>
-                    <div>
-                      <p className="font-bold">Driver side</p>
-                      <p className="text-sm text-muted">Car &gt; ride details &gt; publish &gt; accept or reject passengers</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="icon-tile">
-                      <Search size={18} />
-                    </span>
-                    <div>
-                      <p className="font-bold">Passenger side</p>
-                      <p className="text-sm text-muted">Search &gt; ride details &gt; book &gt; cancel from booked rides</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Link to="/profile" className="card-soft p-4 transition hover:border-primary">
-                  <p className="text-xs font-bold text-primary">Profile first</p>
-                  <p className="mt-1 text-sm font-bold">Save user and car details</p>
-                </Link>
-                <Link to="/my-rides" className="card-soft p-4 transition hover:border-primary">
-                  <p className="text-xs font-bold text-primary">After publishing</p>
-                  <p className="mt-1 text-sm font-bold">Manage passenger requests</p>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="card-soft p-4 md:p-5">
-          <SectionHeader
-            eyebrow="Step 1"
-            title="Set up the user before any ride action"
-            body="Every important action comes back to one logged-in user, so profile, driver data, and passenger bookings remain separated."
-            icon={BadgeCheck}
-          />
-          <FlowRow steps={appSteps} compact />
-        </section>
-
         <section className="card p-4 md:p-5">
           <SectionHeader
             eyebrow="Driver workflow"
             title="Publish a ride, then manage passengers"
-            body="This follows the sketch: driver adds car information, adds ride details, publishes, then accepts, rejects, or cancels from the driver dashboard."
+            body="Add car information, add ride details, publish, then accept, reject, or cancel from the driver dashboard."
             icon={Car}
           />
           <FlowRow steps={driverSteps} />
@@ -300,11 +223,23 @@ export default function ExplorePage() {
           </div>
         </section>
 
+        <section className="grid gap-3 md:grid-cols-3">
+          {ruleCards.map((card) => (
+            <StepCard key={card.title} step={card} compact />
+          ))}
+        </section>
+      </div>
+    );
+  }
+
+  if (role === "passenger") {
+    return (
+      <div className="flex flex-col gap-5">
         <section className="card p-4 md:p-5">
           <SectionHeader
             eyebrow="Passenger workflow"
             title="Search, book, and cancel when plans change"
-            body="Passenger flow stays direct: search available rides, open the details, book seats, then manage unfinished bookings from the passenger profile."
+            body="Search available rides, open the details, book seats, then manage unfinished bookings from your passenger profile."
             icon={Search}
           />
           <FlowRow steps={passengerSteps} />
@@ -316,6 +251,32 @@ export default function ExplorePage() {
           ))}
         </section>
       </div>
+    );
+  }
+
+  // Guest overview
+  return (
+    <div className="flex flex-col gap-5">
+      <section className="card-soft p-4 md:p-5">
+        <SectionHeader
+          eyebrow="How Carthi works"
+          title="Set up your user before any ride action"
+          body="Every important action comes back to one logged-in user, so profile, driver data, and passenger bookings stay separated."
+          icon={BadgeCheck}
+        />
+        <FlowRow steps={appSteps} compact />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="card p-4 md:p-5">
+          <SectionHeader eyebrow="Driver side" title="Publish a journey" body="Car > ride details > publish > accept or reject passengers." icon={Car} />
+          <FlowRow steps={driverSteps} compact />
+        </div>
+        <div className="card p-4 md:p-5">
+          <SectionHeader eyebrow="Passenger side" title="Find a seat" body="Search > ride details > book > cancel from booked rides." icon={Search} />
+          <FlowRow steps={passengerSteps} compact />
+        </div>
+      </section>
     </div>
   );
 }

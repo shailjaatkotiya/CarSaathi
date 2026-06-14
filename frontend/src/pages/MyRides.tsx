@@ -59,21 +59,21 @@ function RideBookings({
             </p>
             <p className="text-sm text-muted">WhatsApp: {booking.passenger_whatsapp || "Not added"}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="chip self-start sm:self-center">
+          <div className="flex flex-col gap-2 sm:items-end">
+            <span className="chip self-start sm:self-end">
               {booking.status} - Rs. {booking.total_amount}
             </span>
             {booking.status === "pending" && (
-              <>
-                <button type="button" className="btn-primary" onClick={() => acceptBooking(booking.id)}>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <button type="button" className="btn-primary flex-1 sm:flex-none" onClick={() => acceptBooking(booking.id)}>
                   <CheckCircle2 size={16} />
                   Accept
                 </button>
-                <button type="button" className="btn-danger" onClick={() => rejectBooking(booking.id)}>
+                <button type="button" className="btn-danger flex-1 sm:flex-none" onClick={() => rejectBooking(booking.id)}>
                   <XCircle size={16} />
                   Reject
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>

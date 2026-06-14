@@ -8,7 +8,6 @@ import AuthPage from "./pages/AuthPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import CreateRide from "./pages/CreateRide";
 import DriverOnboarding from "./pages/DriverOnboarding";
-import ExplorePage from "./pages/ExplorePage";
 import LandingPage from "./pages/LandingPage";
 import MyRides from "./pages/MyRides";
 import PassengerProfilePage from "./pages/PassengerProfilePage";
@@ -31,7 +30,6 @@ export default function App() {
             </RequireAuth>
           }
         />
-        <Route path="/explore" element={<ExplorePage />} />
         <Route path="/driver/onboarding" element={<DriverOnboarding />} />
         <Route
           path="/driver/vehicle"

@@ -244,9 +244,14 @@ def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: Use
     booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    if booking.status in {BookingStatus.pending, BookingStatus.confirmed}:
-        booking.ride.available_seats += booking.seats_booked
-        cap_available_seats(booking.ride)
+    # Passengers may cancel only after the driver has approved (confirmed) the booking.
+    if booking.status != BookingStatus.confirmed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can cancel a ride only after the driver approves your booking",
+        )
+    booking.ride.available_seats += booking.seats_booked
+    cap_available_seats(booking.ride)
     booking.status = BookingStatus.cancelled
     booking.cancellation_reason = payload.reason
     db.add(CancellationReason(user_id=passenger.id, booking_id=booking.id, reason=payload.reason))

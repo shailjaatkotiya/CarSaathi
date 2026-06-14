@@ -17,10 +17,10 @@ body {
   min-width: 320px;
   font-family: "Archia", "Space Grotesk", Inter, "Segoe UI", Roboto, Arial, sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(153, 173, 122, 0.22), transparent 28rem),
-    radial-gradient(circle at bottom right, rgba(220, 204, 172, 0.28), transparent 30rem),
-    linear-gradient(180deg, #fff8ec 0%, #faf2e0 48%, #efe3cb 100%);
-  color: #2c3324;
+    radial-gradient(circle at top left, rgba(0, 0, 0, 0.05), transparent 28rem),
+    radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.04), transparent 30rem),
+    linear-gradient(180deg, #ffffff 0%, #fafafa 50%, #f4f4f5 100%);
+  color: #171717;
 }
 
 a {
@@ -54,20 +54,22 @@ a {
     @apply w-full rounded-xl border border-sand bg-cream px-3 py-2.5 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
   }
 
-  /* native date/time inputs: match text-input height, align value left, keep picker icon on the right */
+  /* native date/time inputs: flex-center the value, value left, picker icon pinned right */
   input.input[type="date"],
   input.input[type="time"] {
-    @apply h-[46px] appearance-none md:h-[42px];
+    @apply flex h-[46px] appearance-none items-center md:h-[42px];
   }
 
   input.input[type="date"]::-webkit-datetime-edit,
   input.input[type="time"]::-webkit-datetime-edit {
-    @apply py-0 text-ink;
+    @apply flex-1 py-0 text-ink;
   }
 
+  /* black picker glyph to match the monochrome theme, aligned to the right edge */
   input.input[type="date"]::-webkit-calendar-picker-indicator,
   input.input[type="time"]::-webkit-calendar-picker-indicator {
-    @apply cursor-pointer rounded opacity-70 transition hover:opacity-100;
+    @apply ml-auto cursor-pointer rounded opacity-60 transition hover:opacity-100;
+    filter: grayscale(1) brightness(0);
   }
 
   input.input[type="date"]::-webkit-inner-spin-button,

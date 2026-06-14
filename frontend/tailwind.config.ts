@@ -6,26 +6,26 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#546B41",
-          dark: "#3F5130",
-          light: "#99AD7A",
-          soft: "#E9EEDF"
+          DEFAULT: "#171717",
+          dark: "#000000",
+          light: "#737373",
+          soft: "#F4F4F5"
         },
-        sage: "#99AD7A",
+        sage: "#737373",
         sand: {
-          DEFAULT: "#DCCCAC",
-          light: "#EAE0C9"
+          DEFAULT: "#E5E5E5",
+          light: "#F5F5F5"
         },
-        cream: "#FFF8EC",
-        ink: "#2C3324",
-        muted: "#6B7261"
+        cream: "#FFFFFF",
+        ink: "#171717",
+        muted: "#6B7280"
       },
       fontFamily: {
         sans: ["Archia", "Space Grotesk", "Inter", "Segoe UI", "Roboto", "Arial", "sans-serif"]
       },
       boxShadow: {
-        soft: "0 12px 32px rgba(84, 107, 65, 0.12)",
-        card: "0 18px 50px rgba(84, 107, 65, 0.08)"
+        soft: "0 12px 32px rgba(0, 0, 0, 0.10)",
+        card: "0 18px 50px rgba(0, 0, 0, 0.08)"
       }
     }
   },
