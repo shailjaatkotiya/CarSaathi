@@ -7,9 +7,8 @@ import { useSessionStore } from "../store/session";
 import RideFlow from "../components/RideFlow";
 import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
 
-// Techy digital car dashboard / cockpit shot for the hero visuals.
-const DASHBOARD_IMG =
-  "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1400&q=80";
+// Monochrome car-dashboard illustration with an Ahmedabad -> Rajkot nav map.
+const DASHBOARD_IMG = "/car-dashboard.svg";
 
 const features = [
   [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
@@ -160,7 +159,7 @@ function HomeForUser({ user }: { user?: User }) {
             <img
               src={DASHBOARD_IMG}
               alt="Car dashboard"
-              className="h-[260px] w-full object-cover grayscale md:h-[390px]"
+              className="h-[260px] w-full object-cover md:h-[390px]"
               loading="lazy"
             />
           </div>
