@@ -157,20 +157,14 @@ export default function PassengerProfilePage() {
                   <h3 className="font-bold">{booking.route.replace(/\s+to\s+/i, " -> ")}</h3>
                 </div>
                 <p className="text-sm text-muted">driver {booking.driver_name}</p>
-                <div className="mt-3 grid gap-2 rounded-2xl border border-primary-light bg-primary-soft p-3 sm:grid-cols-2">
-                  <span className="flex items-center gap-2">
-                    <Calendar size={17} className="text-primary" />
-                    <span>
-                      <span className="block text-[11px] font-bold uppercase tracking-wide text-primary-dark">Travel Date</span>
-                      <span className="font-bold text-ink">{formatRideDate(booking.journey_date)}</span>
-                    </span>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={15} className="text-primary" />
+                    {formatRideDate(booking.journey_date)}
                   </span>
-                  <span className="flex items-center gap-2">
-                    <Clock size={17} className="text-primary" />
-                    <span>
-                      <span className="block text-[11px] font-bold uppercase tracking-wide text-primary-dark">Time</span>
-                      <span className="font-bold text-ink">{booking.departure_time.slice(0, 5)}</span>
-                    </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock size={15} className="text-primary" />
+                    {booking.departure_time.slice(0, 5)}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted">
