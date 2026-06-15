@@ -1,5 +1,5 @@
-import { Clock, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 function formatTimeLabel(value: string) {
   if (!value) return "Select time";
@@ -58,49 +58,16 @@ export default function TimePicker({
   onChange: (value: string) => void;
   label?: string;
 }) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedTime, setSelectedTime] = useState(value || "00:00");
-  const [hoursInput, setHoursInput] = useState("00");
+  const [hoursInput, setHoursInput] = useState("07");
   const [minutesInput, setMinutesInput] = useState("00");
   const [period, setPeriod] = useState<"AM" | "PM">("AM");
 
   useEffect(() => {
-    const parsed = parseTimeValue(value || "00:00");
+    const parsed = parseTimeValue(value || "07:00");
     setHoursInput(parsed.hoursInput);
     setMinutesInput(parsed.minutesInput);
     setPeriod(parsed.period as "AM" | "PM");
-    setSelectedTime(parsed.value);
   }, [value]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function closeOnOutsideClick(event: MouseEvent) {
-      if (!wrapperRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    document.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutsideClick);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [isOpen]);
-
-  function handleTimeChange(nextValue: string) {
-    setSelectedTime(nextValue);
-    onChange(nextValue);
-  }
 
   function updateTime(
     nextHours: string,
@@ -108,109 +75,70 @@ export default function TimePicker({
     nextPeriod: "AM" | "PM",
   ) {
     const nextValue = to24HourValue(nextHours, nextMinutes, nextPeriod);
-    handleTimeChange(nextValue);
+    onChange(nextValue);
   }
 
+  const timeLabel = formatTimeLabel(value || "07:00");
+
   return (
-    <div ref={wrapperRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="flex h-full min-h-[52px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-left text-ink transition hover:border-primary hover:bg-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40 md:min-h-[48px] md:rounded-2xl"
-        aria-expanded={isOpen}
-        aria-haspopup="dialog"
-      >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">
-          <Clock size={17} />
+    <div className="flex h-full min-h-[52px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-ink md:min-h-[48px] md:rounded-2xl">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">
+        <Clock size={17} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <span className="block text-[11px] font-bold uppercase tracking-wide text-muted">
+          {label}
         </span>
-        <span className="min-w-0">
-          <span className="block text-[11px] font-bold uppercase tracking-wide text-muted">
-            {label}
-          </span>
-          <span className="block truncate text-sm font-bold">
-            {formatTimeLabel(selectedTime)}
-          </span>
+        <span className="block truncate text-sm font-bold text-primary">
+          {timeLabel}
         </span>
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-sand bg-white p-3 text-ink shadow-card"
-          role="dialog"
-          aria-label={`${label} selector`}
+      </div>
+      <div className="flex items-center gap-1">
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={2}
+          aria-label="Hour"
+          className="w-10 rounded-lg border border-sand bg-white px-1 py-1 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+          value={hoursInput}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
+            const safe = String(Math.min(12, Math.max(0, Number(raw) || 0))).padStart(2, "0");
+            setHoursInput(safe);
+            updateTime(safe, minutesInput, period);
+          }}
+        />
+        <span className="font-bold text-muted">:</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={2}
+          aria-label="Minute"
+          className="w-10 rounded-lg border border-sand bg-white px-1 py-1 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+          value={minutesInput}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
+            const safe = String(Math.min(59, Math.max(0, Number(raw) || 0))).padStart(2, "0");
+            setMinutesInput(safe);
+            updateTime(hoursInput, safe, period);
+          }}
+        />
+        <select
+          aria-label="AM or PM"
+          className="rounded-lg border border-sand bg-white px-1 py-1 text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+          value={period}
+          onChange={(e) => {
+            const next = e.target.value as "AM" | "PM";
+            setPeriod(next);
+            updateTime(hoursInput, minutesInput, next);
+          }}
         >
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="field-label mb-0">Hour (00-12)</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={2}
-                className="input"
-                value={hoursInput}
-                onChange={(event) => {
-                  const nextValue = event.target.value
-                    .replace(/\D/g, "")
-                    .slice(0, 2);
-                  const safeValue = Math.min(
-                    12,
-                    Math.max(0, Number(nextValue) || 0),
-                  );
-                  setHoursInput(String(safeValue).padStart(2, "0"));
-                  updateTime(
-                    String(safeValue).padStart(2, "0"),
-                    minutesInput,
-                    period,
-                  );
-                }}
-              />
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span className="field-label mb-0">Minute (00-59)</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={2}
-                className="input"
-                value={minutesInput}
-                onChange={(event) => {
-                  const nextValue = event.target.value
-                    .replace(/\D/g, "")
-                    .slice(0, 2);
-                  const safeValue = Math.min(
-                    60,
-                    Math.max(0, Number(nextValue) || 0),
-                  );
-                  setMinutesInput(String(safeValue).padStart(2, "0"));
-                  updateTime(
-                    hoursInput,
-                    String(safeValue).padStart(2, "0"),
-                    period,
-                  );
-                }}
-              />
-            </label>
-          </div>
-          <label className="mt-3 flex flex-col gap-1">
-            <span className="field-label mb-0">AM / PM</span>
-            <select
-              className="input"
-              value={period}
-              onChange={(event) => {
-                const nextPeriod = event.target.value as "AM" | "PM";
-                setPeriod(nextPeriod);
-                updateTime(hoursInput, minutesInput, nextPeriod);
-              }}
-            >
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
-          </label>
-        </div>
-      )}
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
     </div>
   );
 }
