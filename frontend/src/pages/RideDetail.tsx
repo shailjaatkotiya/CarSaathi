@@ -62,12 +62,16 @@ export default function RideDetail() {
     }
     setMessage("");
     setError("");
+    if (!pickup || !drop) {
+      setError("Please select pickup and drop points before booking.");
+      return;
+    }
     setPaying(true);
     try {
       const { data } = await api.post<BookingActionResponse>(`/passenger/rides/${ride.id}/book`, {
         seats_booked: seats,
-        pickup_point: pickup || ride.pickup_points[0],
-        drop_point: drop || ride.drop_points[0],
+        pickup_point: pickup,
+        drop_point: drop,
         payment_method: paymentMethod
       });
       if (data.payment) {

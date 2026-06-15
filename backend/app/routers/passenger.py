@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -44,6 +44,12 @@ SORT_ALIASES = {
 
 def cap_available_seats(ride: Ride) -> None:
     ride.available_seats = min(ride.available_seats, ride.total_seats)
+
+
+def ride_departure_has_passed(ride: Ride, now: datetime | None = None) -> bool:
+    current = now or datetime.now()
+    journey_at = datetime.combine(ride.journey_date, ride.departure_time)
+    return journey_at <= current
 
 
 def parse_csv_filter(value: str | None) -> set[str]:
@@ -107,6 +113,12 @@ def search_rides(
     pets_allowed: bool | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[RideOut]:
+    source = source.strip() if source else None
+    destination = destination.strip() if destination else None
+    if not source or not destination:
+        return []
+
+    now = datetime.now()
     selected_departure_windows = parse_csv_filter(departure_window)
     normalized_sort = normalize_sort(sort_by)
     search_params = {
@@ -132,6 +144,7 @@ def search_rides(
         "instant_booking": instant_booking,
         "smoking_allowed": smoking_allowed,
         "pets_allowed": pets_allowed,
+        "active_after": now.replace(microsecond=0).isoformat(),
     }
     cached = cache.get_cached_ride_search(search_params)
     if cached is not None:
@@ -157,6 +170,8 @@ def search_rides(
     rides = query.order_by(Ride.journey_date.asc(), Ride.departure_time.asc()).all()
     results = []
     for ride in rides:
+        if ride_departure_has_passed(ride, now):
+            continue
         output = ride_to_out(ride)
         pickup_names = [point.lower() for point in output.pickup_points]
         drop_names = [point.lower() for point in output.drop_points]
@@ -262,6 +277,8 @@ def book_ride(ride_id: int, payload: BookingCreate, passenger: User = Depends(re
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Driver cannot book own ride")
     if payload.seats_booked > ride.available_seats:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Not enough seats available")
+    if ride_departure_has_passed(ride):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This ride has already departed")
     ride_output = ride_to_out(ride)
     valid_pickups = ride_output.pickup_points
     valid_drops = ride_output.drop_points + ride_output.route_stops
