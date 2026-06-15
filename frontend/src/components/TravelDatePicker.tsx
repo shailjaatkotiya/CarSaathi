@@ -214,16 +214,6 @@ export default function TravelDatePicker({
               );
             })}
           </div>
-
-          <div className="mt-3 flex items-center justify-between border-t border-sand pt-3">
-            <button type="button" className="text-xs font-bold text-muted transition hover:text-primary" onClick={() => setIsOpen(false)}>
-              Close
-            </button>
-            <button type="button" className="chip-outline border-primary text-primary" onClick={() => selectDate(today)}>
-              Today
-            </button>
-          </div>
-          <p className="mt-2 text-center text-[11px] font-semibold text-muted">Choose a date up to 10 days ahead.</p>
         </div>
       )}
     </div>

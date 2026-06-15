@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
 import RideListItem from "../components/RideListItem";
+import TimePicker from "../components/TimePicker";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 
 export default function SearchRides() {
@@ -186,11 +187,11 @@ export default function SearchRides() {
             <div className="grid grid-cols-2 gap-2">
               <label>
                 <span className="field-label">After</span>
-                <input className="input" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} />
+                <TimePicker value={departureAfter} onChange={setDepartureAfter} label="After" />
               </label>
               <label>
                 <span className="field-label">Before</span>
-                <input className="input" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} />
+                <TimePicker value={departureBefore} onChange={setDepartureBefore} label="Before" />
               </label>
             </div>
             <div className="grid grid-cols-2 gap-2">

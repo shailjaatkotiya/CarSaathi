@@ -18,6 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
+import TimePicker from "../components/TimePicker";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
@@ -438,7 +439,7 @@ export default function CreateRide() {
                   </label>
                   <label>
                     <span className="field-label">Departure time</span>
-                    <input className="input" type="time" value={departureTime} onChange={(event) => setDepartureTime(event.target.value)} />
+                    <TimePicker value={departureTime} onChange={setDepartureTime} label="Departure time" />
                     <span className="field-hint">At least 3 hours from now.</span>
                   </label>
                 </div>

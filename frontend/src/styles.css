@@ -57,10 +57,30 @@ a {
     @apply w-full rounded-xl border border-sand bg-cream px-3 py-2 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
   }
 
+  select.input {
+    @apply appearance-none pr-10;
+    color-scheme: light;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #171717 50%),
+      linear-gradient(135deg, #171717 50%, transparent 50%);
+    background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    background-color: #ffffff;
+  }
+
+  select.input option {
+    @apply bg-white text-ink;
+  }
+
   /* native date/time inputs: flex-center the value, value left, picker icon pinned right */
   input.input[type="date"],
   input.input[type="time"] {
     @apply flex h-[46px] appearance-none items-center md:h-[42px];
+    color-scheme: light;
+    accent-color: #171717;
+    background-color: #ffffff;
+    -webkit-text-fill-color: #171717;
   }
 
   input.input[type="date"]::-webkit-datetime-edit,
@@ -71,8 +91,9 @@ a {
   /* black picker glyph to match the monochrome theme, aligned to the right edge */
   input.input[type="date"]::-webkit-calendar-picker-indicator,
   input.input[type="time"]::-webkit-calendar-picker-indicator {
-    @apply ml-auto cursor-pointer rounded opacity-60 transition hover:opacity-100;
+    @apply ml-auto cursor-pointer rounded opacity-70 transition hover:opacity-100;
     filter: grayscale(1) brightness(0);
+    background-color: transparent;
   }
 
   input.input[type="date"]::-webkit-inner-spin-button,
