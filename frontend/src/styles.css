@@ -57,6 +57,14 @@ a {
     @apply w-full rounded-xl border border-sand bg-cream px-3 py-2 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
   }
 
+  .input-lg {
+    @apply w-full rounded-2xl border border-sand bg-sand-light px-4 py-3 text-base font-bold text-ink outline-none transition placeholder:font-semibold placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary-light/40;
+  }
+
+  .time-input {
+    @apply w-full rounded-[2rem] border border-sand bg-white px-5 py-4 text-center text-5xl font-black text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40;
+  }
+
   /* native date/time inputs: flex-center the value, value left, picker icon pinned right */
   input.input[type="date"],
   input.input[type="time"] {
@@ -131,5 +139,144 @@ a {
 
   .icon-tile {
     @apply grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary;
+  }
+
+  .market-page {
+    @apply min-h-[calc(100vh-64px)] bg-white px-4 py-5 md:min-h-[calc(100vh-72px)] md:py-6;
+  }
+
+  .market-flow {
+    @apply mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-[560px] flex-col gap-4;
+  }
+
+  .market-shell {
+    @apply flex-1 rounded-none bg-white pt-3;
+  }
+
+  .market-icon {
+    @apply grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary;
+  }
+
+  .stack {
+    @apply flex flex-col gap-4;
+  }
+
+  .icon-link {
+    @apply inline-grid h-11 w-11 place-items-center rounded-full text-primary transition hover:bg-primary-soft disabled:opacity-40;
+  }
+
+  .round-action {
+    @apply grid h-12 w-12 shrink-0 place-items-center rounded-full border-2 border-primary bg-white text-primary transition hover:bg-primary-soft disabled:border-sand disabled:text-muted;
+  }
+
+  .round-next {
+    @apply ml-auto grid h-16 w-16 place-items-center rounded-full bg-primary text-white shadow-soft transition hover:bg-primary-dark;
+  }
+
+  .flow-actions {
+    @apply sticky bottom-0 mt-auto flex min-h-[90px] items-center justify-end bg-white py-4;
+  }
+
+  .map-empty {
+    @apply grid min-h-52 place-items-center rounded-2xl border border-dashed border-sand bg-sand-light p-6 text-center text-muted;
+  }
+
+  .list-row,
+  .choice-row,
+  .toggle-row {
+    @apply flex w-full items-center gap-3 rounded-2xl border border-sand bg-white p-4 text-left transition hover:border-primary hover:bg-primary-soft;
+  }
+
+  .choice-row-active {
+    @apply border-primary bg-primary-soft;
+  }
+
+  .radio-dot {
+    @apply grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-primary bg-white;
+  }
+
+  .radio-dot::after {
+    content: "";
+    @apply h-3 w-3 rounded-full bg-transparent;
+  }
+
+  .radio-dot-active::after {
+    @apply bg-primary;
+  }
+
+  .square-check {
+    @apply h-6 w-6 shrink-0 rounded border-2 border-primary bg-white;
+  }
+
+  .square-check-active {
+    @apply bg-primary shadow-[inset_0_0_0_4px_white];
+  }
+
+  .date-chip {
+    @apply min-h-16 rounded-2xl border border-sand bg-white px-3 py-2 text-sm font-black text-ink transition hover:border-primary hover:bg-primary-soft;
+  }
+
+  .date-chip-active {
+    @apply border-primary bg-primary text-white hover:bg-primary;
+  }
+
+  .info-pill {
+    @apply flex items-start gap-3 rounded-2xl bg-primary-soft p-4 text-sm text-ink;
+  }
+
+  .option-card {
+    @apply rounded-2xl border border-sand bg-white p-3 text-left text-sm transition hover:border-primary hover:bg-primary-soft;
+  }
+
+  .option-card-active {
+    @apply border-primary bg-primary text-white hover:bg-primary;
+  }
+
+  .summary-grid {
+    @apply grid gap-3 rounded-2xl border border-sand bg-sand-light p-4 text-sm font-bold sm:grid-cols-3;
+  }
+
+  .route-preview {
+    @apply relative h-64 overflow-hidden rounded-2xl border border-sand bg-[linear-gradient(135deg,#ffffff_25%,#f4f4f5_25%,#f4f4f5_50%,#ffffff_50%,#ffffff_75%,#f4f4f5_75%)] bg-[length:42px_42px];
+  }
+
+  .route-line {
+    @apply absolute left-12 top-1/2 h-2 w-[78%] -translate-y-1/2 rotate-[-14deg] rounded-full bg-primary shadow-[0_0_0_4px_#d4d4d8];
+  }
+
+  .route-dot {
+    @apply absolute grid h-8 w-8 place-items-center rounded-full border-4 border-primary bg-white shadow-soft;
+  }
+
+  .route-dot-start {
+    @apply bottom-16 left-10;
+  }
+
+  .route-dot-end {
+    @apply right-10 top-16;
+  }
+
+  .zen-card {
+    @apply flex gap-3 rounded-2xl border-2 border-sand bg-white p-5 text-left transition hover:border-primary hover:bg-primary-soft;
+  }
+
+  .zen-card-active {
+    @apply border-primary bg-primary-soft;
+  }
+
+  .review-list {
+    @apply divide-y divide-sand rounded-2xl border border-sand bg-white px-4;
+  }
+
+  .review-list > div {
+    @apply flex items-start justify-between gap-4 py-3 text-sm;
+  }
+
+  .review-list span {
+    @apply text-right font-semibold text-muted;
+  }
+
+  .market-success {
+    @apply overflow-hidden rounded-2xl border border-sand bg-white shadow-card;
   }
 }

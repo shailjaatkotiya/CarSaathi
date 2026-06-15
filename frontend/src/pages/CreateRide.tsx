@@ -2,13 +2,18 @@ import {
   ArrowLeft,
   ArrowRight,
   Banknote,
-  CalendarCheck,
+  CalendarDays,
   Car,
   CheckCircle2,
-  ListChecks,
-  MapPin,
+  Clock,
+  HelpCircle,
   Map as MapIcon,
+  MapPin,
+  Minus,
+  Plus,
   Route as RouteIcon,
+  ShieldCheck,
+  Users,
   Zap
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,22 +26,36 @@ import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
 const rideRules = [
-  { value: "no_pets", label: "No pets" },
-  { value: "no_extra_children", label: "No extra children" },
-  { value: "no_music", label: "No music" },
-  { value: "no_smoking", label: "No smoking" },
-  { value: "no_alcohol", label: "No alcohol" },
-  { value: "no_tobacco", label: "No tobacco" }
+  { value: "no_pets", label: "No pets", hint: "Prefer not to travel with pets" },
+  { value: "no_smoking", label: "No smoking", hint: "Keep the car smoke-free" },
+  { value: "no_alcohol", label: "No alcohol", hint: "No alcohol during the ride" },
+  { value: "no_tobacco", label: "No tobacco", hint: "No tobacco in the car" },
+  { value: "no_music", label: "Quiet ride", hint: "Music only if everyone agrees" },
+  { value: "no_extra_children", label: "No extra children", hint: "Book every seat needed" }
 ];
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
 
+const addressSuggestions = [
+  "Mumbai Central, Mumbai, Maharashtra",
+  "Wakad Brg, Patil Nagar, Balewadi, Pune, Maharashtra",
+  "Navi Mumbai, Sanpada Rd, Sector 2, Maharashtra",
+  "Pimpri-Chinchwad, Pune, Maharashtra",
+  "Chakan, Pune - Nashik Hwy, Maharashtra"
+];
+
+const routeOptions = [
+  { id: "fast", label: "2 hr 50 min - Tolls", distance: 149, road: "Mumbai-Pune Expressway", note: "Fastest route" },
+  { id: "balanced", label: "3 hr 20 min - Tolls", distance: 156, road: "NH 48", note: "Balanced with more pickup points" },
+  { id: "notolls", label: "4 hr - No tolls", distance: 168, road: "Old Mumbai-Pune Hwy", note: "Avoids toll roads" }
+];
+
 type CarMode = "profile" | "saved" | "new";
 
 const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
-  { value: "profile", label: "Car from my profile", hint: "Reuse the personal car saved in your profile" },
-  { value: "saved", label: "A saved vehicle", hint: "Choose one of the vehicles you added earlier" },
-  { value: "new", label: "Add a new car", hint: "Type fresh car details for this ride" }
+  { value: "profile", label: "Profile car", hint: "Use the car saved in your profile" },
+  { value: "saved", label: "Saved vehicle", hint: "Pick one of your saved vehicles" },
+  { value: "new", label: "Add a new car", hint: "Enter fresh car details for this ride" }
 ];
 
 type SavedVehicle = {
@@ -49,71 +68,125 @@ type SavedVehicle = {
   seats: number;
 };
 
-function formatRuleLabel(value: string) {
-  return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
-}
-
 function defaultAvailableSeats(carType?: string | null) {
   return carType?.toLowerCase().includes("7") ? 6 : 3;
 }
 
 function countPoints(value: string) {
-  return value.split(",").map((item) => item.trim()).filter(Boolean).length;
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean).length;
 }
 
-// One step shell: title, subtitle, icon, and the step's fields. Same on every
-// viewport - a single centred column so desktop and mobile match exactly.
-function StepShell({ title, subtitle, icon, children }: { title: string; subtitle: string; icon: ReactNode; children: ReactNode }) {
+function nextDate(offset: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDate(value: string) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  });
+}
+
+function formatRuleLabel(value: string) {
+  return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
+}
+
+function StepShell({
+  title,
+  subtitle,
+  icon,
+  children
+}: {
+  title: string;
+  subtitle?: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <div className="card p-5 md:p-6">
+    <div className="market-shell">
       <div className="flex items-start gap-3">
-        <span className="icon-tile">{icon}</span>
+        <span className="market-icon">{icon}</span>
         <div>
-          <h2 className="text-lg font-bold md:text-xl">{title}</h2>
-          <p className="text-sm text-muted">{subtitle}</p>
+          <h2 className="text-2xl font-black leading-tight text-ink md:text-3xl">{title}</h2>
+          {subtitle && <p className="mt-2 text-sm leading-relaxed text-muted">{subtitle}</p>}
         </div>
       </div>
-      <div className="mt-5">{children}</div>
+      <div className="mt-7">{children}</div>
+    </div>
+  );
+}
+
+function Counter({
+  value,
+  min,
+  max,
+  onChange
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-5">
+      <button type="button" className="round-action" onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min}>
+        <Minus size={22} />
+      </button>
+      <span className="text-6xl font-black leading-none text-ink tabular-nums">{value}</span>
+      <button type="button" className="round-action" onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max}>
+        <Plus size={22} />
+      </button>
     </div>
   );
 }
 
 export default function CreateRide() {
   const token = useSessionStore((state) => state.token);
-  const defaultRideDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-  // All fields are controlled so values survive while steps mount/unmount.
+  const defaultRideDate = nextDate(2);
   const [step, setStep] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [sourceCity, setSourceCity] = useState("Rajkot");
-  const [destinationCity, setDestinationCity] = useState("Jamnagar");
-  const [distanceKm, setDistanceKm] = useState("96");
+  const [sourceCity, setSourceCity] = useState("Mumbai");
+  const [destinationCity, setDestinationCity] = useState("Pune");
+  const [pickupAddress, setPickupAddress] = useState(addressSuggestions[0]);
+  const [dropAddress, setDropAddress] = useState(addressSuggestions[1]);
+  const [selectedRoute, setSelectedRoute] = useState(routeOptions[0].id);
   const [journeyDate, setJourneyDate] = useState(defaultRideDate);
-  const [departureTime, setDepartureTime] = useState("07:30");
-  const [pricePerSeat, setPricePerSeat] = useState("180");
+  const [departureTime, setDepartureTime] = useState("08:00");
+  const [pricePerSeat, setPricePerSeat] = useState("470");
 
-  const [pickupPoints, setPickupPoints] = useState("Rajkot Bus Stand, Kalawad Road, Gondal Road, University Road, Mavdi Circle");
-  const [routeStops, setRouteStops] = useState("Dhrol, Reliance Circle");
-  const [dropPoints, setDropPoints] = useState("Jamnagar Bus Stand, Patel Colony, Reliance Circle, Digjam Circle, Railway Station");
+  const [pickupPoints, setPickupPoints] = useState("Mumbai Central, Dadar, Sion, Chembur, Vashi");
+  const [routeStops, setRouteStops] = useState("Navi Mumbai, Lonavala");
+  const [dropPoints, setDropPoints] = useState("Wakad, Hinjewadi, Shivajinagar, Swargate, Kothrud");
 
   const [carMode, setCarMode] = useState<CarMode>("new");
   const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
   const [newCarBrandOther, setNewCarBrandOther] = useState("");
   const [carModel, setCarModel] = useState("Swift Dzire");
-  const [vehicleNumber, setVehicleNumber] = useState("GJ01AB1234");
+  const [vehicleNumber, setVehicleNumber] = useState("MH01AB1234");
   const [fuelType, setFuelType] = useState("Petrol");
   const [carColor, setCarColor] = useState("White");
   const [newCarType, setNewCarType] = useState("Sedan");
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
-  const [availableSeats, setAvailableSeats] = useState(3);
 
+  const [availableSeats, setAvailableSeats] = useState(3);
+  const [maxTwoBack, setMaxTwoBack] = useState(false);
+  const [womenOnly, setWomenOnly] = useState(false);
+  const [autoConfirm, setAutoConfirm] = useState(true);
   const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
-  const [extraInstructions, setExtraInstructions] = useState("Please be on time. Call before reaching pickup point.");
+  const [extraInstructions, setExtraInstructions] = useState(
+    "Flexible about where and when to meet? Not taking the motorway? Got limited space in your boot? Keep passengers in the loop."
+  );
   const [luggageAllowance, setLuggageAllowance] = useState("One cabin bag");
-  const [routeNotes, setRouteNotes] = useState("Short route with one optional water break.");
-  const [autoConfirm, setAutoConfirm] = useState(false);
+  const [routeNotes, setRouteNotes] = useState("Short halt available if everyone agrees.");
+  const [zenFlexible, setZenFlexible] = useState(true);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -152,22 +225,34 @@ export default function CreateRide() {
     carMode === "saved" ? selectedVehicle?.car_type : carMode === "profile" ? profileCar?.category : newCarType;
   const maxAvailableSeats = defaultAvailableSeats(selectedCarType);
   const resolvedNewBrand = newCarBrand === "Other" ? newCarBrandOther.trim() : newCarBrand;
+  const selectedRouteOption = routeOptions.find((option) => option.id === selectedRoute) ?? routeOptions[0];
+  const recommendedLow = Math.max(80, Math.round(selectedRouteOption.distance * 1.9));
+  const recommendedHigh = Math.round(selectedRouteOption.distance * 2.2);
 
   useEffect(() => {
     setAvailableSeats(defaultAvailableSeats(selectedCarType));
   }, [selectedCarType]);
 
+  useEffect(() => {
+    setPricePerSeat(String(Math.round((recommendedLow + recommendedHigh) / 2)));
+  }, [recommendedLow, recommendedHigh]);
+
   const instructionText = useMemo(
     () =>
       [
+        maxTwoBack ? "- Max. 2 in the back" : null,
+        womenOnly ? "- Women only ride" : null,
+        zenFlexible ? "- Flexible route option enabled" : null,
         ...selectedRules.map((rule) => `- ${formatRuleLabel(rule)}`),
         ...extraInstructions
           .split("\n")
           .map((line) => line.trim())
           .filter(Boolean)
           .map((line) => `- ${line.replace(/^-+\s*/, "")}`)
-      ].join("\n"),
-    [selectedRules, extraInstructions]
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    [extraInstructions, maxTwoBack, selectedRules, womenOnly, zenFlexible]
   );
 
   function toggleRule(value: string, checked: boolean) {
@@ -179,43 +264,59 @@ export default function CreateRide() {
 
   const missingWhatsapp = Boolean(me) && !me?.whatsapp_number?.trim();
 
-  // Steps in order. Map step is intentionally an empty placeholder for a later
-  // iteration. Validate returns an error string (or null) before advancing.
   const steps = [
     {
-      key: "route",
+      key: "cities",
       title: "Where are you going?",
-      subtitle: "Set the cities your ride connects.",
-      icon: <RouteIcon size={20} />,
+      subtitle: "Start with the city pair. Exact map pinning is intentionally empty for now.",
+      icon: <RouteIcon size={22} />,
       validate: () => {
         if (!sourceCity.trim() || !destinationCity.trim()) return "Enter both source and destination city.";
-        if (!Number(distanceKm) || Number(distanceKm) <= 0) return "Enter a valid route distance in km.";
         return null;
       }
     },
     {
-      key: "map",
-      title: "Pin pickup & drop on map",
-      subtitle: "Map selection arrives in a later update - skip for now.",
-      icon: <MapIcon size={20} />,
+      key: "addresses",
+      title: "Choose pickup and drop",
+      subtitle: "Use suggested addresses for now. Map search will be connected in the next iteration.",
+      icon: <MapPin size={22} />,
+      validate: () => {
+        if (!pickupAddress.trim() || !dropAddress.trim()) return "Select pickup and drop addresses.";
+        return null;
+      }
+    },
+    {
+      key: "route",
+      title: "What is your route?",
+      subtitle: "A route choice helps estimate price, timing, and stopovers.",
+      icon: <MapIcon size={22} />,
       validate: () => null
     },
     {
-      key: "datetime",
-      title: "When do you leave?",
-      subtitle: "Pick the journey date and departure time.",
-      icon: <CalendarCheck size={20} />,
+      key: "date",
+      title: "When are you going?",
+      subtitle: "Publish up to 10 days ahead. Repeating ride dates can come next.",
+      icon: <CalendarDays size={22} />,
       validate: () => {
         if (!journeyDate) return "Choose a journey date.";
+        return null;
+      }
+    },
+    {
+      key: "time",
+      title: "What time will you pick up passengers?",
+      subtitle: "Rides must be published at least 3 hours before departure.",
+      icon: <Clock size={22} />,
+      validate: () => {
         if (!departureTime) return "Choose a departure time.";
         return null;
       }
     },
     {
-      key: "points",
-      title: "Pickup, stops & drop points",
-      subtitle: "Add at least 5 pickup and 5 drop points, comma separated.",
-      icon: <MapPin size={20} />,
+      key: "stopovers",
+      title: "Add stopovers to get more passengers",
+      subtitle: "Add pickups, in-between stops, and drops. Carthi keeps the backend minimum of 5 pickup and 5 drop points.",
+      icon: <MapPin size={22} />,
       validate: () => {
         if (countPoints(pickupPoints) < 5) return "Add minimum 5 pickup points.";
         if (countPoints(dropPoints) < 5) return "Add minimum 5 drop points.";
@@ -225,55 +326,73 @@ export default function CreateRide() {
     {
       key: "car",
       title: "Which car will you drive?",
-      subtitle: "Use your profile car, a saved vehicle, or add a new one.",
-      icon: <Car size={20} />,
+      subtitle: "Keep advanced Carthi vehicle options while making the choice simple.",
+      icon: <Car size={22} />,
       validate: () => {
-        if (carMode === "profile" && !profileCarComplete) return "Complete your profile car (brand, model, number, fuel, category) first.";
+        if (carMode === "profile" && !profileCarComplete) return "Complete your profile car first.";
         if (carMode === "saved" && !selectedVehicleId) return "Select one of your saved vehicles.";
         if (carMode === "new") {
-          if (!resolvedNewBrand || !carModel.trim() || !vehicleNumber.trim() || !fuelType.trim() || !newCarType.trim())
-            return "Enter complete car details (brand, model, number, fuel, category).";
+          if (!resolvedNewBrand || !carModel.trim() || !vehicleNumber.trim() || !fuelType.trim() || !newCarType.trim()) {
+            return "Enter complete car details.";
+          }
         }
         return null;
       }
     },
     {
-      key: "seatsprice",
-      title: "Seats & price",
-      subtitle: "How many seats and what each passenger pays.",
-      icon: <Banknote size={20} />,
+      key: "seats",
+      title: "How many passengers can you take?",
+      subtitle: "Set seats and passenger comfort options.",
+      icon: <Users size={22} />,
       validate: () => {
         if (availableSeats < 1) return "Offer at least 1 seat.";
         if (availableSeats > maxAvailableSeats) return `${selectedCarType || "This car"} can publish up to ${maxAvailableSeats} seats.`;
+        return null;
+      }
+    },
+    {
+      key: "instant",
+      title: "Enable Instant Booking for your passengers",
+      subtitle: "Passengers prefer quick answers. You can still review every request if needed.",
+      icon: <Zap size={22} />,
+      validate: () => null
+    },
+    {
+      key: "price",
+      title: "Set your price per seat",
+      subtitle: `Recommended price: Rs. ${recommendedLow} - Rs. ${recommendedHigh}.`,
+      icon: <Banknote size={22} />,
+      validate: () => {
         if (!Number(pricePerSeat) || Number(pricePerSeat) < 1) return "Enter a valid price per seat.";
         return null;
       }
     },
     {
       key: "rules",
-      title: "Ride rules & instructions",
-      subtitle: "Set expectations so booking is smooth.",
-      icon: <ListChecks size={20} />,
+      title: "Passenger options",
+      subtitle: "Make expectations clear before anyone books.",
+      icon: <ShieldCheck size={22} />,
       validate: () => null
     },
     {
-      key: "booking",
-      title: "Booking & extras",
-      subtitle: "Instant booking, luggage, and route notes.",
-      icon: <Zap size={20} />,
+      key: "zen",
+      title: "Save up to 3 times more on this ride",
+      subtitle: "A flexible route option can help fill seats. Keep it optional for drivers.",
+      icon: <HelpCircle size={22} />,
       validate: () => null
     },
     {
-      key: "review",
-      title: "Review & publish",
-      subtitle: "Check everything before going live.",
-      icon: <CheckCircle2 size={20} />,
+      key: "comment",
+      title: "Ready to publish your ride?",
+      subtitle: "Add a final comment for passengers, then publish.",
+      icon: <CheckCircle2 size={22} />,
       validate: () => null
     }
   ];
 
   const lastStep = steps.length - 1;
   const current = steps[step];
+  const progress = Math.round(((step + 1) / steps.length) * 100);
 
   function goNext() {
     setError("");
@@ -293,7 +412,6 @@ export default function CreateRide() {
   async function publish() {
     setError("");
     setMessage("");
-    // Re-run every step's validation before publishing.
     for (let index = 0; index < steps.length; index += 1) {
       const stepError = steps[index].validate();
       if (stepError) {
@@ -302,8 +420,6 @@ export default function CreateRide() {
         return;
       }
     }
-
-    const newCarColor = String(payload.car_color ?? "").trim() || "White";
 
     const carDetails =
       carMode === "saved" && selectedVehicleId
@@ -331,23 +447,32 @@ export default function CreateRide() {
     try {
       const { data } = await api.post("/driver/rides", {
         ...carDetails,
-        source_city: sourceCity,
-        destination_city: destinationCity,
-        distance_km: Number(distanceKm),
+        source_city: sourceCity.trim(),
+        destination_city: destinationCity.trim(),
+        distance_km: selectedRouteOption.distance,
         journey_date: journeyDate,
         departure_time: departureTime,
         available_seats: availableSeats,
         price_per_seat: Number(pricePerSeat),
-        pickup_points: pickupPoints.split(",").map((item) => item.trim()).filter(Boolean),
-        drop_points: dropPoints.split(",").map((item) => item.trim()).filter(Boolean),
-        route_stops: routeStops.split(",").map((item) => item.trim()).filter(Boolean),
+        pickup_points: pickupPoints
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        drop_points: dropPoints
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        route_stops: routeStops
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
         ride_rules: selectedRules,
         driver_instructions: instructionText,
-        route_notes: routeNotes,
+        route_notes: `${selectedRouteOption.label} - ${selectedRouteOption.road}. ${routeNotes}`,
         luggage_allowance: luggageAllowance,
         smoking_allowed: !selectedRules.includes("no_smoking"),
         ac_available: true,
-        women_only_preference: false,
+        women_only_preference: womenOnly,
         auto_confirm_bookings: autoConfirm
       });
       setMessage(`Ride published successfully as listing #${data.id}.`);
@@ -357,27 +482,19 @@ export default function CreateRide() {
     }
   }
 
-  const progress = Math.round(((step + 1) / steps.length) * 100);
-
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-5 md:py-7">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-bold md:text-2xl">Publish a ride</h1>
-          <p className="mt-1 text-sm text-muted">One detail at a time so nothing is missed.</p>
+    <div className="market-page">
+      <div className="market-flow">
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" className="icon-link" onClick={goBack} disabled={step === 0} aria-label="Back">
+            <ArrowLeft size={22} />
+          </button>
+          <span className="text-xs font-black uppercase tracking-wide text-muted">
+            Step {step + 1} of {steps.length}
+          </span>
         </div>
-
-        {/* Progress: step count + bar. Identical on desktop and mobile. */}
-        <div>
-          <div className="flex items-center justify-between text-xs font-bold text-muted">
-            <span>
-              Step {step + 1} of {steps.length}
-            </span>
-            <span>{current.title}</span>
-          </div>
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-sand">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-          </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-sand-light">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
         </div>
 
         {missingWhatsapp && (
@@ -391,121 +508,185 @@ export default function CreateRide() {
         )}
 
         {message ? (
-          <div className="card flex flex-col items-center gap-3 p-8 text-center">
-            <span className="icon-tile h-12 w-12">
-              <CheckCircle2 size={24} />
-            </span>
-            <h2 className="text-lg font-bold">Ride published</h2>
-            <p className="alert-success">{message}</p>
-            <Link to="/my-rides" className="btn-primary">
-              View published rides
-            </Link>
+          <div className="market-success">
+            <div className="h-36 bg-primary px-6 py-7 text-white">
+              <h1 className="text-3xl font-black">Your ride is published!</h1>
+            </div>
+            <div className="px-6 pb-8 pt-10">
+              <h2 className="text-2xl font-black">One last step: verify your profile</h2>
+              <div className="mt-6 divide-y divide-sand">
+                <Link to="/verify" className="flex items-center gap-3 py-4 font-bold text-primary">
+                  <Plus size={20} />
+                  Verify your Govt. ID
+                </Link>
+                <Link to="/profile" className="flex items-center gap-3 py-4 font-bold text-primary">
+                  <Plus size={20} />
+                  Confirm your email
+                </Link>
+                <div className="flex items-center gap-3 py-4 font-bold">
+                  <CheckCircle2 size={20} className="text-primary" />
+                  Confirmed phone number
+                </div>
+              </div>
+              <p className="alert-success mt-6">{message}</p>
+              <Link to="/my-rides" className="btn-outline mt-8 w-full justify-center">
+                See my ride offer
+              </Link>
+            </div>
           </div>
         ) : (
           <>
             <StepShell title={current.title} subtitle={current.subtitle} icon={current.icon}>
+              {current.key === "cities" && (
+                <div className="stack">
+                  <label>
+                    <span className="field-label">Leaving from</span>
+                    <input className="input-lg" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} />
+                  </label>
+                  <label>
+                    <span className="field-label">Going to</span>
+                    <input className="input-lg" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} />
+                  </label>
+                  <div className="map-empty">
+                    <MapIcon size={28} />
+                    <p className="font-black">Map feature reserved</p>
+                    <p className="text-sm text-muted">Exact map interaction will be connected in the next iteration.</p>
+                  </div>
+                </div>
+              )}
+
+              {current.key === "addresses" && (
+                <div className="stack">
+                  <label>
+                    <span className="field-label">Pick-up</span>
+                    <select className="input-lg" value={pickupAddress} onChange={(event) => setPickupAddress(event.target.value)}>
+                      {addressSuggestions.map((address) => (
+                        <option key={address} value={address}>
+                          {address}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span className="field-label">Drop-off</span>
+                    <select className="input-lg" value={dropAddress} onChange={(event) => setDropAddress(event.target.value)}>
+                      {addressSuggestions.map((address) => (
+                        <option key={address} value={address}>
+                          {address}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button type="button" className="list-row">
+                    <MapPin size={20} />
+                    <span>
+                      <span className="block font-black">Use current location</span>
+                      <span className="text-sm text-muted">Placeholder action until map details are shared.</span>
+                    </span>
+                    <ArrowRight size={18} className="ml-auto" />
+                  </button>
+                </div>
+              )}
+
               {current.key === "route" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Source city</span>
-                    <input className="input" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} placeholder="Rajkot" />
-                  </label>
-                  <label>
-                    <span className="field-label">Destination city</span>
-                    <input className="input" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} placeholder="Jamnagar" />
-                  </label>
-                  <label className="sm:col-span-2">
-                    <span className="field-label">Distance in km</span>
-                    <input className="input" type="number" value={distanceKm} onChange={(event) => setDistanceKm(event.target.value)} placeholder="96" />
-                    <span className="field-hint">Approx route distance.</span>
-                  </label>
+                <div className="stack">
+                  <div className="route-preview">
+                    <div className="route-line" />
+                    <div className="route-dot route-dot-start" />
+                    <div className="route-dot route-dot-end" />
+                    <p className="absolute left-5 top-5 text-xs font-black text-muted">{sourceCity}</p>
+                    <p className="absolute bottom-5 right-5 text-xs font-black text-muted">{destinationCity}</p>
+                  </div>
+                  {routeOptions.map((option) => (
+                    <button key={option.id} type="button" className="choice-row" onClick={() => setSelectedRoute(option.id)}>
+                      <span className={`radio-dot ${selectedRoute === option.id ? "radio-dot-active" : ""}`} />
+                      <span>
+                        <span className="block font-black">{option.label}</span>
+                        <span className="text-sm text-muted">
+                          {option.distance} km - {option.road} - {option.note}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
                 </div>
               )}
 
-              {current.key === "map" && (
-                <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-sand bg-sand-light py-12 text-center">
-                  <MapIcon size={28} className="text-muted" />
-                  <p className="font-bold">Map selection coming soon</p>
-                  <p className="text-sm text-muted">Pin exact pickup and drop locations in a later update.</p>
+              {current.key === "date" && (
+                <div className="stack">
+                  <div className="info-pill">
+                    <CalendarDays size={18} />
+                    <span>
+                      <b>Doing this ride often?</b> You can select one ride date now. Multi-date publish can be added later.
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((offset) => {
+                      const value = nextDate(offset);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`date-chip ${journeyDate === value ? "date-chip-active" : ""}`}
+                          onClick={() => setJourneyDate(value)}
+                        >
+                          {formatDate(value)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <input className="input-lg" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
                 </div>
               )}
 
-              {current.key === "datetime" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Journey date</span>
-                    <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
-                    <span className="field-hint">Up to 10 days ahead.</span>
-                  </label>
-                  <label>
-                    <span className="field-label">Departure time</span>
-                    <input className="input" type="time" value={departureTime} onChange={(event) => setDepartureTime(event.target.value)} />
-                    <span className="field-hint">At least 3 hours from now.</span>
-                  </label>
-                </div>
+              {current.key === "time" && (
+                <label className="block">
+                  <input className="time-input" type="time" value={departureTime} onChange={(event) => setDepartureTime(event.target.value)} />
+                </label>
               )}
 
-              {current.key === "points" && (
-                <div className="flex flex-col gap-4">
+              {current.key === "stopovers" && (
+                <div className="stack">
                   <label>
                     <span className="field-label">Pickup points - minimum 5 ({countPoints(pickupPoints)})</span>
-                    <textarea className="input" rows={2} value={pickupPoints} onChange={(event) => setPickupPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated. Example: Bopal, Gota, Iscon.</span>
+                    <textarea className="input-lg" rows={2} value={pickupPoints} onChange={(event) => setPickupPoints(event.target.value)} />
                   </label>
                   <label>
-                    <span className="field-label">In-between stops ({countPoints(routeStops)})</span>
-                    <textarea className="input" rows={2} value={routeStops} onChange={(event) => setRouteStops(event.target.value)} />
-                    <span className="field-hint">Optional stops passengers can choose before the final drop.</span>
+                    <span className="field-label">Suggested stopovers</span>
+                    <textarea className="input-lg" rows={2} value={routeStops} onChange={(event) => setRouteStops(event.target.value)} />
                   </label>
                   <label>
                     <span className="field-label">Drop points - minimum 5 ({countPoints(dropPoints)})</span>
-                    <textarea className="input" rows={2} value={dropPoints} onChange={(event) => setDropPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated final-city drop points.</span>
+                    <textarea className="input-lg" rows={2} value={dropPoints} onChange={(event) => setDropPoints(event.target.value)} />
                   </label>
                 </div>
               )}
 
               {current.key === "car" && (
-                <div className="flex flex-col gap-4">
+                <div className="stack">
                   <div className="grid gap-3 sm:grid-cols-3">
                     {carModeOptions.map((option) => (
                       <button
                         key={option.value}
                         type="button"
                         onClick={() => setCarMode(option.value)}
-                        className={`rounded-xl border p-3 text-left transition ${
-                          carMode === option.value ? "border-primary bg-primary text-white" : "border-sand bg-cream text-ink hover:border-primary"
-                        }`}
+                        className={`option-card ${carMode === option.value ? "option-card-active" : ""}`}
                       >
-                        <p className="text-sm font-bold">{option.label}</p>
-                        <p className="mt-1 text-xs">{option.hint}</p>
+                        <span className="font-black">{option.label}</span>
+                        <span className="mt-1 block text-xs">{option.hint}</span>
                       </button>
                     ))}
                   </div>
 
                   {carMode === "profile" &&
                     (profileCar ? (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Car</p>
-                          <p className="mt-1 font-bold">{[profileCar.brand, profileCar.model].filter(Boolean).join(" ") || "Not added"}</p>
-                        </div>
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Vehicle number</p>
-                          <p className="mt-1 font-bold">{profileCar.number || "Not added"}</p>
-                        </div>
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Fuel · category</p>
-                          <p className="mt-1 font-bold">{[profileCar.fuel, profileCar.category].filter(Boolean).join(" · ") || "Not added"}</p>
-                        </div>
+                      <div className="summary-grid">
+                        <span>{[profileCar.brand, profileCar.model].filter(Boolean).join(" ") || "Not added"}</span>
+                        <span>{profileCar.number || "Not added"}</span>
+                        <span>{[profileCar.fuel, profileCar.category].filter(Boolean).join(" - ") || "Not added"}</span>
                       </div>
                     ) : (
                       <p className="alert-warning">
-                        No personal car saved{token ? "" : " (login required)"}.{" "}
-                        <Link to="/profile" className="font-bold underline">
-                          Add it in My Profile
-                        </Link>
-                        .
+                        No personal car saved. <Link to="/profile" className="font-bold underline">Add it in My Profile</Link>.
                       </p>
                     ))}
 
@@ -517,27 +698,23 @@ export default function CreateRide() {
                             key={vehicle.id}
                             type="button"
                             onClick={() => setSelectedVehicleId(vehicle.id)}
-                            className={`rounded-xl border p-3 text-left transition ${
-                              selectedVehicleId === vehicle.id ? "border-primary bg-primary text-white" : "border-sand bg-white text-ink hover:border-primary"
-                            }`}
+                            className={`choice-row ${selectedVehicleId === vehicle.id ? "choice-row-active" : ""}`}
                           >
-                            <p className="font-bold">
-                              {vehicle.brand} {vehicle.model}
-                            </p>
-                            <p className="mt-1 text-xs">{vehicle.vehicle_number}</p>
-                            <p className="text-xs">
-                              {vehicle.car_type} · {vehicle.fuel_type} · {vehicle.seats} seats
-                            </p>
+                            <span className={`radio-dot ${selectedVehicleId === vehicle.id ? "radio-dot-active" : ""}`} />
+                            <span>
+                              <span className="block font-black">
+                                {vehicle.brand} {vehicle.model}
+                              </span>
+                              <span className="text-sm text-muted">
+                                {vehicle.vehicle_number} - {vehicle.car_type} - {vehicle.fuel_type}
+                              </span>
+                            </span>
                           </button>
                         ))}
                       </div>
                     ) : (
                       <p className="alert-warning">
-                        No saved vehicles{token ? "" : " (login required)"}.{" "}
-                        <Link to="/driver/vehicle" className="font-bold underline">
-                          Add one
-                        </Link>
-                        .
+                        No saved vehicles. <Link to="/driver/vehicle" className="font-bold underline">Add one</Link>.
                       </p>
                     ))}
 
@@ -559,11 +736,11 @@ export default function CreateRide() {
                       </label>
                       <label>
                         <span className="field-label">Car model</span>
-                        <input className="input" value={carModel} onChange={(event) => setCarModel(event.target.value)} placeholder="Swift Dzire" />
+                        <input className="input" value={carModel} onChange={(event) => setCarModel(event.target.value)} />
                       </label>
                       <label>
                         <span className="field-label">Vehicle number</span>
-                        <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value)} placeholder="GJ01AB1234" />
+                        <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value)} />
                       </label>
                       <label>
                         <span className="field-label">Fuel type</span>
@@ -576,7 +753,7 @@ export default function CreateRide() {
                       </label>
                       <label>
                         <span className="field-label">Car color</span>
-                        <input className="input" value={carColor} onChange={(event) => setCarColor(event.target.value)} placeholder="White" />
+                        <input className="input" value={carColor} onChange={(event) => setCarColor(event.target.value)} />
                       </label>
                       <label>
                         <span className="field-label">Car category</span>
@@ -591,127 +768,140 @@ export default function CreateRide() {
                 </div>
               )}
 
-              {current.key === "seatsprice" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Available seats</span>
-                    <input
-                      className="input"
-                      type="number"
-                      min={1}
-                      max={maxAvailableSeats}
-                      value={availableSeats}
-                      onChange={(event) => setAvailableSeats(Number(event.target.value))}
-                    />
-                    <span className="field-hint">
-                      {selectedCarType?.toLowerCase().includes("7") ? "7 Seater allows up to 6." : "Sedan and SUV allow up to 3."}
+              {current.key === "seats" && (
+                <div className="stack">
+                  <Counter value={availableSeats} min={1} max={maxAvailableSeats} onChange={setAvailableSeats} />
+                  <button type="button" className="toggle-row" onClick={() => setMaxTwoBack((value) => !value)}>
+                    <span className={`square-check ${maxTwoBack ? "square-check-active" : ""}`} />
+                    <span>
+                      <span className="block font-black">Max. 2 in the back</span>
+                      <span className="text-sm text-muted">Think comfort, keep the middle seat empty</span>
                     </span>
-                  </label>
-                  <label>
-                    <span className="field-label">Price per seat</span>
-                    <input className="input" type="number" value={pricePerSeat} onChange={(event) => setPricePerSeat(event.target.value)} placeholder="180" />
-                    <span className="field-hint">Amount each passenger pays.</span>
-                  </label>
+                    <Users size={20} className="ml-auto text-muted" />
+                  </button>
+                  <button type="button" className="toggle-row" onClick={() => setWomenOnly((value) => !value)}>
+                    <span className={`square-check ${womenOnly ? "square-check-active" : ""}`} />
+                    <span>
+                      <span className="block font-black">Women Only</span>
+                      <span className="text-sm text-muted">Make your ride only visible to women</span>
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {current.key === "instant" && (
+                <div className="stack">
+                  <div className="rounded-2xl bg-primary-soft p-5 text-center">
+                    <Zap size={56} className="mx-auto text-primary" />
+                  </div>
+                  <button type="button" className="choice-row" onClick={() => setAutoConfirm(true)}>
+                    <span className={`radio-dot ${autoConfirm ? "radio-dot-active" : ""}`} />
+                    <span>
+                      <span className="block font-black text-primary">Enable Instant Booking</span>
+                      <span className="text-sm text-muted">Passengers can instantly book your ride.</span>
+                    </span>
+                    <ArrowRight size={18} className="ml-auto" />
+                  </button>
+                  <button type="button" className="choice-row" onClick={() => setAutoConfirm(false)}>
+                    <span className={`radio-dot ${!autoConfirm ? "radio-dot-active" : ""}`} />
+                    <span>
+                      <span className="block font-black">Review every request before it expires</span>
+                      <span className="text-sm text-muted">You approve or reject each request manually.</span>
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {current.key === "price" && (
+                <div className="stack">
+                  <div className="flex items-center justify-between gap-5">
+                    <button type="button" className="round-action" onClick={() => setPricePerSeat(String(Math.max(1, Number(pricePerSeat) - 10)))}>
+                      <Minus size={22} />
+                    </button>
+                    <span className="text-6xl font-black leading-none text-primary tabular-nums">Rs. {pricePerSeat}</span>
+                    <button type="button" className="round-action" onClick={() => setPricePerSeat(String(Number(pricePerSeat) + 10))}>
+                      <Plus size={22} />
+                    </button>
+                  </div>
+                  <div className="text-center">
+                    <span className="rounded-lg bg-primary px-3 py-1 text-sm font-black text-white">
+                      Recommended price: Rs. {recommendedLow} - Rs. {recommendedHigh}
+                    </span>
+                    <p className="mt-2 text-sm text-muted">You'll get passengers in no time.</p>
+                  </div>
                 </div>
               )}
 
               {current.key === "rules" && (
-                <div className="flex flex-col gap-4">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {rideRules.map((rule) => (
-                      <label key={rule.value} className="flex cursor-pointer items-center gap-2 rounded-xl border border-sand p-3 text-sm font-semibold">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 accent-primary"
-                          checked={selectedRules.includes(rule.value)}
-                          onChange={(event) => toggleRule(rule.value, event.target.checked)}
-                        />
-                        {rule.label}
-                      </label>
-                    ))}
-                  </div>
+                <div className="stack">
                   <label>
-                    <span className="field-label">Extra instructions</span>
-                    <textarea className="input" rows={2} value={extraInstructions} onChange={(event) => setExtraInstructions(event.target.value)} />
-                    <span className="field-hint">Any extra note passengers must read before booking.</span>
+                    <span className="field-label">Luggage</span>
+                    <input className="input-lg" value={luggageAllowance} onChange={(event) => setLuggageAllowance(event.target.value)} />
                   </label>
-                </div>
-              )}
-
-              {current.key === "booking" && (
-                <div className="flex flex-col gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setAutoConfirm((value) => !value)}
-                    className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition ${
-                      autoConfirm ? "border-primary bg-primary-soft" : "border-sand bg-cream hover:border-primary"
-                    }`}
-                  >
-                    <span className="flex items-start gap-3">
-                      <Zap size={18} className="mt-0.5 text-primary" />
+                  {rideRules.map((rule) => (
+                    <label key={rule.value} className="toggle-row">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={selectedRules.includes(rule.value)}
+                        onChange={(event) => toggleRule(rule.value, event.target.checked)}
+                      />
+                      <span className={`square-check ${selectedRules.includes(rule.value) ? "square-check-active" : ""}`} />
                       <span>
-                        <span className="block font-bold">Instant booking</span>
-                        <span className="block text-sm text-muted">Seats are confirmed automatically without your approval.</span>
+                        <span className="block font-black">{rule.label}</span>
+                        <span className="text-sm text-muted">{rule.hint}</span>
                       </span>
-                    </span>
-                    <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${autoConfirm ? "bg-primary" : "bg-sand"}`}>
-                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${autoConfirm ? "left-[22px]" : "left-0.5"}`} />
-                    </span>
-                  </button>
-                  <label>
-                    <span className="field-label">Luggage allowance</span>
-                    <input className="input" value={luggageAllowance} onChange={(event) => setLuggageAllowance(event.target.value)} placeholder="One cabin bag per passenger" />
-                  </label>
+                    </label>
+                  ))}
                   <label>
                     <span className="field-label">Route notes</span>
-                    <textarea className="input" rows={2} value={routeNotes} onChange={(event) => setRouteNotes(event.target.value)} placeholder="Halt, route preference, road condition" />
+                    <textarea className="input-lg" rows={2} value={routeNotes} onChange={(event) => setRouteNotes(event.target.value)} />
                   </label>
                 </div>
               )}
 
-              {current.key === "review" && (
-                <div className="flex flex-col gap-3 text-sm">
-                  {[
-                    ["Route", `${sourceCity} -> ${destinationCity} · ${distanceKm} km`],
-                    ["When", `${journeyDate} · ${departureTime}`],
-                    [
-                      "Car",
-                      carMode === "saved" && selectedVehicle
-                        ? `${selectedVehicle.brand} ${selectedVehicle.model} · ${selectedVehicle.vehicle_number}`
-                        : carMode === "profile" && profileCar
-                        ? `${profileCar.brand} ${profileCar.model} · ${profileCar.number}`
-                        : `${resolvedNewBrand} ${carModel} · ${vehicleNumber} · ${carColor}`
-                    ],
-                    ["Seats & price", `${availableSeats} seats · Rs. ${pricePerSeat}/seat`],
-                    ["Pickup points", `${countPoints(pickupPoints)} added`],
-                    ["Drop points", `${countPoints(dropPoints)} added`],
-                    ["Instant booking", autoConfirm ? "On" : "Off"]
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-start justify-between gap-3 border-b border-sand pb-2 last:border-0">
-                      <span className="font-bold text-muted">{label}</span>
-                      <span className="text-right font-semibold text-ink">{value}</span>
-                    </div>
-                  ))}
+              {current.key === "zen" && (
+                <div className="stack">
+                  <button type="button" className={`zen-card ${zenFlexible ? "zen-card-active" : ""}`} onClick={() => setZenFlexible(true)}>
+                    <span className={`radio-dot ${zenFlexible ? "radio-dot-active" : ""}`} />
+                    <span>
+                      <span className="block font-black">Activate flexible routing for free on this ride</span>
+                      <span className="mt-3 block text-sm text-muted">One booking can fill empty seats, one passenger coordinates, and you stay free to accept requests based on schedule.</span>
+                    </span>
+                  </button>
+                  <button type="button" className="choice-row" onClick={() => setZenFlexible(false)}>
+                    <span className={`radio-dot ${!zenFlexible ? "radio-dot-active" : ""}`} />
+                    <span className="font-black">Continue without the flexible option</span>
+                  </button>
+                </div>
+              )}
+
+              {current.key === "comment" && (
+                <div className="stack">
+                  <label>
+                    <span className="field-label">Additional details</span>
+                    <textarea className="input-lg min-h-32" value={extraInstructions} onChange={(event) => setExtraInstructions(event.target.value)} />
+                  </label>
+                  <div className="review-list">
+                    <div><b>Route</b><span>{sourceCity} to {destinationCity}</span></div>
+                    <div><b>When</b><span>{formatDate(journeyDate)} at {departureTime}</span></div>
+                    <div><b>Price</b><span>Rs. {pricePerSeat} per seat</span></div>
+                    <div><b>Seats</b><span>{availableSeats}</span></div>
+                    <div><b>Booking</b><span>{autoConfirm ? "Instant booking" : "Manual approval"}</span></div>
+                  </div>
                 </div>
               )}
             </StepShell>
 
             {error && <p className="alert-error">{error}</p>}
 
-            {/* Navigation: same controls every viewport. */}
-            <div className="flex items-center justify-between gap-3">
-              <button type="button" className="btn-outline" onClick={goBack} disabled={step === 0}>
-                <ArrowLeft size={16} />
-                Back
-              </button>
+            <div className="flow-actions">
               {step < lastStep ? (
-                <button type="button" className="btn-primary" onClick={goNext}>
-                  Continue
-                  <ArrowRight size={16} />
+                <button type="button" className="round-next" onClick={goNext} aria-label="Continue">
+                  <ArrowRight size={28} />
                 </button>
               ) : (
-                <button type="button" className="btn-primary" onClick={publish} disabled={missingWhatsapp}>
-                  <CheckCircle2 size={16} />
+                <button type="button" className="btn-primary w-full justify-center py-3 text-base" onClick={publish} disabled={missingWhatsapp}>
                   Publish ride
                 </button>
               )}

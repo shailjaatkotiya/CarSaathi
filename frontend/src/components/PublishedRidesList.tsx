@@ -1,6 +1,21 @@
-import { CheckCircle2, ChevronDown, ChevronUp, MessageCircle, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Copy,
+  Edit3,
+  Eye,
+  MessageCircle,
+  Repeat2,
+  X,
+  XCircle
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, Ride, whatsappLink } from "../api/client";
 import RideCard from "./RideCard";
 
@@ -99,6 +114,8 @@ function RideBookings({
 export default function PublishedRidesList() {
   const [message, setMessage] = useState("");
   const [expandedRideId, setExpandedRideId] = useState<number | null>(null);
+  const [manageRideId, setManageRideId] = useState<number | null>(null);
+  const [cancelRideId, setCancelRideId] = useState<number | null>(null);
   const { data, refetch } = useQuery({
     queryKey: ["my-rides"],
     queryFn: async () => (await api.get<Ride[]>("/driver/rides")).data
@@ -107,12 +124,32 @@ export default function PublishedRidesList() {
   async function cancelRide(rideId: number) {
     await api.post(`/driver/rides/${rideId}/cancel`, { reason: "Driver cancelled from app" });
     setMessage("Ride cancelled. WhatsApp cancellation messages have been logged for booked passengers.");
+    setCancelRideId(null);
+    setManageRideId(null);
     refetch();
   }
 
   return (
     <div className="flex flex-col gap-3">
       {message && <p className="alert-success">{message}</p>}
+      {cancelRideId && (
+        <div className="fixed inset-0 z-[60] flex items-end bg-black/70 p-4 sm:items-center sm:justify-center">
+          <div className="w-full max-w-md rounded-2xl bg-primary p-5 text-white shadow-soft">
+            <AlertTriangle size={46} className="text-white" />
+            <h2 className="mt-5 text-2xl font-black leading-tight">
+              You're about to cancel your ride. It will be deleted and passengers won't be able to travel with you.
+            </h2>
+            <div className="mt-10 flex items-center justify-between gap-3">
+              <button type="button" className="grid h-14 w-14 place-items-center rounded-full bg-white text-primary" onClick={() => setCancelRideId(null)}>
+                <X size={22} />
+              </button>
+              <button type="button" className="btn-danger border-white/20 bg-white text-primary hover:bg-sand-light" onClick={() => cancelRide(cancelRideId)}>
+                Cancel the ride
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {data?.map((ride) => (
         <div key={ride.id} className="flex flex-col gap-3">
           <RideCard
@@ -122,13 +159,21 @@ export default function PublishedRidesList() {
                 <button
                   type="button"
                   className="btn-outline self-start"
+                  onClick={() => setManageRideId((current) => (current === ride.id ? null : ride.id))}
+                >
+                  {manageRideId === ride.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  {manageRideId === ride.id ? "Hide publication" : "Manage publication"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-outline self-start"
                   onClick={() => setExpandedRideId((current) => (current === ride.id ? null : ride.id))}
                 >
                   {expandedRideId === ride.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   {expandedRideId === ride.id ? "Hide booked passengers" : "View booked passengers"}
                 </button>
                 {ride.status !== "cancelled" && (
-                  <button type="button" className="btn-danger self-start" onClick={() => cancelRide(ride.id)}>
+                  <button type="button" className="btn-danger self-start" onClick={() => setCancelRideId(ride.id)}>
                     <XCircle size={16} />
                     Cancel Ride
                   </button>
@@ -136,14 +181,58 @@ export default function PublishedRidesList() {
               </>
             }
             details={
-              expandedRideId === ride.id ? (
-                <RideBookings rideId={ride.id} onMessage={setMessage} onRideChanged={refetch} />
-              ) : null
+              <>
+                {manageRideId === ride.id && (
+                  <div className="rounded-2xl border border-sand bg-white p-4">
+                    <h3 className="text-lg font-black">Your publication</h3>
+                    <div className="mt-3 divide-y divide-sand">
+                      <Link to={`/rides/${ride.id}`} className="flex items-center gap-3 py-3 font-bold">
+                        <Eye size={18} className="text-muted" />
+                        <span>
+                          <span className="block">See your publication online</span>
+                          <span className="block text-sm font-semibold text-muted">
+                            {ride.available_seats} seats left
+                          </span>
+                        </span>
+                        <ChevronRight size={18} className="ml-auto text-muted" />
+                      </Link>
+                      <Link to="/driver/create-ride" className="flex items-center gap-3 py-3 font-bold">
+                        <Edit3 size={18} className="text-muted" />
+                        Edit your publication
+                        <ChevronRight size={18} className="ml-auto text-muted" />
+                      </Link>
+                      <Link to="/driver/create-ride" className="flex items-center gap-3 py-3 font-bold text-primary">
+                        <Copy size={18} />
+                        Duplicate your publication
+                      </Link>
+                      <Link to="/driver/create-ride" className="flex items-center gap-3 py-3 font-bold text-primary">
+                        <Repeat2 size={18} />
+                        Publish your return ride
+                      </Link>
+                      {ride.status !== "cancelled" && (
+                        <button type="button" className="flex w-full items-center gap-3 py-3 text-left font-bold text-primary" onClick={() => setCancelRideId(ride.id)}>
+                          <XCircle size={18} />
+                          Cancel your ride
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {expandedRideId === ride.id && <RideBookings rideId={ride.id} onMessage={setMessage} onRideChanged={refetch} />}
+              </>
             }
           />
         </div>
       ))}
-      {data?.length === 0 && <p className="alert-info">No published rides yet.</p>}
+      {data?.length === 0 && (
+        <div className="card p-5 text-center">
+          <p className="font-black">No published rides yet.</p>
+          <Link to="/driver/create-ride" className="btn-primary mt-4">
+            Publish a ride
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

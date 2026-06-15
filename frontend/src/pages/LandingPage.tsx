@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Car, ListChecks, Map, MapPin, Search, Shield, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, Car, ListChecks, Map, MapPin, Repeat2, Search, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
@@ -6,23 +6,12 @@ import { api, User } from "../api/client";
 import { useSessionStore } from "../store/session";
 import RideFlow from "../components/RideFlow";
 import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
-import PixelSlideshow from "../components/PixelSlideshow";
-
-// Monochrome car-dashboard illustrations (different intercity routes) that the
-// hero cycles through with a pixelate dissolve.
-const DASHBOARD_IMAGES = [
-  "/car-dashboard-1.svg",
-  "/car-dashboard-2.svg",
-  "/car-dashboard-3.svg",
-  "/car-dashboard-4.svg",
-  "/car-dashboard-5.svg"
-];
 
 const features = [
-  [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
-  [Car, "Homely car comfort", "Choose drivers, cars, AC, pickup points, and flexible halt notes."],
-  [Users, "Friendly travel", "Skip the lonely bus and share intercity routes with verified people."],
-  [Map, "Gujarat-first routes", "Ahmedabad, Rajkot, Jamnagar, Surat, and nearby city corridors."]
+  [Shield, "Verified profiles", "Govt. ID, email, phone, ratings, and report actions keep trust visible."],
+  [Car, "Ride-ready details", "Cars, pickup points, drop points, luggage, comfort rules, and instant booking."],
+  [Users, "Shared intercity travel", "Search and publish rides across Mumbai, Pune, Nashik, Nagpur, and more."],
+  [Map, "Map placeholder ready", "The product keeps map space empty so the next iteration can plug in the real provider."]
 ] as const;
 
 export default function LandingPage() {
@@ -62,16 +51,27 @@ function RideSearchBar() {
   return (
     <form
       onSubmit={findVehicle}
-      className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto] md:gap-2 md:rounded-3xl md:p-3"
+      className="overflow-hidden rounded-2xl border-2 border-primary bg-white text-ink shadow-card"
     >
-      <Field icon={MapPin} label="Pickup" value={pickup} onChange={setPickup} placeholder="Enter pickup city" />
-      <Field icon={MapPin} label="Drop off" value={dropoff} onChange={setDropoff} placeholder="Enter drop off city" />
-      <TravelDatePicker value={pickupDate} onChange={setPickupDate} />
-      <button
-        type="submit"
-        className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-neutral-950 px-6 text-sm font-bold text-white transition hover:bg-neutral-800 md:rounded-2xl"
-      >
-        Find a ride
+      <div className="divide-y divide-sand">
+        <Field icon={MapPin} label="Leaving from" value={pickup} onChange={setPickup} placeholder="Mumbai Central, Maharashtra" />
+        <Field icon={MapPin} label="Going to" value={dropoff} onChange={setDropoff} placeholder="Wakad, Pune, Maharashtra" />
+        <div className="grid grid-cols-2 divide-x divide-sand">
+          <div className="p-3">
+            <TravelDatePicker value={pickupDate} onChange={setPickupDate} label="Today" />
+          </div>
+          <div className="flex items-center gap-2 p-4 text-sm font-bold text-muted">
+            <Repeat2 size={18} />
+            Return date
+          </div>
+        </div>
+        <div className="flex items-center gap-3 p-4 text-sm font-bold">
+          <Users size={18} className="text-muted" />
+          1 passenger
+        </div>
+      </div>
+      <button type="submit" className="flex min-h-[64px] w-full items-center justify-center gap-2 bg-primary px-6 text-base font-black text-white transition hover:bg-primary-dark">
+        Search
         <ArrowRight size={18} />
       </button>
     </form>
@@ -100,18 +100,18 @@ function Field({
   placeholder?: string;
 }) {
   return (
-    <label className="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</span>
+    <label className="flex flex-col gap-2 px-4 py-4 transition hover:bg-primary-soft">
       <span className="flex items-center gap-2">
-        <Icon size={16} className="shrink-0 text-neutral-400" />
+        <Icon size={18} className="shrink-0 text-muted" />
         <input
-          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
+          className="w-full bg-transparent text-base font-bold text-ink outline-none placeholder:font-semibold placeholder:text-muted"
           type={type}
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
         />
       </span>
+      <span className="sr-only">{label}</span>
     </label>
   );
 }
@@ -133,26 +133,25 @@ function HomeForUser({ user }: { user?: User }) {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 md:py-4">
-        <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
-          <div className="flex flex-col gap-6">
-            <span className="chip-solid self-start px-4 py-1.5">
-              <BadgeCheck size={15} />
-              Verified Gujarat intercity carpooling
-            </span>
-            <div>
-              <h1 className="text-5xl font-bold leading-none md:text-7xl">
-                {user?.full_name ? `Welcome, ${user.full_name.split(" ")[0]}` : "Carthi"}
-              </h1>
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
-                {isDriver
-                  ? "Manage the rides you publish or open a new intercity journey for verified passengers."
-                  : "Book a friendly car ride, flexible halts, and a homely intercity travel experience."}
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-8 pt-7">
+        <div className="flex flex-col gap-6">
+          <span className="inline-flex items-center gap-2 self-start text-lg font-black text-ink">
+            <BadgeCheck size={24} className="text-primary" />
+            Hello{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}!
+          </span>
+          <div>
+            <h1 className="text-4xl font-black leading-tight md:text-5xl">Travel anywhere together. Spend smarter.</h1>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
+              Maharashtra-first carpooling with verified people, clear pickup points, and ride publishing that captures one detail at a time.
+            </p>
+          </div>
+
+          {!isDriver && <RideSearchBar />}
+
+          {isDriver && (
+            <div className="grid gap-3 sm:grid-cols-2">
               <Link to={primary.to} className="btn-primary px-6 py-3 text-base">
-                {isDriver ? <ListChecks size={18} /> : <Search size={18} />}
+                <ListChecks size={18} />
                 {primary.label}
                 <ArrowRight size={18} />
               </Link>
@@ -161,22 +160,11 @@ function HomeForUser({ user }: { user?: User }) {
                 {secondary.label}
               </Link>
             </div>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-sand">
-            <PixelSlideshow images={DASHBOARD_IMAGES} className="block h-[260px] w-full md:h-[390px]" />
-          </div>
+          )}
         </div>
       </div>
 
-      {!isDriver && (
-        <div className="mx-auto w-full max-w-6xl px-4 pb-4">
-          <h2 className="mb-3 text-xl font-bold">Search published rides</h2>
-          <RideSearchBar />
-        </div>
-      )}
-
-      <div className="mx-auto w-full max-w-6xl px-4 pb-4 pt-4">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-4 pt-2">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map(([Icon, title, copy]) => (
             <div key={title} className="card h-full p-5 shadow-none">
