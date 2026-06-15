@@ -105,7 +105,7 @@ export default function SearchRides() {
             placeholder="Drop off city"
           />
         </label>
-        <div className="flex items-center px-2 md:w-[200px]">
+        <div className="flex items-center px-2 md:w-[160px]">
           <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Date" />
         </div>
         <label className="flex flex-col justify-center px-3 py-2 md:w-[150px]">

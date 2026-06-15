@@ -66,10 +66,8 @@ export default function TimePicker({
     onChange(to24HourValue(Math.min(12, Math.max(1, Number(hoursInput) || 1)), next, period));
   }
 
-  const spinBtn = "flex h-4 w-4 items-center justify-center rounded text-muted transition hover:bg-sand hover:text-ink active:scale-95";
-
   return (
-    <div className="flex min-h-[52px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-ink md:min-h-[48px] md:rounded-2xl">
+    <div className="flex h-full min-h-[60px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-ink md:min-h-[60px] md:rounded-2xl">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">
         <Clock size={17} />
       </span>
