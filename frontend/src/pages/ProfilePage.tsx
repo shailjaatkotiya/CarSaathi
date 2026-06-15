@@ -17,7 +17,7 @@ import {
   Star,
   User as UserIcon,
   Wallet,
-  X
+  X,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -41,14 +41,14 @@ type ProfileForm = {
 
 const emptyForm: ProfileForm = {
   full_name: "",
-  whatsapp_number: ""
+  whatsapp_number: "",
 };
 
 function formFromUser(user?: User): ProfileForm {
   if (!user) return emptyForm;
   return {
     full_name: user.full_name || "",
-    whatsapp_number: user.whatsapp_number || ""
+    whatsapp_number: user.whatsapp_number || "",
   };
 }
 
@@ -62,7 +62,7 @@ function SettingsRow({
   sublabel,
   to,
   onClick,
-  danger = false
+  danger = false,
 }: {
   icon?: ReactNode;
   label: string;
@@ -74,16 +74,31 @@ function SettingsRow({
   const cls = `flex items-center gap-3 w-full px-4 py-3.5 text-left transition hover:bg-sand-light ${danger ? "text-red-600" : "text-ink"}`;
   const inner = (
     <>
-      {icon && <span className={`shrink-0 ${danger ? "text-red-500" : "text-muted"}`}>{icon}</span>}
+      {icon && (
+        <span className={`shrink-0 ${danger ? "text-red-500" : "text-muted"}`}>
+          {icon}
+        </span>
+      )}
       <span className="flex-1 min-w-0">
         <span className="block text-sm font-semibold">{label}</span>
-        {sublabel && <span className="block text-xs text-muted mt-0.5">{sublabel}</span>}
+        {sublabel && (
+          <span className="block text-xs text-muted mt-0.5">{sublabel}</span>
+        )}
       </span>
       {!danger && <ChevronRight size={16} className="shrink-0 text-muted" />}
     </>
   );
-  if (to) return <Link to={to} className={cls}>{inner}</Link>;
-  return <button type="button" className={cls} onClick={onClick}>{inner}</button>;
+  if (to)
+    return (
+      <Link to={to} className={cls}>
+        {inner}
+      </Link>
+    );
+  return (
+    <button type="button" className={cls} onClick={onClick}>
+      {inner}
+    </button>
+  );
 }
 
 function SettingsGroup({ children }: { children: ReactNode }) {
@@ -93,7 +108,6 @@ function SettingsGroup({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
@@ -107,13 +121,14 @@ export default function ProfilePage() {
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data
+    queryFn: async () => (await api.get<User>("/auth/me")).data,
   });
 
   const { data: verification } = useQuery({
     queryKey: ["profile-verification"],
-    queryFn: async () => (await api.get<VerificationStatus>("/profile/verification-status")).data,
-    enabled: Boolean(data)
+    queryFn: async () =>
+      (await api.get<VerificationStatus>("/profile/verification-status")).data,
+    enabled: Boolean(data),
   });
 
   useEffect(() => {
@@ -126,7 +141,7 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const payload = {
         full_name: form.full_name.trim(),
-        whatsapp_number: optionalText(form.whatsapp_number)
+        whatsapp_number: optionalText(form.whatsapp_number),
       };
       return (await api.put<User>("/profile", payload)).data;
     },
@@ -138,10 +153,15 @@ export default function ProfilePage() {
       await queryClient.invalidateQueries({ queryKey: ["me"] });
     },
     onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setError(detail || "Could not update profile. Please check the fields and try again.");
+      const detail = axios.isAxiosError(err)
+        ? err.response?.data?.detail
+        : undefined;
+      setError(
+        detail ||
+          "Could not update profile. Please check the fields and try again.",
+      );
       setMessage("");
-    }
+    },
   });
 
   function setField(field: keyof ProfileForm, value: string) {
@@ -178,7 +198,9 @@ export default function ProfilePage() {
       <div className="mx-auto w-full max-w-lg px-4 py-6">
         <div className="flex flex-col gap-4">
           <p className="alert-warning">Please login to view your profile.</p>
-          <Link to="/auth" className="btn-primary self-start">Login to continue</Link>
+          <Link to="/auth" className="btn-primary self-start">
+            Login to continue
+          </Link>
         </div>
       </div>
     );
@@ -226,12 +248,18 @@ export default function ProfilePage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-xl font-bold">{data.full_name || "My Profile"}</h1>
-                    <VerifiedBadge verified={data.verification_status === "verified"} />
+                    <h1 className="text-xl font-bold">
+                      {data.full_name || "My Profile"}
+                    </h1>
+                    <VerifiedBadge
+                      verified={data.verification_status === "verified"}
+                    />
                   </div>
                   <p className="text-xs text-muted mt-0.5">
                     {isDriver ? "Driver" : "Newcomer"}
-                    {isDriver && data.rating_count > 0 && ` · ${data.rating_average} ★ (${data.rating_count})`}
+                    {isDriver &&
+                      data.rating_count > 0 &&
+                      ` · ${data.rating_average} ★ (${data.rating_count})`}
                   </p>
                 </div>
                 <button
@@ -244,82 +272,156 @@ export default function ProfilePage() {
               </div>
             </div>
 
-
             {/* Edit personal details (inline) */}
             {isEditing ? (
               <div className="card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-bold">Edit personal details</h2>
-                  <button type="button" onClick={cancelEdit} className="text-muted hover:text-ink">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="text-muted hover:text-ink"
+                  >
                     <X size={18} />
                   </button>
                 </div>
                 <label>
                   <span className="field-label">Name</span>
-                  <input className="input" required value={form.full_name} onChange={(e) => setField("full_name", e.target.value)} />
+                  <input
+                    className="input"
+                    required
+                    value={form.full_name}
+                    onChange={(e) => setField("full_name", e.target.value)}
+                  />
                 </label>
                 <label>
                   <span className="field-label">WhatsApp number</span>
-                  <input className="input" value={form.whatsapp_number} onChange={(e) => setField("whatsapp_number", e.target.value)} placeholder="+91 98765 43210" />
+                  <input
+                    className="input"
+                    value={form.whatsapp_number}
+                    onChange={(e) =>
+                      setField("whatsapp_number", e.target.value)
+                    }
+                    placeholder="+91 98765 43210"
+                  />
                 </label>
                 <div className="flex gap-2 pt-1">
-                  <button type="button" className="btn-outline flex-1" onClick={cancelEdit}>Cancel</button>
-                  <button type="button" className="btn-primary flex-1" onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
+                  <button
+                    type="button"
+                    className="btn-outline flex-1"
+                    onClick={cancelEdit}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary flex-1"
+                    onClick={() => updateProfile.mutate()}
+                    disabled={updateProfile.isPending}
+                  >
                     <Save size={16} />
                     {updateProfile.isPending ? "Saving..." : "Save"}
                   </button>
                 </div>
               </div>
             ) : (
-              <SettingsGroup>
-                <SettingsRow icon={<Pencil size={16} />} label="Edit personal details" onClick={() => setIsEditing(true)} />
-              </SettingsGroup>
+              <></>
             )}
 
             {/* Verify your profile */}
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Verify your profile</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Verify your profile
+              </h2>
               <SettingsGroup>
                 <SettingsRow
-                  icon={govtIdVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                  icon={
+                    govtIdVerified ? (
+                      <ShieldCheck size={16} className="text-green-600" />
+                    ) : (
+                      <Plus size={16} />
+                    )
+                  }
                   label="Verify your Govt. ID"
-                  sublabel={govtIdVerified ? `Aadhaar ****${verification?.masked_aadhaar?.slice(-4) || ""}` : "Quick to do and inspires trust"}
+                  sublabel={
+                    govtIdVerified
+                      ? `Aadhaar ****${verification?.masked_aadhaar?.slice(-4) || ""}`
+                      : "Quick to do and inspires trust"
+                  }
                   to="/verify"
                 />
                 <SettingsRow
-                  icon={emailVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                  icon={
+                    emailVerified ? (
+                      <ShieldCheck size={16} className="text-green-600" />
+                    ) : (
+                      <Plus size={16} />
+                    )
+                  }
                   label={`Confirm email ${data.email}`}
-                  sublabel={emailVerified ? "Email verified" : "Verify your email address"}
+                  sublabel={
+                    emailVerified
+                      ? "Email verified"
+                      : "Verify your email address"
+                  }
                   onClick={() => {}}
                 />
                 <div className="flex items-center gap-3 px-4 py-3.5">
                   <span className="shrink-0 text-muted">
-                    {phoneVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Phone size={16} />}
+                    {phoneVerified ? (
+                      <ShieldCheck size={16} className="text-green-600" />
+                    ) : (
+                      <Phone size={16} />
+                    )}
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-semibold">{data.whatsapp_number || "Add phone number"}</span>
-                    {phoneVerified && <span className="block text-xs text-muted mt-0.5">Phone number added</span>}
+                    <span className="block text-sm font-semibold">
+                      {data.whatsapp_number || "Add phone number"}
+                    </span>
+                    {phoneVerified && (
+                      <span className="block text-xs text-muted mt-0.5">
+                        Phone number added
+                      </span>
+                    )}
                   </span>
-                  {phoneVerified && <Shield size={16} className="shrink-0 text-green-600" />}
+                  {phoneVerified && (
+                    <Shield size={16} className="shrink-0 text-green-600" />
+                  )}
                 </div>
               </SettingsGroup>
             </div>
 
             {/* About you */}
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">About you</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                About you
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<Plus size={16} />} label="Add a mini bio" onClick={() => {}} />
-                <SettingsRow icon={<Plus size={16} />} label="Edit travel preferences" onClick={() => {}} />
+                <SettingsRow
+                  icon={<Plus size={16} />}
+                  label="Add a mini bio"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<Plus size={16} />}
+                  label="Edit travel preferences"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             {/* Vehicles */}
             {isDriver && (
               <div>
-                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Vehicles</h2>
+                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                  Vehicles
+                </h2>
                 <SettingsGroup>
-                  <SettingsRow icon={<Plus size={16} />} label="Add a vehicle" to="/driver/vehicle" />
+                  <SettingsRow
+                    icon={<Plus size={16} />}
+                    label="Add a vehicle"
+                    to="/driver/vehicle"
+                  />
                 </SettingsGroup>
               </div>
             )}
@@ -327,13 +429,20 @@ export default function ProfilePage() {
             {/* Ratings (driver) */}
             {isDriver && (
               <div>
-                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Reviews</h2>
+                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                  Reviews
+                </h2>
                 <SettingsGroup>
                   <div className="px-4 py-3.5 flex items-center gap-3">
                     <Star size={16} className="text-muted shrink-0" />
                     <span className="flex-1">
-                      <span className="block text-sm font-semibold">Rating</span>
-                      <span className="block text-xs text-muted">{data.rating_average || 0} ★ from {data.rating_count || 0} reviews</span>
+                      <span className="block text-sm font-semibold">
+                        Rating
+                      </span>
+                      <span className="block text-xs text-muted">
+                        {data.rating_average || 0} ★ from{" "}
+                        {data.rating_count || 0} reviews
+                      </span>
                     </span>
                   </div>
                 </SettingsGroup>
@@ -343,7 +452,11 @@ export default function ProfilePage() {
             {/* My rides */}
             {isDriver && (
               <SettingsGroup>
-                <SettingsRow icon={<Car size={16} />} label="My published rides" to="/my-rides" />
+                <SettingsRow
+                  icon={<Car size={16} />}
+                  label="My published rides"
+                  to="/my-rides"
+                />
               </SettingsGroup>
             )}
           </>
@@ -353,49 +466,113 @@ export default function ProfilePage() {
         {tab === "account" && (
           <>
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Profile</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Profile
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<Star size={16} />} label="Ratings" sublabel={`${data.rating_average || 0} ★ (${data.rating_count || 0} reviews)`} onClick={() => {}} />
-                <SettingsRow icon={<UserIcon size={16} />} label="Saved passengers" onClick={() => {}} />
+                <SettingsRow
+                  icon={<Star size={16} />}
+                  label="Ratings"
+                  sublabel={`${data.rating_average || 0} ★ (${data.rating_count || 0} reviews)`}
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<UserIcon size={16} />}
+                  label="Saved passengers"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Preferences</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Preferences
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<Mail size={16} />} label="Communication preferences" onClick={() => {}} />
+                <SettingsRow
+                  icon={<Mail size={16} />}
+                  label="Communication preferences"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Security</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Security
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<Lock size={16} />} label="Password" onClick={() => {}} />
-                <SettingsRow icon={<MapPin size={16} />} label="Postal address" onClick={() => {}} />
+                <SettingsRow
+                  icon={<Lock size={16} />}
+                  label="Password"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<MapPin size={16} />}
+                  label="Postal address"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Payments</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Payments
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<Wallet size={16} />} label="Payout methods" onClick={() => {}} />
-                <SettingsRow icon={<Wallet size={16} />} label="Payouts" onClick={() => {}} />
-                <SettingsRow icon={<CreditCard size={16} />} label="Payment methods" onClick={() => {}} />
-                <SettingsRow icon={<CreditCard size={16} />} label="Payments & refunds" onClick={() => {}} />
+                <SettingsRow
+                  icon={<Wallet size={16} />}
+                  label="Payout methods"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<Wallet size={16} />}
+                  label="Payouts"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<CreditCard size={16} />}
+                  label="Payment methods"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<CreditCard size={16} />}
+                  label="Payments & refunds"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             <div>
-              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Support</h2>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">
+                Support
+              </h2>
               <SettingsGroup>
-                <SettingsRow icon={<HelpCircle size={16} />} label="Help" onClick={() => {}} />
-                <SettingsRow icon={<FileText size={16} />} label="Terms and Conditions" onClick={() => {}} />
-                <SettingsRow icon={<Shield size={16} />} label="Data protection" onClick={() => {}} />
+                <SettingsRow
+                  icon={<HelpCircle size={16} />}
+                  label="Help"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<FileText size={16} />}
+                  label="Terms and Conditions"
+                  onClick={() => {}}
+                />
+                <SettingsRow
+                  icon={<Shield size={16} />}
+                  label="Data protection"
+                  onClick={() => {}}
+                />
               </SettingsGroup>
             </div>
 
             <SettingsGroup>
-              <SettingsRow icon={<LogOut size={16} />} label="Log out" onClick={handleLogout} danger />
+              <SettingsRow
+                icon={<LogOut size={16} />}
+                label="Log out"
+                onClick={handleLogout}
+                danger
+              />
               <SettingsRow label="Close my account" onClick={() => {}} danger />
             </SettingsGroup>
           </>
