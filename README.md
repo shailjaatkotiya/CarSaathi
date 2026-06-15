@@ -54,6 +54,12 @@ Frontend URL:
 
 Set `VITE_API_BASE_URL=http://localhost:8000/api/v1` if your backend runs elsewhere.
 
+For the driver route map, copy `frontend/.env.example` to `frontend/.env` and set:
+
+```powershell
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_token
+```
+
 ## MVP Scope
 
 The MVP supports:

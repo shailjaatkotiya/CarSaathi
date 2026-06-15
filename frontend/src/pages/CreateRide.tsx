@@ -14,9 +14,10 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
+import type { SelectedRoute } from "../components/MapboxRoutePicker";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
 import { carBrands } from "../data/carBrands";
@@ -32,6 +33,7 @@ const rideRules = [
 ];
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
+const MapboxRoutePicker = lazy(() => import("../components/MapboxRoutePicker"));
 
 type CarMode = "saved" | "new";
 
@@ -60,6 +62,13 @@ function defaultAvailableSeats(carType?: string | null) {
 
 function countPoints(value: string) {
   return value.split(",").map((item) => item.trim()).filter(Boolean).length;
+}
+
+function replaceFirstPoint(points: string, value: string) {
+  const items = points.split(",").map((item) => item.trim()).filter(Boolean);
+  if (!value.trim()) return items.join(", ");
+  if (!items.length) return value.trim();
+  return [value.trim(), ...items.slice(1)].join(", ");
 }
 
 // One step shell: title, subtitle, icon, and the step's fields. Same on every
@@ -91,6 +100,8 @@ export default function CreateRide() {
   const [sourceCity, setSourceCity] = useState("Rajkot");
   const [destinationCity, setDestinationCity] = useState("Jamnagar");
   const [distanceKm, setDistanceKm] = useState("96");
+  const [mainPickup, setMainPickup] = useState("");
+  const [mainDrop, setMainDrop] = useState("");
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
   const [departureTime, setDepartureTime] = useState("07:30");
   const [pricePerSeat, setPricePerSeat] = useState("180");
@@ -160,8 +171,17 @@ export default function CreateRide() {
 
   const missingWhatsapp = Boolean(me) && !me?.whatsapp_number?.trim();
 
-  // Steps in order. Map step is intentionally an empty placeholder for a later
-  // iteration. Validate returns an error string (or null) before advancing.
+  function applyMapRoute(selection: SelectedRoute) {
+    setMainPickup(selection.pickup.label);
+    setMainDrop(selection.drop.label);
+    if (selection.pickup.city) setSourceCity(selection.pickup.city);
+    if (selection.drop.city) setDestinationCity(selection.drop.city);
+    setDistanceKm(String(Math.max(1, Math.round(selection.route.distanceKm))));
+    setPickupPoints((current) => replaceFirstPoint(current, selection.pickup.label));
+    setDropPoints((current) => replaceFirstPoint(current, selection.drop.label));
+  }
+
+  // Steps in order. Validate returns an error string (or null) before advancing.
   const steps = [
     {
       key: "route",
@@ -177,7 +197,7 @@ export default function CreateRide() {
     {
       key: "map",
       title: "Pin pickup & drop on map",
-      subtitle: "Map selection arrives in a later update - skip for now.",
+      subtitle: "Search full addresses, compare route options, and save the main points.",
       icon: <MapIcon size={20} />,
       validate: () => null
     },
@@ -391,11 +411,17 @@ export default function CreateRide() {
               )}
 
               {current.key === "map" && (
-                <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-sand bg-sand-light py-12 text-center">
-                  <MapIcon size={28} className="text-muted" />
-                  <p className="font-bold">Map selection coming soon</p>
-                  <p className="text-sm text-muted">Pin exact pickup and drop locations in a later update.</p>
-                </div>
+                <Suspense fallback={<p className="alert-info">Loading map tools...</p>}>
+                  <MapboxRoutePicker
+                    sourceCity={sourceCity}
+                    destinationCity={destinationCity}
+                    pickupLabel={mainPickup}
+                    dropLabel={mainDrop}
+                    onPickupLabelChange={setMainPickup}
+                    onDropLabelChange={setMainDrop}
+                    onApply={applyMapRoute}
+                  />
+                </Suspense>
               )}
 
               {current.key === "datetime" && (
@@ -642,6 +668,8 @@ export default function CreateRide() {
                 <div className="flex flex-col gap-3 text-sm">
                   {[
                     ["Route", `${sourceCity} -> ${destinationCity} · ${distanceKm} km`],
+                    ["Main pickup", mainPickup || pickupPoints.split(",")[0]?.trim() || "Not selected"],
+                    ["Main drop", mainDrop || dropPoints.split(",")[0]?.trim() || "Not selected"],
                     ["When", `${journeyDate} · ${departureTime}`],
                     [
                       "Car",
