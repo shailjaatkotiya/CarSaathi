@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, User } from "../api/client";
+import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
@@ -90,7 +91,7 @@ export default function CreateRide() {
   const [sourceCity, setSourceCity] = useState("Rajkot");
   const [destinationCity, setDestinationCity] = useState("Jamnagar");
   const [distanceKm, setDistanceKm] = useState("96");
-  const [journeyDate, setJourneyDate] = useState(defaultRideDate);
+  const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
   const [departureTime, setDepartureTime] = useState("07:30");
   const [pricePerSeat, setPricePerSeat] = useState("180");
 
@@ -303,8 +304,6 @@ export default function CreateRide() {
       }
     }
 
-    const newCarColor = String(payload.car_color ?? "").trim() || "White";
-
     const carDetails =
       carMode === "saved" && selectedVehicleId
         ? { vehicle_id: selectedVehicleId }
@@ -434,7 +433,7 @@ export default function CreateRide() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label>
                     <span className="field-label">Journey date</span>
-                    <input className="input" type="date" value={journeyDate} onChange={(event) => setJourneyDate(event.target.value)} />
+                    <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Journey date" />
                     <span className="field-hint">Up to 10 days ahead.</span>
                   </label>
                   <label>
