@@ -158,10 +158,15 @@ export default function TravelDatePicker({
             {label}
           </span>
           <span className="block truncate text-sm font-bold">
-            {selectedDate ? formatTravelDate(selectedDate) : <span className="text-muted font-normal">Select a date</span>}
+            {selectedDate ? (
+              formatTravelDate(selectedDate)
+            ) : (
+              <span className="text-muted font-normal">Select a date</span>
+            )}
           </span>
         </span>
       </button>
+
       {isOpen && (
         <div
           className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-sand bg-white p-3 text-ink shadow-card"
@@ -202,7 +207,8 @@ export default function TravelDatePicker({
 
           <div className="mt-1 grid grid-cols-7 gap-1">
             {calendarDays.map((day) => {
-              const isSelected = selectedDate !== null && day.value === selectedDate;
+              const isSelected =
+                selectedDate !== null && day.value === selectedDate;
               const isToday = day.value === today;
               const isDisabled = day.value < today || day.value > maxDate;
               return (
@@ -226,23 +232,6 @@ export default function TravelDatePicker({
                 </button>
               );
             })}
-          </div>
-
-          <div className="mt-3 flex gap-2 border-t border-sand pt-2">
-            <button
-              type="button"
-              className="flex-1 rounded-lg border border-sand bg-cream py-1.5 text-xs font-bold text-ink transition hover:border-primary hover:bg-primary-soft hover:text-primary"
-              onClick={() => { onChange(clampTravelDate(today)); setIsOpen(false); }}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              className="flex-1 rounded-lg border border-sand bg-cream py-1.5 text-xs font-bold text-muted transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
-              onClick={() => { onChange(""); setIsOpen(false); }}
-            >
-              Clear
-            </button>
           </div>
         </div>
       )}

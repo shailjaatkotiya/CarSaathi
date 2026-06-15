@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function parseTimeValue(value: string) {
@@ -78,9 +78,6 @@ export default function TimePicker({
         <div className="flex items-center gap-1">
           {/* Hours */}
           <div className="flex flex-col items-center">
-            <button type="button" className={spinBtn} onClick={() => stepHours(1)} tabIndex={-1} aria-label="Increase hour">
-              <ChevronUp size={12} />
-            </button>
             <input
               type="text"
               inputMode="numeric"
@@ -90,19 +87,17 @@ export default function TimePicker({
               value={hoursInput}
               onChange={(e) => setHoursInput(e.target.value.replace(/\D/g, "").slice(0, 2))}
               onBlur={() => commit(hoursInput, minutesInput, period)}
+              onWheel={(e) => {
+                e.preventDefault();
+                stepHours(e.deltaY < 0 ? 1 : -1);
+              }}
             />
-            <button type="button" className={spinBtn} onClick={() => stepHours(-1)} tabIndex={-1} aria-label="Decrease hour">
-              <ChevronDown size={12} />
-            </button>
           </div>
 
           <span className="mb-0.5 font-bold text-muted">:</span>
 
           {/* Minutes */}
           <div className="flex flex-col items-center">
-            <button type="button" className={spinBtn} onClick={() => stepMinutes(1)} tabIndex={-1} aria-label="Increase minute">
-              <ChevronUp size={12} />
-            </button>
             <input
               type="text"
               inputMode="numeric"
@@ -112,10 +107,11 @@ export default function TimePicker({
               value={minutesInput}
               onChange={(e) => setMinutesInput(e.target.value.replace(/\D/g, "").slice(0, 2))}
               onBlur={() => commit(hoursInput, minutesInput, period)}
+              onWheel={(e) => {
+                e.preventDefault();
+                stepMinutes(e.deltaY < 0 ? 1 : -1);
+              }}
             />
-            <button type="button" className={spinBtn} onClick={() => stepMinutes(-1)} tabIndex={-1} aria-label="Decrease minute">
-              <ChevronDown size={12} />
-            </button>
           </div>
 
           {/* AM/PM */}
