@@ -17,6 +17,7 @@ type Vehicle = {
   vehicle_number: string;
   fuel_type: string;
   car_type: string;
+  color: string;
   seats: number;
   photo_urls: string[];
   is_verified: boolean;
@@ -62,6 +63,7 @@ export default function AddVehicle() {
       (form.elements.namedItem("model") as HTMLInputElement).value = vehicle.model;
       (form.elements.namedItem("vehicle_number") as HTMLInputElement).value = vehicle.vehicle_number;
       (form.elements.namedItem("fuel_type") as HTMLSelectElement).value = vehicle.fuel_type;
+      (form.elements.namedItem("color") as HTMLInputElement).value = vehicle.color || "White";
       form.scrollIntoView({ behavior: "smooth" });
     }
   }
@@ -84,12 +86,12 @@ export default function AddVehicle() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
-      <div className="card rounded-3xl p-6 md:p-8">
-        <form ref={formRef} onSubmit={submit} className="flex flex-col gap-5">
+    <div className="mx-auto w-full max-w-3xl px-4 py-5 md:py-7">
+      <div className="card rounded-2xl p-4 md:p-5">
+        <form ref={formRef} onSubmit={submit} className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{editingVehicle ? `Edit vehicle ${editingVehicle.vehicle_number}` : "Add vehicle"}</h1>
-            <p className="mt-2 text-muted">Add car details passengers can compare before requesting seats.</p>
+            <h1 className="text-xl font-bold md:text-2xl">{editingVehicle ? `Edit vehicle ${editingVehicle.vehicle_number}` : "Add vehicle"}</h1>
+            <p className="mt-1 text-sm text-muted">Add car details passengers can compare before requesting seats.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label>
@@ -128,6 +130,11 @@ export default function AddVehicle() {
                 <option value="CNG">CNG</option>
                 <option value="EV">EV</option>
               </select>
+            </label>
+            <label>
+              <span className="field-label">Car color</span>
+              <input className="input" name="color" defaultValue="White" placeholder="White" required />
+              <span className="field-hint">Helps passengers spot your car. Defaults to White.</span>
             </label>
             <label>
               <span className="field-label">Passenger seats</span>
@@ -194,7 +201,7 @@ export default function AddVehicle() {
                 {vehicle.brand} {vehicle.model} - {vehicle.vehicle_number}
               </p>
               <p className="text-sm text-muted">
-                {vehicle.car_type} - {vehicle.fuel_type} - {vehicle.seats} passenger seats
+                {vehicle.car_type} - {vehicle.color} - {vehicle.fuel_type} - {vehicle.seats} passenger seats
               </p>
             </div>
             <div className="flex items-center gap-2">

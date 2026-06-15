@@ -1,4 +1,4 @@
-import { AlertTriangle, Banknote, Car, CreditCard, Fuel, MessageCircle, Share2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useMemo, useState } from "react";
@@ -179,6 +179,14 @@ export default function RideDetail() {
                     <span className="chip">
                       <Car size={12} />
                       {ride.vehicle.car_type}
+                    </span>
+                    <span className="chip-outline">
+                      <Palette size={12} />
+                      {ride.vehicle.color}
+                    </span>
+                    <span className="chip-outline">
+                      <Hash size={12} />
+                      {ride.vehicle.vehicle_number}
                     </span>
                     <span className="chip-outline">
                       <Fuel size={12} />

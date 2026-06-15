@@ -10,6 +10,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Base rem is 16px; trimming to 15px shrinks all rem-based spacing and text
+     a notch for a denser, less "spacious" feel while staying readable. */
+  font-size: 15px;
 }
 
 body {
@@ -30,7 +33,7 @@ a {
 
 @layer components {
   .section {
-    @apply mx-auto w-full max-w-6xl px-4 py-8;
+    @apply mx-auto w-full max-w-5xl px-4 py-5;
   }
 
   .card {
@@ -51,7 +54,7 @@ a {
 
   /* text-base below md stops iOS Safari auto-zooming inputs under 16px */
   .input {
-    @apply w-full rounded-xl border border-sand bg-cream px-3 py-2.5 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
+    @apply w-full rounded-xl border border-sand bg-cream px-3 py-2 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light/40 md:text-sm;
   }
 
   /* native date/time inputs: flex-center the value, value left, picker icon pinned right */
@@ -79,7 +82,7 @@ a {
 
   /* 44px minimum touch target on mobile per iOS/Android guidelines */
   .btn {
-    @apply inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[40px];
+    @apply inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[36px];
   }
 
   .btn-primary {
@@ -107,7 +110,7 @@ a {
   }
 
   .alert {
-    @apply rounded-xl border px-4 py-3 text-sm font-semibold;
+    @apply rounded-xl border px-3 py-2 text-sm font-semibold;
   }
 
   .alert-success {
@@ -127,6 +130,6 @@ a {
   }
 
   .icon-tile {
-    @apply grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary;
+    @apply grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary;
   }
 }

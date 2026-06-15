@@ -25,6 +25,22 @@ def update_profile(payload: ProfileUpdate, user: User = Depends(get_current_user
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
         user.email = str(updates["email"])
 
+    car_fields = [
+        "personal_car_brand",
+        "personal_car_model",
+        "personal_car_fuel_type",
+        "personal_car_category",
+        "personal_car_color",
+        "personal_car_seats",
+    ]
+    merged_number = updates["personal_car_number"] if "personal_car_number" in updates else user.personal_car_number
+    has_car_detail = any(
+        (updates[field] if field in updates else getattr(user, field)) not in (None, "")
+        for field in car_fields
+    )
+    if has_car_detail and not (merged_number and str(merged_number).strip()):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Car number is required to add a car")
+
     for field in [
         "full_name",
         "age",
@@ -34,10 +50,15 @@ def update_profile(payload: ProfileUpdate, user: User = Depends(get_current_user
         "personal_car_number",
         "personal_car_fuel_type",
         "personal_car_category",
+        "personal_car_color",
         "personal_car_seats",
     ]:
         if field in updates:
             setattr(user, field, updates[field])
+
+    # Default personal car colour to White once any car detail exists.
+    if has_car_detail and not (user.personal_car_color and user.personal_car_color.strip()):
+        user.personal_car_color = "White"
 
     if user.driver_profile:
         for field in ["driving_license_number", "bio", "auto_confirm_bookings"]:

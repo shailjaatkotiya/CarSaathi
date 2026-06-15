@@ -54,6 +54,7 @@ export type Ride = {
     vehicle_number: string;
     fuel_type: string;
     car_type: string;
+    color: string;
     seats: number;
     photo_urls: string[];
     is_verified: boolean;
@@ -67,6 +68,9 @@ export type Booking = {
   passenger_id: number;
   driver_id: number;
   driver_name: string;
+  driver_whatsapp?: string | null;
+  car_number?: string | null;
+  car_color?: string | null;
   route: string;
   journey_date: string;
   departure_time: string;
@@ -78,6 +82,16 @@ export type Booking = {
   payment_method: "cash" | "online";
   payment_status: string;
 };
+
+// Build a wa.me chat link from a phone number. Assumes India (+91) when no
+// country code is present. Returns null for empty/invalid numbers.
+export function whatsappLink(number?: string | null): string | null {
+  if (!number) return null;
+  let digits = number.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.length === 10) digits = `91${digits}`;
+  return `https://wa.me/${digits}`;
+}
 
 export type PaymentInit = {
   razorpay_order_id: string;
@@ -125,6 +139,7 @@ export type User = {
   personal_car_number?: string;
   personal_car_fuel_type?: string;
   personal_car_category?: string;
+  personal_car_color?: string;
   personal_car_seats?: number;
   verification_status: "pending" | "verified" | "rejected";
   is_blocked: boolean;

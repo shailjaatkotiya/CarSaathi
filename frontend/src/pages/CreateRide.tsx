@@ -105,6 +105,7 @@ export default function CreateRide() {
           number: me.personal_car_number || "",
           fuel: me.personal_car_fuel_type || "",
           category: me.personal_car_category || "",
+          color: me.personal_car_color || "White",
           seats: me.personal_car_seats || null
         }
       : null;
@@ -177,6 +178,8 @@ export default function CreateRide() {
       return;
     }
 
+    const newCarColor = String(payload.car_color ?? "").trim() || "White";
+
     const carDetails =
       carMode === "saved" && selectedVehicleId
         ? { vehicle_id: selectedVehicleId }
@@ -187,10 +190,12 @@ export default function CreateRide() {
             vehicle_number: profileCar.number || null,
             fuel_type: profileCar.fuel || null,
             car_type: profileCar.category || null,
+            car_color: profileCar.color || "White",
             car_seats: defaultAvailableSeats(profileCar.category)
           }
         : {
             ...newCarDetails,
+            car_color: newCarColor,
             car_seats: defaultAvailableSeats(newCarType)
           };
 
@@ -378,6 +383,11 @@ export default function CreateRide() {
                   <option value="Diesel">Diesel</option>
                 </select>
                 <span className="field-hint">Petrol, CNG, EV, or Diesel</span>
+              </label>
+              <label>
+                <span className="field-label">Car color</span>
+                <input className="input" name="car_color" defaultValue="White" placeholder="White" required />
+                <span className="field-hint">Helps passengers spot your car</span>
               </label>
               <label>
                 <span className="field-label">Car category</span>

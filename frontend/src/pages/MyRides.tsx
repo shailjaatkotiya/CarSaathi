@@ -1,7 +1,7 @@
-import { CheckCircle2, ChevronDown, ChevronUp, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, MessageCircle, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { api, Ride } from "../api/client";
+import { api, Ride, whatsappLink } from "../api/client";
 import RideCard from "../components/RideCard";
 
 type RideBooking = {
@@ -57,7 +57,19 @@ function RideBookings({
             <p className="text-sm text-muted">
               {booking.booking_code} - {booking.seats_booked} seats - {booking.pickup_point} to {booking.drop_point}
             </p>
-            <p className="text-sm text-muted">WhatsApp: {booking.passenger_whatsapp || "Not added"}</p>
+            {whatsappLink(booking.passenger_whatsapp) ? (
+              <a
+                href={whatsappLink(booking.passenger_whatsapp)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
+              >
+                <MessageCircle size={14} />
+                Chat on WhatsApp {booking.passenger_whatsapp}
+              </a>
+            ) : (
+              <p className="text-sm text-muted">WhatsApp: Not added</p>
+            )}
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <span className="chip self-start sm:self-end">
@@ -97,11 +109,11 @@ export default function MyRides() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
-      <div className="flex flex-col gap-5">
-        <div className="card-soft rounded-3xl p-6 md:p-8">
-          <h1 className="text-3xl font-bold">Published Rides</h1>
-          <p className="mt-2 text-muted">Open any published ride to see all passengers who booked it.</p>
+    <div className="mx-auto w-full max-w-4xl px-4 py-5 md:py-7">
+      <div className="flex flex-col gap-3">
+        <div className="card-soft rounded-2xl p-4 md:p-5">
+          <h1 className="text-xl font-bold md:text-2xl">Published Rides</h1>
+          <p className="mt-1 text-sm text-muted">Open any published ride to see all passengers who booked it.</p>
         </div>
         {message && <p className="alert-success">{message}</p>}
         {data?.map((ride) => (

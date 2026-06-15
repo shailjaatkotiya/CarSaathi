@@ -1,9 +1,9 @@
-import { ArrowUpDown, ChevronDown, ChevronUp, Search, SlidersHorizontal } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
-import RideCard from "../components/RideCard";
+import RideListItem from "../components/RideListItem";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 
 export default function SearchRides() {
@@ -23,8 +23,6 @@ export default function SearchRides() {
   const [acAvailable, setAcAvailable] = useState("");
   const [sortBy, setSortBy] = useState("date_time");
   const [seats, setSeats] = useState(1);
-  const [showSort, setShowSort] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -69,77 +67,101 @@ export default function SearchRides() {
     }
   });
 
+  function clearFilters() {
+    setSortBy("date_time");
+    setSourceArea("");
+    setDestinationArea("");
+    setDepartureAfter("");
+    setDepartureBefore("");
+    setCarType("");
+    setFuelType("");
+    setMinPrice("");
+    setMaxPrice("");
+    setDriverRating("");
+    setAcAvailable("");
+  }
+
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
-      <div className="flex flex-col gap-6">
-        <div className="card rounded-3xl p-5 md:p-6">
-          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal size={26} className="text-primary" />
-                <h1 className="text-3xl font-bold md:text-4xl">Passenger ride search</h1>
-              </div>
-              <p className="mt-2 max-w-xl text-sm text-muted md:whitespace-nowrap">
-                Pickup, drop-off, date - your shotgun seat is a search away.
-              </p>
-            </div>
-            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto">
-              <button type="button" className="btn-outline w-full justify-center gap-2 px-4" onClick={() => setShowSort((current) => !current)}>
-                <ArrowUpDown size={18} />
-                Sort
-                {showSort ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+    <div className="mx-auto w-full max-w-6xl px-4 py-5 md:py-6">
+      {/* Top search bar: pickup, drop off, date, passengers */}
+      <div className="card flex flex-col gap-2 rounded-2xl p-2 md:flex-row md:items-stretch md:gap-0 md:divide-x md:divide-sand">
+        <label className="flex flex-1 flex-col justify-center px-3 py-2">
+          <span className="field-label mb-0">From</span>
+          <input
+            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            value={source}
+            onChange={(event) => setSource(event.target.value)}
+            placeholder="Pickup city"
+          />
+        </label>
+        <label className="flex flex-1 flex-col justify-center px-3 py-2">
+          <span className="field-label mb-0">To</span>
+          <input
+            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            value={destination}
+            onChange={(event) => setDestination(event.target.value)}
+            placeholder="Drop off city"
+          />
+        </label>
+        <div className="flex items-center px-2 md:w-[200px]">
+          <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Date" />
+        </div>
+        <label className="flex flex-col justify-center px-3 py-2 md:w-[150px]">
+          <span className="field-label mb-0">Passengers</span>
+          <span className="flex items-center gap-2">
+            <Users size={15} className="text-muted" />
+            <input
+              className="w-full bg-transparent text-sm font-bold text-ink outline-none"
+              type="number"
+              min={1}
+              value={seats}
+              onChange={(event) => setSeats(Math.max(1, Number(event.target.value)))}
+            />
+          </span>
+        </label>
+        <button type="button" className="btn-primary justify-center gap-2 md:rounded-xl md:px-6" onClick={() => refetch()}>
+          <Search size={18} />
+          Search
+        </button>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[260px_1fr]">
+        {/* Left sidebar: sort + filters */}
+        <aside className="card h-max rounded-2xl p-4 lg:sticky lg:top-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold">Sort by</h2>
+            <button type="button" className="text-xs font-bold text-muted transition hover:text-primary" onClick={clearFilters}>
+              Clear all
+            </button>
+          </div>
+          <div className="mt-3 flex flex-col gap-1">
+            {[
+              ["date_time", "Earliest departure"],
+              ["time", "Departure time"],
+              ["price", "Lowest price"]
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-left text-sm transition hover:bg-sand-light"
+                onClick={() => setSortBy(value)}
+              >
+                <span
+                  className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${
+                    sortBy === value ? "border-primary" : "border-sand"
+                  }`}
+                >
+                  {sortBy === value && <span className="h-2 w-2 rounded-full bg-primary" />}
+                </span>
+                <span className={sortBy === value ? "font-bold text-ink" : "text-muted"}>{label}</span>
               </button>
-              <button type="button" className="btn-outline w-full justify-center gap-2 px-4" onClick={() => setShowFilters((current) => !current)}>
-                <SlidersHorizontal size={18} />
-                Filter
-                {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-              <button type="button" className="btn-primary col-span-2 w-full justify-center gap-2 px-4 sm:col-span-1" onClick={() => refetch()}>
-                <Search size={18} />
-                Search rides
-              </button>
-            </div>
+            ))}
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_220px]">
-            <label>
-              <span className="field-label">Pickup</span>
-              <input className="input" value={source} onChange={(event) => setSource(event.target.value)} placeholder="Enter pickup city" />
-            </label>
-            <label>
-              <span className="field-label">Drop off</span>
-              <input className="input" value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Enter drop off city" />
-            </label>
-            <TravelDatePicker value={journeyDate} onChange={setJourneyDate} />
-          </div>
+          <hr className="my-4 border-sand" />
 
-          {showSort && (
-            <div className="mt-4 rounded-2xl border border-sand bg-cream p-3">
-              <span className="field-label">Sort rides</span>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {[
-                  ["date_time", "Date"],
-                  ["time", "Time"],
-                  ["price", "Price"]
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={sortBy === value ? "btn-primary" : "btn-outline"}
-                    onClick={() => setSortBy(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className={`mt-4 gap-4 rounded-2xl border border-sand bg-cream p-4 sm:grid-cols-2 lg:grid-cols-4 ${showFilters ? "grid" : "hidden"}`}>
-            <label>
-              <span className="field-label">Seats needed</span>
-              <input className="input" type="number" min={1} value={seats} onChange={(event) => setSeats(Number(event.target.value))} />
-            </label>
+          <h2 className="text-base font-bold">Filters</h2>
+          <div className="mt-3 flex flex-col gap-3">
             <label>
               <span className="field-label">Pickup area</span>
               <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
@@ -148,24 +170,28 @@ export default function SearchRides() {
               <span className="field-label">Stop or drop area</span>
               <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
             </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label>
+                <span className="field-label">After</span>
+                <input className="input" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} />
+              </label>
+              <label>
+                <span className="field-label">Before</span>
+                <input className="input" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} />
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label>
+                <span className="field-label">Min price</span>
+                <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="150" />
+              </label>
+              <label>
+                <span className="field-label">Max price</span>
+                <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="650" />
+              </label>
+            </div>
             <label>
-              <span className="field-label">Departure after</span>
-              <input className="input" type="time" value={departureAfter} onChange={(event) => setDepartureAfter(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Departure before</span>
-              <input className="input" type="time" value={departureBefore} onChange={(event) => setDepartureBefore(event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Minimum price</span>
-              <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="Rs. 150" />
-            </label>
-            <label>
-              <span className="field-label">Maximum price</span>
-              <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="Rs. 650" />
-            </label>
-            <label>
-              <span className="field-label">Minimum driver rating</span>
+              <span className="field-label">Min driver rating</span>
               <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
                 <option value="">Any rating</option>
                 <option value="4">4.0+ stars</option>
@@ -201,19 +227,32 @@ export default function SearchRides() {
               </select>
             </label>
           </div>
-        </div>
+        </aside>
 
-        <div className="flex flex-col gap-4">
-          {isLoading && <p className="alert-info">Loading rides...</p>}
-          {data?.map((ride) => <RideCard key={ride.id} ride={ride} />)}
-          {data?.length === 0 &&
-            (journeyDate ? (
-              <p className="alert-warning">
-                No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
-              </p>
-            ) : (
-              <p className="alert-warning">No rides found for this route.</p>
-            ))}
+        {/* Right: results list */}
+        <div className="min-w-0">
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h1 className="text-lg font-bold md:text-xl">
+              {source || "All cities"} {destination ? `-> ${destination}` : ""}
+            </h1>
+            {data && (
+              <span className="shrink-0 text-sm text-muted">
+                {data.length} ride{data.length === 1 ? "" : "s"} available
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col gap-3">
+            {isLoading && <p className="alert-info">Loading rides...</p>}
+            {data?.map((ride) => <RideListItem key={ride.id} ride={ride} />)}
+            {data?.length === 0 &&
+              (journeyDate ? (
+                <p className="alert-warning">
+                  No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
+                </p>
+              ) : (
+                <p className="alert-warning">No rides found for this route.</p>
+              ))}
+          </div>
         </div>
       </div>
     </div>

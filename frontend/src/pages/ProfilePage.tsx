@@ -1,4 +1,4 @@
-import { Car, LogOut, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
+import { Car, ChevronDown, LogOut, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
@@ -24,6 +24,7 @@ type ProfileForm = {
   personal_car_number: string;
   personal_car_fuel_type: string;
   personal_car_category: string;
+  personal_car_color: string;
   personal_car_seats: string;
 };
 
@@ -36,6 +37,7 @@ const emptyForm: ProfileForm = {
   personal_car_number: "",
   personal_car_fuel_type: "",
   personal_car_category: "",
+  personal_car_color: "",
   personal_car_seats: ""
 };
 
@@ -50,6 +52,7 @@ function formFromUser(user?: User): ProfileForm {
     personal_car_number: user.personal_car_number || "",
     personal_car_fuel_type: user.personal_car_fuel_type || "",
     personal_car_category: user.personal_car_category || "",
+    personal_car_color: user.personal_car_color || "",
     personal_car_seats: user.personal_car_seats ? String(user.personal_car_seats) : ""
   };
 }
@@ -74,6 +77,38 @@ function DetailTile({ label, value, icon }: { label: string; value?: string | nu
   );
 }
 
+function Section({
+  icon,
+  title,
+  open,
+  onToggle,
+  children
+}: {
+  icon?: ReactNode;
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-sand-light md:p-5"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2.5">
+          {icon}
+          <span className="text-base font-bold md:text-lg">{title}</span>
+        </span>
+        <ChevronDown size={18} className={`shrink-0 text-muted transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="border-t border-sand p-4 md:p-5">{children}</div>}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -83,6 +118,9 @@ export default function ProfilePage() {
   const [brandOther, setBrandOther] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [openCar, setOpenCar] = useState(false);
+  const [openVerify, setOpenVerify] = useState(false);
+  const [openRides, setOpenRides] = useState(false);
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["me"],
@@ -114,6 +152,7 @@ export default function ProfilePage() {
         personal_car_number: optionalText(form.personal_car_number)?.toUpperCase() || null,
         personal_car_fuel_type: optionalText(form.personal_car_fuel_type),
         personal_car_category: optionalText(form.personal_car_category),
+        personal_car_color: optionalText(form.personal_car_color),
         personal_car_seats: optionalNumber(form.personal_car_seats)
       };
       return (await api.put<User>("/profile", payload)).data;
@@ -180,74 +219,19 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
-      <div className="flex flex-col gap-5">
-        <div className="card overflow-hidden rounded-3xl p-6 md:p-8">
-          <div className="flex flex-col justify-between gap-5 md:flex-row">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
+      <div className="flex flex-col gap-4">
+        {/* Header: name + number outside the dropdowns */}
+        <div className="card overflow-hidden rounded-3xl p-5 md:p-6">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
             <div className="flex items-center gap-4">
-              <span className="grid h-[72px] w-[72px] place-items-center rounded-2xl bg-primary text-3xl font-bold text-white">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-primary text-2xl font-bold text-white">
                 {data?.full_name?.slice(0, 1).toUpperCase() || "R"}
               </span>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-3xl font-bold">{data?.full_name || "My Profile"}</h1>
-                  {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
-                </div>
-                <p className="mt-1 text-muted">Carthi account</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 md:items-end">
-              <p className="flex items-center gap-2 text-sm text-muted">
-                <Star size={16} />
-                Rating {data?.rating_average || 0} from {data?.rating_count || 0} reviews
-              </p>
-              {!isEditing ? (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
-                    <Pencil size={16} />
-                    Edit profile
-                  </button>
-                  <button type="button" className="btn-danger" onClick={handleLogout}>
-                    <LogOut size={16} />
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button type="button" className="btn-outline" onClick={cancelEdit}>
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => updateProfile.mutate()}
-                    disabled={updateProfile.isPending}
-                  >
-                    <Save size={16} />
-                    Save profile
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {message && <p className="alert-success">{message}</p>}
-        {error && <p className="alert-error">{error}</p>}
-
-        <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="flex flex-col gap-5">
-            <div className="card p-5 md:p-6">
-              <h2 className="text-xl font-bold">User profile details</h2>
-              <p className="mt-1.5 text-sm text-muted">
-                Update your profile identity and WhatsApp contact. These values are saved against the logged-in user.
-              </p>
-
               {isEditing ? (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="grid flex-1 gap-2 sm:grid-cols-3">
                   <label>
-                    <span className="field-label">User name</span>
+                    <span className="field-label">Name</span>
                     <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
                   </label>
                   <label>
@@ -255,145 +239,207 @@ export default function ProfilePage() {
                     <input className="input" type="number" min={18} max={100} value={form.age} onChange={(event) => setField("age", event.target.value)} />
                   </label>
                   <label>
-                    <span className="field-label">WhatsApp contact</span>
-                    <input className="input" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} />
+                    <span className="field-label">Number</span>
+                    <input className="input" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} placeholder="WhatsApp number" />
                   </label>
                 </div>
               ) : (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <DetailTile label="User name" value={data?.full_name} icon={<UserIcon size={16} className="text-primary" />} />
-                  <DetailTile label="Age" value={data?.age} icon={<UserIcon size={16} className="text-primary" />} />
-                  <DetailTile label="WhatsApp contact" value={data?.whatsapp_number} icon={<Phone size={16} className="text-primary" />} />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-2xl font-bold md:text-3xl">{data?.full_name || "My Profile"}</h1>
+                    {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
+                  </div>
+                  <p className="mt-1 flex items-center gap-1.5 text-muted">
+                    <Phone size={15} />
+                    {data?.whatsapp_number || "Number not added"}
+                  </p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                    {data?.age ? <span>Age {data.age}</span> : null}
+                    <span className="flex items-center gap-1">
+                      <Star size={14} />
+                      {data?.rating_average || 0} ({data?.rating_count || 0})
+                    </span>
+                  </p>
                 </div>
               )}
             </div>
 
-            {isDriver && (
-            <div className="card p-5 md:p-6">
-              <h2 className="text-xl font-bold">Personal car details optional</h2>
-              <p className="mt-1.5 text-sm text-muted">
-                Add a personal car reference for your profile. Driver ride vehicle details remain handled in the publish
-                ride and vehicle flows.
-              </p>
-
-              {isEditing ? (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Car brand optional</span>
-                    <select
-                      className="input"
-                      value={brandOther ? "__other__" : form.personal_car_brand}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        if (value === "__other__") {
-                          setBrandOther(true);
-                          setField("personal_car_brand", "");
-                        } else {
-                          setBrandOther(false);
-                          setField("personal_car_brand", value);
-                        }
-                      }}
-                    >
-                      <option value="">Not added</option>
-                      {carBrands.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                      <option value="__other__">Other</option>
-                    </select>
-                    {brandOther && (
-                      <input
-                        className="input mt-2"
-                        value={form.personal_car_brand}
-                        onChange={(event) => setField("personal_car_brand", event.target.value)}
-                        placeholder="Enter brand name"
-                      />
-                    )}
-                  </label>
-                  <label>
-                    <span className="field-label">Car model optional</span>
-                    <input className="input" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
-                  </label>
-                  <label>
-                    <span className="field-label">Vehicle number optional</span>
-                    <input className="input" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
-                  </label>
-                  <label>
-                    <span className="field-label">Fuel type optional</span>
-                    <select className="input" value={form.personal_car_fuel_type} onChange={(event) => setField("personal_car_fuel_type", event.target.value)}>
-                      <option value="">Not added</option>
-                      <option value="Petrol">Petrol</option>
-                      <option value="CNG">CNG</option>
-                      <option value="EV">EV</option>
-                      <option value="Diesel">Diesel</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span className="field-label">Car category optional</span>
-                    <select className="input" value={form.personal_car_category} onChange={(event) => setField("personal_car_category", event.target.value)}>
-                      <option value="">Not added</option>
-                      <option value="Mini">Mini</option>
-                      <option value="Sedan">Sedan</option>
-                      <option value="SUV">SUV</option>
-                      <option value="7 Seater">7 Seater</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span className="field-label">Seats optional</span>
-                    <input className="input" type="number" min={1} max={8} value={form.personal_car_seats} onChange={(event) => setField("personal_car_seats", event.target.value)} />
-                  </label>
-                </div>
-              ) : (
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<Car size={16} className="text-primary" />} />
-                  <DetailTile label="Vehicle number" value={data?.personal_car_number} />
-                  <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
-                  <DetailTile label="Category" value={data?.personal_car_category} />
-                  <DetailTile label="Seats" value={data?.personal_car_seats} />
-                </div>
-              )}
-            </div>
+            {!isEditing ? (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
+                  <Pencil size={16} />
+                  Edit profile
+                </button>
+                <button type="button" className="btn-danger" onClick={handleLogout}>
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button type="button" className="btn-outline" onClick={cancelEdit}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => updateProfile.mutate()}
+                  disabled={updateProfile.isPending}
+                >
+                  <Save size={16} />
+                  Save profile
+                </button>
+              </div>
             )}
           </div>
+        </div>
 
-          <div className="flex flex-col gap-5">
-            {isDriver && (
-            <div className="card p-5 md:p-6">
-              <div className="flex items-center gap-2.5">
-                <Shield size={22} className="text-primary" />
-                <h2 className="text-xl font-bold">Verification details</h2>
+        {message && <p className="alert-success">{message}</p>}
+        {error && <p className="alert-error">{error}</p>}
+
+        {/* Dropdown sections */}
+        {isDriver && (
+          <Section
+            icon={<Car size={20} className="text-primary" />}
+            title="Car Details"
+            open={isEditing || openCar}
+            onToggle={() => setOpenCar((current) => !current)}
+          >
+            {isEditing ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label>
+                  <span className="field-label">Car brand optional</span>
+                  <select
+                    className="input"
+                    value={brandOther ? "__other__" : form.personal_car_brand}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value === "__other__") {
+                        setBrandOther(true);
+                        setField("personal_car_brand", "");
+                      } else {
+                        setBrandOther(false);
+                        setField("personal_car_brand", value);
+                      }
+                    }}
+                  >
+                    <option value="">Not added</option>
+                    {carBrands.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                    <option value="__other__">Other</option>
+                  </select>
+                  {brandOther && (
+                    <input
+                      className="input mt-2"
+                      value={form.personal_car_brand}
+                      onChange={(event) => setField("personal_car_brand", event.target.value)}
+                      placeholder="Enter brand name"
+                    />
+                  )}
+                </label>
+                <label>
+                  <span className="field-label">Car model optional</span>
+                  <input className="input" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
+                </label>
+                <label>
+                  <span className="field-label">Vehicle number</span>
+                  <input className="input" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
+                  <span className="field-hint">Required to add a car</span>
+                </label>
+                <label>
+                  <span className="field-label">Car color</span>
+                  <input className="input" value={form.personal_car_color} onChange={(event) => setField("personal_car_color", event.target.value)} placeholder="White" />
+                  <span className="field-hint">Defaults to White</span>
+                </label>
+                <label>
+                  <span className="field-label">Fuel type optional</span>
+                  <select className="input" value={form.personal_car_fuel_type} onChange={(event) => setField("personal_car_fuel_type", event.target.value)}>
+                    <option value="">Not added</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="CNG">CNG</option>
+                    <option value="EV">EV</option>
+                    <option value="Diesel">Diesel</option>
+                  </select>
+                </label>
+                <label>
+                  <span className="field-label">Car category optional</span>
+                  <select className="input" value={form.personal_car_category} onChange={(event) => setField("personal_car_category", event.target.value)}>
+                    <option value="">Not added</option>
+                    <option value="Mini">Mini</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="7 Seater">7 Seater</option>
+                  </select>
+                </label>
+                <label>
+                  <span className="field-label">Seats optional</span>
+                  <input className="input" type="number" min={1} max={8} value={form.personal_car_seats} onChange={(event) => setField("personal_car_seats", event.target.value)} />
+                </label>
               </div>
-              <div className="mt-5 flex flex-col gap-3">
-                <DetailTile label="Profile verification" value={data?.verification_status} />
-                <DetailTile label="Aadhaar verification" value={verification?.status} />
-                <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
-                {verification?.rejection_reason && <p className="alert-error">{verification.rejection_reason}</p>}
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<Car size={16} className="text-primary" />} />
+                <DetailTile label="Vehicle number" value={data?.personal_car_number} />
+                <DetailTile label="Color" value={data?.personal_car_color} />
+                <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
+                <DetailTile label="Category" value={data?.personal_car_category} />
+                <DetailTile label="Seats" value={data?.personal_car_seats} />
               </div>
-              <hr className="my-5 border-sand" />
+            )}
+          </Section>
+        )}
+
+        {isDriver && (
+          <Section
+            icon={<Shield size={20} className="text-primary" />}
+            title="Verification Details"
+            open={openVerify}
+            onToggle={() => setOpenVerify((current) => !current)}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <DetailTile label="Profile verification" value={data?.verification_status} />
+              <DetailTile label="Aadhaar verification" value={verification?.status} />
+              <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
+            </div>
+            {verification?.rejection_reason && <p className="alert-error mt-3">{verification.rejection_reason}</p>}
+            <div className="mt-4">
               <span className={data?.verification_status === "verified" ? "chip-solid" : "chip-outline"}>
                 {data?.verification_status === "verified" ? "Verified profile" : "Verification pending"}
               </span>
             </div>
-            )}
+          </Section>
+        )}
 
-            {isDriver && (
-            <Link to="/my-rides" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
-              <Car size={22} className="text-primary" />
-              <h3 className="mt-2 font-bold">Published Rides</h3>
-              <p className="mt-1.5 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
+        {isDriver && (
+          <Section
+            icon={<Car size={20} className="text-primary" />}
+            title="Published Ride Details"
+            open={openRides}
+            onToggle={() => setOpenRides((current) => !current)}
+          >
+            <p className="text-sm text-muted">Published rides with all passengers who booked each ride.</p>
+            <Link to="/my-rides" className="btn-primary mt-3">
+              View published rides
             </Link>
-            )}
+          </Section>
+        )}
 
-            {isPassenger && (
-            <Link to="/profile/passenger" className="card block p-5 shadow-none transition hover:-translate-y-0.5 hover:border-primary">
-              <UserIcon size={22} className="text-primary" />
-              <h3 className="mt-2 font-bold">Booked Rides</h3>
-              <p className="mt-1.5 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
+        {isPassenger && (
+          <Section
+            icon={<UserIcon size={20} className="text-primary" />}
+            title="Ride Details"
+            open={openRides}
+            onToggle={() => setOpenRides((current) => !current)}
+          >
+            <p className="text-sm text-muted">Booked unfinished rides for this passenger account.</p>
+            <Link to="/profile/passenger" className="btn-primary mt-3">
+              View booked rides
             </Link>
-            )}
-          </div>
-        </div>
+          </Section>
+        )}
       </div>
     </div>
   );

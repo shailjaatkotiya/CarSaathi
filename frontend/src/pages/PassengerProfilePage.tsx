@@ -1,8 +1,8 @@
-import { Calendar, Clock, Flag, MapPin, Star, XCircle } from "lucide-react";
+import { Calendar, Car, Clock, Flag, MapPin, MessageCircle, Palette, Star, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import axios from "axios";
-import { api } from "../api/client";
+import { api, whatsappLink } from "../api/client";
 
 // Booking status mirrors the driver's action: confirmed = driver accepted.
 const STATUS_LABEL: Record<string, string> = {
@@ -19,6 +19,9 @@ type Booking = {
   ride_id: number;
   driver_id: number;
   driver_name: string;
+  driver_whatsapp?: string | null;
+  car_number?: string | null;
+  car_color?: string | null;
   route: string;
   journey_date: string;
   departure_time: string;
@@ -140,11 +143,11 @@ export default function PassengerProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-10">
-      <div className="flex flex-col gap-5">
-        <div className="card-soft rounded-3xl p-6 md:p-8">
-          <h1 className="text-3xl font-bold">Booked Rides</h1>
-          <p className="mt-2 text-muted">Your booked rides that are not completed yet.</p>
+    <div className="mx-auto w-full max-w-4xl px-4 py-5 md:py-7">
+      <div className="flex flex-col gap-3">
+        <div className="card-soft rounded-2xl p-4 md:p-5">
+          <h1 className="text-xl font-bold md:text-2xl">Booked Rides</h1>
+          <p className="mt-1 text-sm text-muted">Your booked rides that are not completed yet.</p>
         </div>
         {message && <p className="alert-success">{message}</p>}
 
@@ -167,6 +170,20 @@ export default function PassengerProfilePage() {
                     {booking.departure_time.slice(0, 5)}
                   </span>
                 </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+                  {booking.car_number && (
+                    <span className="flex items-center gap-1.5">
+                      <Car size={15} className="text-primary" />
+                      {booking.car_number}
+                    </span>
+                  )}
+                  {booking.car_color && (
+                    <span className="flex items-center gap-1.5">
+                      <Palette size={15} className="text-primary" />
+                      {booking.car_color}
+                    </span>
+                  )}
+                </div>
                 <p className="mt-2 text-sm text-muted">
                   {booking.seats_booked} seats - {booking.pickup_point} to {booking.drop_point}
                 </p>
@@ -174,6 +191,17 @@ export default function PassengerProfilePage() {
                   <span className="chip">{STATUS_LABEL[booking.status] ?? booking.status}</span>
                   <span className="chip-outline">{booking.booking_code}</span>
                   <span className="chip-outline">Rs. {booking.total_amount}</span>
+                  {whatsappLink(booking.driver_whatsapp) && (
+                    <a
+                      href={whatsappLink(booking.driver_whatsapp)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="chip-solid hover:opacity-90"
+                    >
+                      <MessageCircle size={14} />
+                      Chat {booking.driver_whatsapp}
+                    </a>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col gap-2 sm:items-end">

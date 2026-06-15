@@ -88,6 +88,8 @@ def apply_vehicle_details(vehicle: Vehicle, payload: RideCreate) -> None:
         vehicle.fuel_type = fuel_type
     if car_type := clean_optional(payload.car_type):
         vehicle.car_type = car_type
+    if color := clean_optional(payload.car_color):
+        vehicle.color = color
     if payload.car_seats:
         vehicle.seats = payload.car_seats
 
@@ -120,6 +122,7 @@ def resolve_ride_vehicle(db: Session, driver: User, payload: RideCreate) -> Vehi
         vehicle_number=normalized_number or generated_vehicle_number(driver),
         fuel_type=clean_optional(payload.fuel_type) or "",
         car_type=clean_optional(payload.car_type) or "",
+        color=clean_optional(payload.car_color) or "White",
         seats=payload.car_seats or default_available_seats(payload.car_type),
         photo_urls="",
     )
@@ -137,6 +140,7 @@ def add_vehicle(payload: VehicleCreate, driver: User = Depends(require_driver), 
         vehicle_number=payload.vehicle_number.upper(),
         fuel_type=payload.fuel_type,
         car_type=payload.car_type,
+        color=payload.color,
         seats=payload.seats,
         photo_urls=",".join(payload.photo_urls),
     )
@@ -156,7 +160,7 @@ def update_vehicle(vehicle_id: int, payload: VehicleCreate, driver: User = Depen
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id, Vehicle.driver_id == driver.id).first()
     if not vehicle:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
-    for field in ["brand", "model", "fuel_type", "car_type", "seats"]:
+    for field in ["brand", "model", "fuel_type", "car_type", "color", "seats"]:
         setattr(vehicle, field, getattr(payload, field))
     vehicle.vehicle_number = payload.vehicle_number.upper()
     vehicle.photo_urls = ",".join(payload.photo_urls)
@@ -255,6 +259,8 @@ def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
         passenger_id=booking.passenger_id,
         driver_id=booking.driver_id,
         driver_name=booking.driver_name,
+        car_number=booking.car_number,
+        car_color=booking.car_color,
         route=booking.route,
         journey_date=booking.journey_date,
         departure_time=booking.departure_time,

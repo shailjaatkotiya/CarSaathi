@@ -27,6 +27,8 @@ PAYMENT_COLUMNS: dict[str, dict[str, str]] = {
         "method": "VARCHAR(20) DEFAULT 'cash'",
         "razorpay_order_id": "VARCHAR(120)",
     },
+    "vehicles": {"color": "VARCHAR(40) DEFAULT 'White'"},
+    "users": {"personal_car_color": "VARCHAR(40)"},
 }
 
 

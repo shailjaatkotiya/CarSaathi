@@ -55,6 +55,7 @@ def ride_to_out(ride: Ride) -> RideOut:
             vehicle_number=ride.vehicle.vehicle_number,
             fuel_type=ride.vehicle.fuel_type,
             car_type=ride.vehicle.car_type,
+            color=ride.vehicle.color,
             seats=ride.vehicle.seats,
             photo_urls=[url for url in ride.vehicle.photo_urls.split(",") if url],
             is_verified=ride.vehicle.is_verified,
