@@ -1,7 +1,32 @@
 import re
 
-from app.models import Ride
-from app.schemas import RideOut, VehicleOut
+from app.models import Booking, Ride
+from app.schemas import DriverBookingOut, RideOut, VehicleOut
+
+
+def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
+    return DriverBookingOut(
+        id=booking.id,
+        booking_code=booking.booking_code,
+        ride_id=booking.ride_id,
+        passenger_id=booking.passenger_id,
+        driver_id=booking.driver_id,
+        driver_name=booking.driver_name,
+        car_number=booking.car_number,
+        car_color=booking.car_color,
+        route=booking.route,
+        journey_date=booking.journey_date,
+        departure_time=booking.departure_time,
+        seats_booked=booking.seats_booked,
+        pickup_point=booking.pickup_point,
+        drop_point=booking.drop_point,
+        status=booking.status,
+        total_amount=booking.total_amount,
+        payment_method=booking.payment_method,
+        payment_status=booking.payment_status,
+        passenger_name=booking.passenger.full_name,
+        passenger_whatsapp=booking.passenger.whatsapp_number,
+    )
 
 
 def _extract_list(notes: str | None, key: str) -> list[str]:
