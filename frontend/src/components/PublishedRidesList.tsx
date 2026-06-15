@@ -1,6 +1,7 @@
-import { CheckCircle2, ChevronDown, ChevronUp, MessageCircle, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, ClipboardList, MessageCircle, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, Ride, whatsappLink } from "../api/client";
 import RideCard from "./RideCard";
 
@@ -119,18 +120,22 @@ export default function PublishedRidesList() {
             ride={ride}
             actions={
               <>
+                <Link to={`/my-rides/${ride.id}`} className="btn-outline self-start">
+                  <ClipboardList size={16} />
+                  Ride plan
+                </Link>
                 <button
                   type="button"
                   className="btn-outline self-start"
                   onClick={() => setExpandedRideId((current) => (current === ride.id ? null : ride.id))}
                 >
                   {expandedRideId === ride.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  {expandedRideId === ride.id ? "Hide booked passengers" : "View booked passengers"}
+                  {expandedRideId === ride.id ? "Hide passengers" : "View passengers"}
                 </button>
                 {ride.status !== "cancelled" && (
                   <button type="button" className="btn-danger self-start" onClick={() => cancelRide(ride.id)}>
                     <XCircle size={16} />
-                    Cancel Ride
+                    Cancel
                   </button>
                 )}
               </>

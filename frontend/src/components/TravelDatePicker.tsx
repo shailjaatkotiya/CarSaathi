@@ -26,12 +26,14 @@ function formatTravelDate(value: string) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   });
 }
 
 function toInputDate(date: Date) {
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  const localDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60_000,
+  );
   return localDate.toISOString().slice(0, 10);
 }
 
@@ -61,7 +63,7 @@ function getCalendarDays(monthKey: string) {
     return {
       value: toInputDate(date),
       day: date.getDate(),
-      isCurrentMonth: date.getMonth() === month - 1
+      isCurrentMonth: date.getMonth() === month - 1,
     };
   });
 }
@@ -69,14 +71,14 @@ function getCalendarDays(monthKey: string) {
 function getMonthLabel(monthKey: string) {
   return fromInputDate(`${monthKey}-01`).toLocaleDateString("en-IN", {
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 }
 
 export default function TravelDatePicker({
   value,
   onChange,
-  label = "Travel Date"
+  label = "Travel Date",
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -86,14 +88,18 @@ export default function TravelDatePicker({
   const [isOpen, setIsOpen] = useState(false);
   const today = getTodayInputDate();
   const maxDate = getMaxTravelDate();
-  const selectedDate = clampTravelDate(value);
-  const [visibleMonth, setVisibleMonth] = useState(getMonthKey(selectedDate));
-  const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
+  const selectedDate = value && value.length === 10 ? value : null;
+  const calendarBase = selectedDate ?? today;
+  const [visibleMonth, setVisibleMonth] = useState(getMonthKey(calendarBase));
+  const calendarDays = useMemo(
+    () => getCalendarDays(visibleMonth),
+    [visibleMonth],
+  );
   const canGoPrevious = visibleMonth > getMonthKey(today);
   const canGoNext = visibleMonth < getMonthKey(maxDate);
 
   useEffect(() => {
-    setVisibleMonth(getMonthKey(selectedDate));
+    setVisibleMonth(getMonthKey(selectedDate ?? today));
   }, [selectedDate]);
 
   useEffect(() => {
@@ -124,7 +130,8 @@ export default function TravelDatePicker({
     const monthDate = fromInputDate(`${visibleMonth}-01`);
     monthDate.setMonth(monthDate.getMonth() + direction);
     const nextMonth = getMonthKey(toInputDate(monthDate));
-    if (nextMonth < getMonthKey(today) || nextMonth > getMonthKey(maxDate)) return;
+    if (nextMonth < getMonthKey(today) || nextMonth > getMonthKey(maxDate))
+      return;
     setVisibleMonth(nextMonth);
   }
 
@@ -147,8 +154,12 @@ export default function TravelDatePicker({
           <Calendar size={17} />
         </span>
         <span className="min-w-0">
-          <span className="block text-[11px] font-bold uppercase tracking-wide text-muted">{label}</span>
-          <span className="block truncate text-sm font-bold">{formatTravelDate(selectedDate)}</span>
+          <span className="block text-[11px] font-bold uppercase tracking-wide text-muted">
+            {label}
+          </span>
+          <span className="block truncate text-sm font-bold">
+            {selectedDate ? formatTravelDate(selectedDate) : <span className="text-muted font-normal">Select a date</span>}
+          </span>
         </span>
       </button>
       {isOpen && (
@@ -167,7 +178,9 @@ export default function TravelDatePicker({
             >
               <ChevronLeft size={17} />
             </button>
-            <div className="text-sm font-bold">{getMonthLabel(visibleMonth)}</div>
+            <div className="text-sm font-bold">
+              {getMonthLabel(visibleMonth)}
+            </div>
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-full border border-sand bg-cream text-ink transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
@@ -189,7 +202,7 @@ export default function TravelDatePicker({
 
           <div className="mt-1 grid grid-cols-7 gap-1">
             {calendarDays.map((day) => {
-              const isSelected = day.value === selectedDate;
+              const isSelected = selectedDate !== null && day.value === selectedDate;
               const isToday = day.value === today;
               const isDisabled = day.value < today || day.value > maxDate;
               return (
@@ -200,10 +213,10 @@ export default function TravelDatePicker({
                     isSelected
                       ? "bg-primary text-white shadow-soft"
                       : isDisabled
-                      ? "cursor-not-allowed text-muted/35"
-                      : day.isCurrentMonth
-                      ? "text-ink hover:bg-primary-soft"
-                      : "text-muted hover:bg-sand-light"
+                        ? "cursor-not-allowed text-muted/35"
+                        : day.isCurrentMonth
+                          ? "text-ink hover:bg-primary-soft"
+                          : "text-muted hover:bg-sand-light"
                   } ${isToday && !isSelected ? "ring-1 ring-primary" : ""}`}
                   onClick={() => selectDate(day.value)}
                   disabled={isDisabled}
@@ -213,6 +226,23 @@ export default function TravelDatePicker({
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-3 flex gap-2 border-t border-sand pt-2">
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-sand bg-cream py-1.5 text-xs font-bold text-ink transition hover:border-primary hover:bg-primary-soft hover:text-primary"
+              onClick={() => { onChange(clampTravelDate(today)); setIsOpen(false); }}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-sand bg-cream py-1.5 text-xs font-bold text-muted transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+              onClick={() => { onChange(""); setIsOpen(false); }}
+            >
+              Clear
+            </button>
           </div>
         </div>
       )}

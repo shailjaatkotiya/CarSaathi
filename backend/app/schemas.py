@@ -1,7 +1,7 @@
 from datetime import date, time
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.models import BookingStatus, RideStatus, UserRole, VerificationStatus
 
@@ -195,6 +195,15 @@ class RideOut(BaseModel):
     route_stops: list[str] = []
     ride_rules: list[str] = []
     driver_instructions: str | None = None
+
+
+class FellowPassengerOut(BaseModel):
+    name: str
+    pickup_point: str
+    drop_point: str
+    seats_booked: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BookingCreate(BaseModel):

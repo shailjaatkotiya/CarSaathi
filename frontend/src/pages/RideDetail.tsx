@@ -1,4 +1,4 @@
-import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useMemo, useState } from "react";
@@ -35,6 +35,11 @@ export default function RideDetail() {
     queryKey: ["me"],
     queryFn: async () => (await api.get<User>("/auth/me")).data,
     enabled: Boolean(token)
+  });
+  const { data: fellowPassengers } = useQuery({
+    queryKey: ["ride-passengers", rideId],
+    queryFn: async () => (await api.get<{ name: string; pickup_point: string; drop_point: string; seats_booked: number }[]>(`/passenger/rides/${rideId}/passengers`)).data,
+    enabled: Boolean(rideId)
   });
   const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
 
@@ -225,6 +230,24 @@ export default function RideDetail() {
                 </div>
                 {ride.route_notes && <p className="mt-2 text-xs text-muted">Route note: {ride.route_notes}</p>}
               </div>
+
+              {fellowPassengers && fellowPassengers.length > 0 && (
+                <div className="card p-3.5 shadow-none">
+                  <div className="flex items-center gap-2">
+                    <Users size={14} className="text-primary" />
+                    <h3 className="text-sm font-bold">Fellow passengers ({fellowPassengers.length})</h3>
+                  </div>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {fellowPassengers.map((p, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg bg-cream px-3 py-2 text-xs">
+                        <span className="font-bold">{p.name}</span>
+                        <span className="text-muted">{p.pickup_point} → {p.drop_point}</span>
+                        {p.seats_booked > 1 && <span className="chip">{p.seats_booked} seats</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-1.5">
                 <span className="chip-solid">

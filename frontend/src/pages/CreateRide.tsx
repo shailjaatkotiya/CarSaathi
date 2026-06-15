@@ -33,10 +33,9 @@ const rideRules = [
 
 const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
 
-type CarMode = "profile" | "saved" | "new";
+type CarMode = "saved" | "new";
 
 const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
-  { value: "profile", label: "Car from my profile", hint: "Reuse the personal car saved in your profile" },
   { value: "saved", label: "A saved vehicle", hint: "Choose one of the vehicles you added earlier" },
   { value: "new", label: "Add a new car", hint: "Type fresh car details for this ride" }
 ];
@@ -100,7 +99,7 @@ export default function CreateRide() {
   const [routeStops, setRouteStops] = useState("Dhrol, Reliance Circle");
   const [dropPoints, setDropPoints] = useState("Jamnagar Bus Stand, Patel Colony, Reliance Circle, Digjam Circle, Railway Station");
 
-  const [carMode, setCarMode] = useState<CarMode>("new");
+  const [carMode, setCarMode] = useState<CarMode>("saved");
   const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
   const [newCarBrandOther, setNewCarBrandOther] = useState("");
   const [carModel, setCarModel] = useState("Swift Dzire");
@@ -116,6 +115,8 @@ export default function CreateRide() {
   const [luggageAllowance, setLuggageAllowance] = useState("One cabin bag");
   const [routeNotes, setRouteNotes] = useState("Short route with one optional water break.");
   const [autoConfirm, setAutoConfirm] = useState(false);
+  const [womenOnly, setWomenOnly] = useState(false);
+  const [maxTwoInBack, setMaxTwoInBack] = useState(false);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -128,30 +129,9 @@ export default function CreateRide() {
     enabled: Boolean(token)
   });
 
-  const profileCar =
-    me &&
-    (me.personal_car_brand ||
-      me.personal_car_model ||
-      me.personal_car_number ||
-      me.personal_car_fuel_type ||
-      me.personal_car_category ||
-      me.personal_car_seats)
-      ? {
-          brand: me.personal_car_brand || "",
-          model: me.personal_car_model || "",
-          number: me.personal_car_number || "",
-          fuel: me.personal_car_fuel_type || "",
-          category: me.personal_car_category || "",
-          color: me.personal_car_color || "White",
-          seats: me.personal_car_seats || null
-        }
-      : null;
-  const profileCarComplete = Boolean(
-    profileCar?.brand && profileCar.model && profileCar.number && profileCar.fuel && profileCar.category
-  );
   const selectedVehicle = savedVehicles?.find((vehicle) => vehicle.id === selectedVehicleId);
   const selectedCarType =
-    carMode === "saved" ? selectedVehicle?.car_type : carMode === "profile" ? profileCar?.category : newCarType;
+    carMode === "saved" ? selectedVehicle?.car_type : newCarType;
   const maxAvailableSeats = defaultAvailableSeats(selectedCarType);
   const resolvedNewBrand = newCarBrand === "Other" ? newCarBrandOther.trim() : newCarBrand;
 
@@ -230,7 +210,6 @@ export default function CreateRide() {
       subtitle: "Use your profile car, a saved vehicle, or add a new one.",
       icon: <Car size={20} />,
       validate: () => {
-        if (carMode === "profile" && !profileCarComplete) return "Complete your profile car (brand, model, number, fuel, category) first.";
         if (carMode === "saved" && !selectedVehicleId) return "Select one of your saved vehicles.";
         if (carMode === "new") {
           if (!resolvedNewBrand || !carModel.trim() || !vehicleNumber.trim() || !fuelType.trim() || !newCarType.trim())
@@ -308,16 +287,6 @@ export default function CreateRide() {
     const carDetails =
       carMode === "saved" && selectedVehicleId
         ? { vehicle_id: selectedVehicleId }
-        : carMode === "profile" && profileCar
-        ? {
-            car_brand: profileCar.brand || null,
-            car_model: profileCar.model || null,
-            vehicle_number: profileCar.number || null,
-            fuel_type: profileCar.fuel || null,
-            car_type: profileCar.category || null,
-            car_color: profileCar.color || "White",
-            car_seats: defaultAvailableSeats(profileCar.category)
-          }
         : {
             car_brand: resolvedNewBrand,
             car_model: carModel.trim(),
@@ -347,7 +316,7 @@ export default function CreateRide() {
         luggage_allowance: luggageAllowance,
         smoking_allowed: !selectedRules.includes("no_smoking"),
         ac_available: true,
-        women_only_preference: false,
+        women_only_preference: womenOnly,
         auto_confirm_bookings: autoConfirm
       });
       setMessage(`Ride published successfully as listing #${data.id}.`);
@@ -481,31 +450,6 @@ export default function CreateRide() {
                     ))}
                   </div>
 
-                  {carMode === "profile" &&
-                    (profileCar ? (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Car</p>
-                          <p className="mt-1 font-bold">{[profileCar.brand, profileCar.model].filter(Boolean).join(" ") || "Not added"}</p>
-                        </div>
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Vehicle number</p>
-                          <p className="mt-1 font-bold">{profileCar.number || "Not added"}</p>
-                        </div>
-                        <div className="rounded-xl border border-sand bg-white p-3">
-                          <p className="text-xs font-bold text-muted">Fuel · category</p>
-                          <p className="mt-1 font-bold">{[profileCar.fuel, profileCar.category].filter(Boolean).join(" · ") || "Not added"}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="alert-warning">
-                        No personal car saved{token ? "" : " (login required)"}.{" "}
-                        <Link to="/profile" className="font-bold underline">
-                          Add it in My Profile
-                        </Link>
-                        .
-                      </p>
-                    ))}
 
                   {carMode === "saved" &&
                     (savedVehicles?.length ? (
@@ -637,7 +581,28 @@ export default function CreateRide() {
               )}
 
               {current.key === "booking" && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
+                  {/* Max 2 in back */}
+                  <button
+                    type="button"
+                    onClick={() => setMaxTwoInBack((v) => !v)}
+                    className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition ${
+                      maxTwoInBack ? "border-primary bg-primary-soft" : "border-sand bg-cream hover:border-primary"
+                    }`}
+                  >
+                    <span className="flex items-start gap-3">
+                      <span className="mt-0.5 text-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="4"/><circle cx="17" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 7-7h6a7 7 0 0 1 7 7v2"/></svg>
+                      </span>
+                      <span>
+                        <span className="block font-bold">Max. 2 in the back</span>
+                        <span className="block text-sm text-muted">Think comfort, keep the middle seat empty</span>
+                      </span>
+                    </span>
+                    <input type="checkbox" className="h-5 w-5 accent-primary shrink-0" checked={maxTwoInBack} onChange={() => {}} />
+                  </button>
+
+                  {/* Instant booking */}
                   <button
                     type="button"
                     onClick={() => setAutoConfirm((value) => !value)}
@@ -648,21 +613,48 @@ export default function CreateRide() {
                     <span className="flex items-start gap-3">
                       <Zap size={18} className="mt-0.5 text-primary" />
                       <span>
-                        <span className="block font-bold">Instant booking</span>
-                        <span className="block text-sm text-muted">Seats are confirmed automatically without your approval.</span>
+                        <span className="block font-bold">Instant Booking</span>
+                        <span className="block text-sm text-muted">Passengers can instantly book your ride</span>
                       </span>
                     </span>
-                    <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${autoConfirm ? "bg-primary" : "bg-sand"}`}>
-                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${autoConfirm ? "left-[22px]" : "left-0.5"}`} />
-                    </span>
+                    <input type="checkbox" className="h-5 w-5 accent-primary shrink-0" checked={autoConfirm} onChange={() => {}} />
                   </button>
+
+                  {/* Women only */}
+                  <button
+                    type="button"
+                    onClick={() => setWomenOnly((v) => !v)}
+                    className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition ${
+                      womenOnly ? "border-primary bg-primary-soft" : "border-sand bg-cream hover:border-primary"
+                    }`}
+                  >
+                    <span className="flex items-start gap-3">
+                      <span className="mt-0.5 text-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M12 12v8M9 18h6"/></svg>
+                      </span>
+                      <span>
+                        <span className="block font-bold">Women Only</span>
+                        <span className="block text-sm text-muted">Make your ride only visible to women</span>
+                      </span>
+                    </span>
+                    <input type="checkbox" className="h-5 w-5 accent-primary shrink-0" checked={womenOnly} onChange={() => {}} />
+                  </button>
+
+                  {/* Additional details */}
+                  <label>
+                    <span className="field-label">Additional details</span>
+                    <textarea
+                      className="input"
+                      rows={3}
+                      value={routeNotes}
+                      onChange={(event) => setRouteNotes(event.target.value)}
+                      placeholder="Flexible about where and when to meet? Not taking the motorway? Got limited space in your boot? Keep passengers in the loop."
+                    />
+                  </label>
+
                   <label>
                     <span className="field-label">Luggage allowance</span>
                     <input className="input" value={luggageAllowance} onChange={(event) => setLuggageAllowance(event.target.value)} placeholder="One cabin bag per passenger" />
-                  </label>
-                  <label>
-                    <span className="field-label">Route notes</span>
-                    <textarea className="input" rows={2} value={routeNotes} onChange={(event) => setRouteNotes(event.target.value)} placeholder="Halt, route preference, road condition" />
                   </label>
                 </div>
               )}
@@ -676,14 +668,14 @@ export default function CreateRide() {
                       "Car",
                       carMode === "saved" && selectedVehicle
                         ? `${selectedVehicle.brand} ${selectedVehicle.model} · ${selectedVehicle.vehicle_number}`
-                        : carMode === "profile" && profileCar
-                        ? `${profileCar.brand} ${profileCar.model} · ${profileCar.number}`
                         : `${resolvedNewBrand} ${carModel} · ${vehicleNumber} · ${carColor}`
                     ],
                     ["Seats & price", `${availableSeats} seats · Rs. ${pricePerSeat}/seat`],
                     ["Pickup points", `${countPoints(pickupPoints)} added`],
                     ["Drop points", `${countPoints(dropPoints)} added`],
-                    ["Instant booking", autoConfirm ? "On" : "Off"]
+                    ["Instant booking", autoConfirm ? "On" : "Off"],
+                    ["Women only", womenOnly ? "Yes" : "No"],
+                    ["Max 2 in back", maxTwoInBack ? "Yes" : "No"]
                   ].map(([label, value]) => (
                     <div key={label} className="flex items-start justify-between gap-3 border-b border-sand pb-2 last:border-0">
                       <span className="font-bold text-muted">{label}</span>
