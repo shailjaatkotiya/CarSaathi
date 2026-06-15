@@ -14,6 +14,7 @@ from app.schemas import (
     BookingCreate,
     BookingOut,
     CancellationRequest,
+    FellowPassengerOut,
     PaymentInitOut,
     PaymentVerifyRequest,
     ReportCreate,
@@ -131,6 +132,23 @@ def ride_detail(ride_id: int, db: Session = Depends(get_db)) -> RideOut:
     if not ride:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
     return ride_to_out(ride)
+
+
+@router.get("/rides/{ride_id}/passengers", response_model=list[FellowPassengerOut])
+def ride_passengers(ride_id: int, db: Session = Depends(get_db)) -> list[FellowPassengerOut]:
+    ride = db.get(Ride, ride_id)
+    if not ride:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
+    return [
+        FellowPassengerOut(
+            name=b.passenger.full_name,
+            pickup_point=b.pickup_point,
+            drop_point=b.drop_point,
+            seats_booked=b.seats_booked,
+        )
+        for b in ride.bookings
+        if b.status in (BookingStatus.confirmed, BookingStatus.pending)
+    ]
 
 
 @router.post("/rides/{ride_id}/book", response_model=BookingActionOut)

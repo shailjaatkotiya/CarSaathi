@@ -1,15 +1,32 @@
-import { Car, ChevronDown, LogOut, Pencil, Phone, Save, Shield, Star, User as UserIcon } from "lucide-react";
+import {
+  Car,
+  ChevronRight,
+  CreditCard,
+  FileText,
+  HelpCircle,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Save,
+  Shield,
+  ShieldCheck,
+  Star,
+  User as UserIcon,
+  Wallet,
+  X
+} from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, User } from "../api/client";
-import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 import VerifiedBadge from "../components/VerifiedBadge";
-import BookedRidesList from "../components/BookedRidesList";
-import PublishedRidesList from "../components/PublishedRidesList";
 
 type VerificationStatus = {
   status: "pending" | "verified" | "rejected";
@@ -20,106 +37,73 @@ type VerificationStatus = {
 type ProfileForm = {
   full_name: string;
   whatsapp_number: string;
-  personal_car_brand: string;
-  personal_car_model: string;
-  personal_car_number: string;
-  personal_car_fuel_type: string;
-  personal_car_category: string;
-  personal_car_color: string;
-  personal_car_seats: string;
 };
 
 const emptyForm: ProfileForm = {
   full_name: "",
-  whatsapp_number: "",
-  personal_car_brand: "",
-  personal_car_model: "",
-  personal_car_number: "",
-  personal_car_fuel_type: "",
-  personal_car_category: "",
-  personal_car_color: "",
-  personal_car_seats: ""
+  whatsapp_number: ""
 };
 
 function formFromUser(user?: User): ProfileForm {
   if (!user) return emptyForm;
   return {
     full_name: user.full_name || "",
-    whatsapp_number: user.whatsapp_number || "",
-    personal_car_brand: user.personal_car_brand || "",
-    personal_car_model: user.personal_car_model || "",
-    personal_car_number: user.personal_car_number || "",
-    personal_car_fuel_type: user.personal_car_fuel_type || "",
-    personal_car_category: user.personal_car_category || "",
-    personal_car_color: user.personal_car_color || "",
-    personal_car_seats: user.personal_car_seats ? String(user.personal_car_seats) : ""
+    whatsapp_number: user.whatsapp_number || ""
   };
-}
-
-function optionalNumber(value: string) {
-  return value.trim() ? Number(value) : null;
 }
 
 function optionalText(value: string) {
   return value.trim() ? value.trim() : null;
 }
 
-function DetailTile({ label, value, icon }: { label: string; value?: string | number | null; icon?: ReactNode }) {
+function SettingsRow({
+  icon,
+  label,
+  sublabel,
+  to,
+  onClick,
+  danger = false
+}: {
+  icon?: ReactNode;
+  label: string;
+  sublabel?: string;
+  to?: string;
+  onClick?: () => void;
+  danger?: boolean;
+}) {
+  const cls = `flex items-center gap-3 w-full px-4 py-3.5 text-left transition hover:bg-sand-light ${danger ? "text-red-600" : "text-ink"}`;
+  const inner = (
+    <>
+      {icon && <span className={`shrink-0 ${danger ? "text-red-500" : "text-muted"}`}>{icon}</span>}
+      <span className="flex-1 min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        {sublabel && <span className="block text-xs text-muted mt-0.5">{sublabel}</span>}
+      </span>
+      {!danger && <ChevronRight size={16} className="shrink-0 text-muted" />}
+    </>
+  );
+  if (to) return <Link to={to} className={cls}>{inner}</Link>;
+  return <button type="button" className={cls} onClick={onClick}>{inner}</button>;
+}
+
+function SettingsGroup({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-sand bg-white p-4">
-      <div className="flex items-center gap-2">
-        {icon}
-        <p className="text-xs font-bold text-muted">{label}</p>
-      </div>
-      <p className="mt-1.5 font-bold">{value || "Not added"}</p>
+    <div className="card overflow-hidden divide-y divide-sand-light">
+      {children}
     </div>
   );
 }
 
-function Section({
-  icon,
-  title,
-  open,
-  onToggle,
-  children
-}: {
-  icon?: ReactNode;
-  title: string;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <div className="card overflow-hidden">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-sand-light md:p-5"
-        onClick={onToggle}
-        aria-expanded={open}
-      >
-        <span className="flex items-center gap-2.5">
-          {icon}
-          <span className="text-base font-bold md:text-lg">{title}</span>
-        </span>
-        <ChevronDown size={18} className={`shrink-0 text-muted transition ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && <div className="border-t border-sand p-4 md:p-5">{children}</div>}
-    </div>
-  );
-}
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const logout = useSessionStore((state) => state.logout);
+  const [tab, setTab] = useState<"about" | "account">("about");
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<ProfileForm>(emptyForm);
-  const [brandOther, setBrandOther] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [openCar, setOpenCar] = useState(false);
-  const [openVerify, setOpenVerify] = useState(false);
-  const [openRides, setOpenRides] = useState(false);
 
   const { data, isError, isLoading } = useQuery({
     queryKey: ["me"],
@@ -135,8 +119,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (data && !isEditing) {
       setForm(formFromUser(data));
-      const brand = data.personal_car_brand || "";
-      setBrandOther(Boolean(brand) && !carBrands.includes(brand));
     }
   }, [data, isEditing]);
 
@@ -144,14 +126,7 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const payload = {
         full_name: form.full_name.trim(),
-        whatsapp_number: optionalText(form.whatsapp_number),
-        personal_car_brand: optionalText(form.personal_car_brand),
-        personal_car_model: optionalText(form.personal_car_model),
-        personal_car_number: optionalText(form.personal_car_number)?.toUpperCase() || null,
-        personal_car_fuel_type: optionalText(form.personal_car_fuel_type),
-        personal_car_category: optionalText(form.personal_car_category),
-        personal_car_color: optionalText(form.personal_car_color),
-        personal_car_seats: optionalNumber(form.personal_car_seats)
+        whatsapp_number: optionalText(form.whatsapp_number)
       };
       return (await api.put<User>("/profile", payload)).data;
     },
@@ -192,242 +167,238 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
+      <div className="mx-auto w-full max-w-lg px-4 py-6">
         <p className="alert-info">Loading your profile...</p>
       </div>
     );
   }
 
-  const isDriver = data?.role === "driver";
-  const isPassenger = data?.role === "passenger";
-
   if (isError || !data) {
     return (
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
+      <div className="mx-auto w-full max-w-lg px-4 py-6">
         <div className="flex flex-col gap-4">
-          <p className="alert-warning">
-            Please login to view and update your profile. Profile data is saved separately for each logged-in user.
-          </p>
-          <Link to="/auth" className="btn-primary self-start">
-            Login to continue
-          </Link>
+          <p className="alert-warning">Please login to view your profile.</p>
+          <Link to="/auth" className="btn-primary self-start">Login to continue</Link>
         </div>
       </div>
     );
   }
 
+  const isDriver = data.role === "driver";
+  const phoneVerified = Boolean(data.whatsapp_number);
+  const emailVerified = false; // not in current API
+  const govtIdVerified = verification?.status === "verified";
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
-      <div className="flex flex-col gap-4">
-        {/* Header: name + number outside the dropdowns */}
-        <div className="card overflow-hidden rounded-3xl p-5 md:p-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
-            <div className="flex items-center gap-4">
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-primary text-2xl font-bold text-white">
-                {data?.full_name?.slice(0, 1).toUpperCase() || "R"}
-              </span>
-              {isEditing ? (
-                <div className="grid flex-1 gap-2 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Name</span>
-                    <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
-                  </label>
-                  <label>
-                    <span className="field-label">Number</span>
-                    <input className="input" value={form.whatsapp_number} onChange={(event) => setField("whatsapp_number", event.target.value)} placeholder="WhatsApp number" />
-                  </label>
-                </div>
-              ) : (
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="text-2xl font-bold md:text-3xl">{data?.full_name || "My Profile"}</h1>
-                    {data && <VerifiedBadge verified={data.verification_status === "verified"} />}
-                  </div>
-                  <p className="mt-1 flex items-center gap-1.5 text-muted">
-                    <Phone size={15} />
-                    {data?.whatsapp_number || "Number not added"}
-                  </p>
-                  {isDriver && (
-                    <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
-                      <Star size={14} />
-                      {data?.rating_average || 0} ({data?.rating_count || 0})
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+    <div className="mx-auto w-full max-w-lg px-4 py-0">
+      {/* Tab bar */}
+      <div className="sticky top-16 z-30 flex border-b border-sand bg-cream/95 backdrop-blur">
+        {(["about", "account"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`flex-1 py-3 text-sm font-bold capitalize transition ${
+              tab === t
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            {t === "about" ? "About you" : "Account"}
+          </button>
+        ))}
+      </div>
 
-            {!isEditing ? (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button type="button" className="btn-primary" onClick={() => setIsEditing(true)}>
-                  <Pencil size={16} />
-                  Edit profile
-                </button>
-                <button type="button" className="btn-danger" onClick={handleLogout}>
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button type="button" className="btn-outline" onClick={cancelEdit}>
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => updateProfile.mutate()}
-                  disabled={updateProfile.isPending}
-                >
-                  <Save size={16} />
-                  Save profile
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div className="py-4 flex flex-col gap-4">
         {message && <p className="alert-success">{message}</p>}
         {error && <p className="alert-error">{error}</p>}
 
-        {/* Dropdown sections */}
-        {isDriver && (
-          <Section
-            icon={<Car size={20} className="text-primary" />}
-            title="Car Details"
-            open={isEditing || openCar}
-            onToggle={() => setOpenCar((current) => !current)}
-          >
+        {/* ─── ABOUT YOU TAB ─── */}
+        {tab === "about" && (
+          <>
+            {/* Profile header card */}
+            <div className="card p-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-primary text-2xl font-bold text-white">
+                    {data.full_name?.slice(0, 1).toUpperCase() || "?"}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-bold">{data.full_name || "My Profile"}</h1>
+                    <VerifiedBadge verified={data.verification_status === "verified"} />
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">
+                    {isDriver ? "Driver" : "Newcomer"}
+                    {isDriver && data.rating_count > 0 && ` · ${data.rating_average} ★ (${data.rating_count})`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="shrink-0 btn-outline px-3 py-2 text-xs"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            </div>
+
+
+            {/* Edit personal details (inline) */}
             {isEditing ? (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="card p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold">Edit personal details</h2>
+                  <button type="button" onClick={cancelEdit} className="text-muted hover:text-ink">
+                    <X size={18} />
+                  </button>
+                </div>
                 <label>
-                  <span className="field-label">Car brand optional</span>
-                  <select
-                    className="input"
-                    value={brandOther ? "__other__" : form.personal_car_brand}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      if (value === "__other__") {
-                        setBrandOther(true);
-                        setField("personal_car_brand", "");
-                      } else {
-                        setBrandOther(false);
-                        setField("personal_car_brand", value);
-                      }
-                    }}
-                  >
-                    <option value="">Not added</option>
-                    {carBrands.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                    <option value="__other__">Other</option>
-                  </select>
-                  {brandOther && (
-                    <input
-                      className="input mt-2"
-                      value={form.personal_car_brand}
-                      onChange={(event) => setField("personal_car_brand", event.target.value)}
-                      placeholder="Enter brand name"
-                    />
-                  )}
+                  <span className="field-label">Name</span>
+                  <input className="input" required value={form.full_name} onChange={(e) => setField("full_name", e.target.value)} />
                 </label>
                 <label>
-                  <span className="field-label">Car model optional</span>
-                  <input className="input" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
+                  <span className="field-label">WhatsApp number</span>
+                  <input className="input" value={form.whatsapp_number} onChange={(e) => setField("whatsapp_number", e.target.value)} placeholder="+91 98765 43210" />
                 </label>
-                <label>
-                  <span className="field-label">Vehicle number</span>
-                  <input className="input" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
-                  <span className="field-hint">Required to add a car</span>
-                </label>
-                <label>
-                  <span className="field-label">Car color</span>
-                  <input className="input" value={form.personal_car_color} onChange={(event) => setField("personal_car_color", event.target.value)} placeholder="White" />
-                  <span className="field-hint">Defaults to White</span>
-                </label>
-                <label>
-                  <span className="field-label">Fuel type optional</span>
-                  <select className="input" value={form.personal_car_fuel_type} onChange={(event) => setField("personal_car_fuel_type", event.target.value)}>
-                    <option value="">Not added</option>
-                    <option value="Petrol">Petrol</option>
-                    <option value="CNG">CNG</option>
-                    <option value="EV">EV</option>
-                    <option value="Diesel">Diesel</option>
-                  </select>
-                </label>
-                <label>
-                  <span className="field-label">Car category optional</span>
-                  <select className="input" value={form.personal_car_category} onChange={(event) => setField("personal_car_category", event.target.value)}>
-                    <option value="">Not added</option>
-                    <option value="Mini">Mini</option>
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="7 Seater">7 Seater</option>
-                  </select>
-                </label>
-                <label>
-                  <span className="field-label">Seats optional</span>
-                  <input className="input" type="number" min={1} max={8} value={form.personal_car_seats} onChange={(event) => setField("personal_car_seats", event.target.value)} />
-                </label>
+                <div className="flex gap-2 pt-1">
+                  <button type="button" className="btn-outline flex-1" onClick={cancelEdit}>Cancel</button>
+                  <button type="button" className="btn-primary flex-1" onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
+                    <Save size={16} />
+                    {updateProfile.isPending ? "Saving..." : "Save"}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<Car size={16} className="text-primary" />} />
-                <DetailTile label="Vehicle number" value={data?.personal_car_number} />
-                <DetailTile label="Color" value={data?.personal_car_color} />
-                <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
-                <DetailTile label="Category" value={data?.personal_car_category} />
-                <DetailTile label="Seats" value={data?.personal_car_seats} />
+              <SettingsGroup>
+                <SettingsRow icon={<Pencil size={16} />} label="Edit personal details" onClick={() => setIsEditing(true)} />
+              </SettingsGroup>
+            )}
+
+            {/* Verify your profile */}
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Verify your profile</h2>
+              <SettingsGroup>
+                <SettingsRow
+                  icon={govtIdVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                  label="Verify your Govt. ID"
+                  sublabel={govtIdVerified ? `Aadhaar ****${verification?.masked_aadhaar?.slice(-4) || ""}` : "Quick to do and inspires trust"}
+                  to="/verify"
+                />
+                <SettingsRow
+                  icon={emailVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                  label={`Confirm email ${data.email}`}
+                  sublabel={emailVerified ? "Email verified" : "Verify your email address"}
+                  onClick={() => {}}
+                />
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <span className="shrink-0 text-muted">
+                    {phoneVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Phone size={16} />}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold">{data.whatsapp_number || "Add phone number"}</span>
+                    {phoneVerified && <span className="block text-xs text-muted mt-0.5">Phone number added</span>}
+                  </span>
+                  {phoneVerified && <Shield size={16} className="shrink-0 text-green-600" />}
+                </div>
+              </SettingsGroup>
+            </div>
+
+            {/* About you */}
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">About you</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<Plus size={16} />} label="Add a mini bio" onClick={() => {}} />
+                <SettingsRow icon={<Plus size={16} />} label="Edit travel preferences" onClick={() => {}} />
+              </SettingsGroup>
+            </div>
+
+            {/* Vehicles */}
+            {isDriver && (
+              <div>
+                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Vehicles</h2>
+                <SettingsGroup>
+                  <SettingsRow icon={<Plus size={16} />} label="Add a vehicle" to="/driver/vehicle" />
+                </SettingsGroup>
               </div>
             )}
-          </Section>
+
+            {/* Ratings (driver) */}
+            {isDriver && (
+              <div>
+                <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Reviews</h2>
+                <SettingsGroup>
+                  <div className="px-4 py-3.5 flex items-center gap-3">
+                    <Star size={16} className="text-muted shrink-0" />
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold">Rating</span>
+                      <span className="block text-xs text-muted">{data.rating_average || 0} ★ from {data.rating_count || 0} reviews</span>
+                    </span>
+                  </div>
+                </SettingsGroup>
+              </div>
+            )}
+
+            {/* My rides */}
+            {isDriver && (
+              <SettingsGroup>
+                <SettingsRow icon={<Car size={16} />} label="My published rides" to="/my-rides" />
+              </SettingsGroup>
+            )}
+          </>
         )}
 
-        {isDriver && (
-          <Section
-            icon={<Shield size={20} className="text-primary" />}
-            title="Verification Details"
-            open={openVerify}
-            onToggle={() => setOpenVerify((current) => !current)}
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
-              <DetailTile label="Profile verification" value={data?.verification_status} />
-              <DetailTile label="Aadhaar verification" value={verification?.status} />
-              <DetailTile label="Masked Aadhaar" value={verification?.masked_aadhaar || "Not submitted"} />
+        {/* ─── ACCOUNT TAB ─── */}
+        {tab === "account" && (
+          <>
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Profile</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<Star size={16} />} label="Ratings" sublabel={`${data.rating_average || 0} ★ (${data.rating_count || 0} reviews)`} onClick={() => {}} />
+                <SettingsRow icon={<UserIcon size={16} />} label="Saved passengers" onClick={() => {}} />
+              </SettingsGroup>
             </div>
-            {verification?.rejection_reason && <p className="alert-error mt-3">{verification.rejection_reason}</p>}
-            <div className="mt-4">
-              <span className={data?.verification_status === "verified" ? "chip-solid" : "chip-outline"}>
-                {data?.verification_status === "verified" ? "Verified profile" : "Verification pending"}
-              </span>
+
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Preferences</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<Mail size={16} />} label="Communication preferences" onClick={() => {}} />
+              </SettingsGroup>
             </div>
-          </Section>
-        )}
 
-        {isDriver && (
-          <Section
-            icon={<Car size={20} className="text-primary" />}
-            title="Published Ride Details"
-            open={openRides}
-            onToggle={() => setOpenRides((current) => !current)}
-          >
-            <p className="mb-3 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
-            {openRides && <PublishedRidesList />}
-          </Section>
-        )}
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Security</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<Lock size={16} />} label="Password" onClick={() => {}} />
+                <SettingsRow icon={<MapPin size={16} />} label="Postal address" onClick={() => {}} />
+              </SettingsGroup>
+            </div>
 
-        {isPassenger && (
-          <Section
-            icon={<UserIcon size={20} className="text-primary" />}
-            title="Ride Details"
-            open={openRides}
-            onToggle={() => setOpenRides((current) => !current)}
-          >
-            <p className="mb-3 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
-            {openRides && <BookedRidesList />}
-          </Section>
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Payments</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<Wallet size={16} />} label="Payout methods" onClick={() => {}} />
+                <SettingsRow icon={<Wallet size={16} />} label="Payouts" onClick={() => {}} />
+                <SettingsRow icon={<CreditCard size={16} />} label="Payment methods" onClick={() => {}} />
+                <SettingsRow icon={<CreditCard size={16} />} label="Payments & refunds" onClick={() => {}} />
+              </SettingsGroup>
+            </div>
+
+            <div>
+              <h2 className="text-xs font-bold text-muted uppercase tracking-wide px-1 mb-2">Support</h2>
+              <SettingsGroup>
+                <SettingsRow icon={<HelpCircle size={16} />} label="Help" onClick={() => {}} />
+                <SettingsRow icon={<FileText size={16} />} label="Terms and Conditions" onClick={() => {}} />
+                <SettingsRow icon={<Shield size={16} />} label="Data protection" onClick={() => {}} />
+              </SettingsGroup>
+            </div>
+
+            <SettingsGroup>
+              <SettingsRow icon={<LogOut size={16} />} label="Log out" onClick={handleLogout} danger />
+              <SettingsRow label="Close my account" onClick={() => {}} danger />
+            </SettingsGroup>
+          </>
         )}
       </div>
     </div>
