@@ -116,7 +116,6 @@ export default function CreateRide() {
   const [routeNotes, setRouteNotes] = useState("Short route with one optional water break.");
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [womenOnly, setWomenOnly] = useState(false);
-  const [maxTwoInBack, setMaxTwoInBack] = useState(false);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -582,26 +581,6 @@ export default function CreateRide() {
 
               {current.key === "booking" && (
                 <div className="flex flex-col gap-3">
-                  {/* Max 2 in back */}
-                  <button
-                    type="button"
-                    onClick={() => setMaxTwoInBack((v) => !v)}
-                    className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-left transition ${
-                      maxTwoInBack ? "border-primary bg-primary-soft" : "border-sand bg-cream hover:border-primary"
-                    }`}
-                  >
-                    <span className="flex items-start gap-3">
-                      <span className="mt-0.5 text-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="4"/><circle cx="17" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 7-7h6a7 7 0 0 1 7 7v2"/></svg>
-                      </span>
-                      <span>
-                        <span className="block font-bold">Max. 2 in the back</span>
-                        <span className="block text-sm text-muted">Think comfort, keep the middle seat empty</span>
-                      </span>
-                    </span>
-                    <input type="checkbox" className="h-5 w-5 accent-primary shrink-0" checked={maxTwoInBack} onChange={() => {}} />
-                  </button>
-
                   {/* Instant booking */}
                   <button
                     type="button"
@@ -674,8 +653,7 @@ export default function CreateRide() {
                     ["Pickup points", `${countPoints(pickupPoints)} added`],
                     ["Drop points", `${countPoints(dropPoints)} added`],
                     ["Instant booking", autoConfirm ? "On" : "Off"],
-                    ["Women only", womenOnly ? "Yes" : "No"],
-                    ["Max 2 in back", maxTwoInBack ? "Yes" : "No"]
+                    ["Women only", womenOnly ? "Yes" : "No"]
                   ].map(([label, value]) => (
                     <div key={label} className="flex items-start justify-between gap-3 border-b border-sand pb-2 last:border-0">
                       <span className="font-bold text-muted">{label}</span>

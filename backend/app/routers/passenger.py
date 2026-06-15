@@ -28,9 +28,57 @@ settings = get_settings()
 
 router = APIRouter(prefix="/passenger", tags=["passenger"])
 
+DEPARTURE_WINDOWS = {
+    "before_0600": (time.min, time(5, 59, 59)),
+    "morning": (time(6, 0), time(12, 0)),
+    "afternoon": (time(12, 1), time(18, 0)),
+    "after_1800": (time(18, 0, 1), time.max),
+}
+
+SORT_ALIASES = {
+    "date_time": "earliest_departure",
+    "time": "earliest_departure",
+    "price": "lowest_price",
+}
+
 
 def cap_available_seats(ride: Ride) -> None:
     ride.available_seats = min(ride.available_seats, ride.total_seats)
+
+
+def parse_csv_filter(value: str | None) -> set[str]:
+    if not value:
+        return set()
+    return {item.strip() for item in value.split(",") if item.strip()}
+
+
+def normalize_sort(sort_by: str) -> str:
+    normalized = sort_by.strip().lower()
+    return SORT_ALIASES.get(normalized, normalized)
+
+
+def matches_departure_window(departure_time: time, selected_windows: set[str]) -> bool:
+    if not selected_windows:
+        return True
+    return any(
+        start <= departure_time <= end
+        for key, (start, end) in DEPARTURE_WINDOWS.items()
+        if key in selected_windows
+    )
+
+
+def text_match_rank(query: str | None, values: list[str]) -> int:
+    if not query:
+        return 0
+    needle = query.strip().lower()
+    haystack = [value.strip().lower() for value in values if value.strip()]
+    if any(value == needle for value in haystack):
+        return 0
+    if any(value.startswith(needle) or needle.startswith(value) for value in haystack):
+        return 1
+    if any(needle in value or value in needle for value in haystack):
+        return 2
+    return 3
 
 
 @router.get("/rides/search", response_model=list[RideOut])
@@ -50,10 +98,17 @@ def search_rides(
     driver_rating: float | None = None,
     car_type: str | None = None,
     fuel_type: str | None = None,
+    departure_window: str | None = None,
     sort_by: str = "date_time",
     ac_available: bool | None = Query(default=None),
+    verified_profile: bool | None = Query(default=None),
+    instant_booking: bool | None = Query(default=None),
+    smoking_allowed: bool | None = Query(default=None),
+    pets_allowed: bool | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[RideOut]:
+    selected_departure_windows = parse_csv_filter(departure_window)
+    normalized_sort = normalize_sort(sort_by)
     search_params = {
         "source": source,
         "destination": destination,
@@ -70,8 +125,13 @@ def search_rides(
         "driver_rating": driver_rating,
         "car_type": car_type,
         "fuel_type": fuel_type,
-        "sort_by": sort_by,
+        "departure_window": sorted(selected_departure_windows),
+        "sort_by": normalized_sort,
         "ac_available": ac_available,
+        "verified_profile": verified_profile,
+        "instant_booking": instant_booking,
+        "smoking_allowed": smoking_allowed,
+        "pets_allowed": pets_allowed,
     }
     cached = cache.get_cached_ride_search(search_params)
     if cached is not None:
@@ -115,11 +175,43 @@ def search_rides(
             continue
         if fuel_type and ride.vehicle.fuel_type.lower() != fuel_type.lower():
             continue
+        if not matches_departure_window(output.departure_time, selected_departure_windows):
+            continue
+        if verified_profile is not None and output.driver_verified != verified_profile:
+            continue
+        if instant_booking is not None and output.auto_confirm_bookings != instant_booking:
+            continue
+        if smoking_allowed is not None and output.smoking_allowed != smoking_allowed:
+            continue
+        if pets_allowed is not None and ("no_pets" not in output.ride_rules) != pets_allowed:
+            continue
         results.append(output)
-    if sort_by == "time":
-        results = sorted(results, key=lambda item: (item.departure_time, item.journey_date))
-    elif sort_by == "price":
+    if normalized_sort == "lowest_price":
         results = sorted(results, key=lambda item: item.price_per_seat)
+    elif normalized_sort == "close_to_departure_point":
+        departure_query = source_area or pickup_point or source
+        results = sorted(
+            results,
+            key=lambda item: (
+                text_match_rank(departure_query, item.pickup_points + [item.source_city]),
+                item.journey_date,
+                item.departure_time,
+                item.price_per_seat,
+            ),
+        )
+    elif normalized_sort == "close_to_arrival_point":
+        arrival_query = destination_area or drop_point or destination
+        results = sorted(
+            results,
+            key=lambda item: (
+                text_match_rank(arrival_query, item.drop_points + item.route_stops + [item.destination_city]),
+                item.journey_date,
+                item.departure_time,
+                item.price_per_seat,
+            ),
+        )
+    elif normalized_sort == "shortest_ride":
+        results = sorted(results, key=lambda item: (item.distance_km, item.journey_date, item.departure_time))
     else:
         results = sorted(results, key=lambda item: (item.journey_date, item.departure_time))
     cache.set_cached_ride_search(search_params, [ride.model_dump(mode="json") for ride in results])

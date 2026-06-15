@@ -1,11 +1,72 @@
-import { ChevronDown, ChevronUp, Search, SlidersHorizontal, Users } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Cigarette,
+  Clock,
+  Hourglass,
+  IndianRupee,
+  MapPin,
+  PawPrint,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+  Zap,
+  type LucideIcon
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api, Ride } from "../api/client";
 import RideListItem from "../components/RideListItem";
-import TimePicker from "../components/TimePicker";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
+
+type SortOption = "earliest_departure" | "lowest_price" | "close_to_departure_point" | "close_to_arrival_point" | "shortest_ride";
+
+const sortOptions: { value: SortOption; label: string; Icon: LucideIcon }[] = [
+  { value: "earliest_departure", label: "Earliest departure", Icon: Clock },
+  { value: "lowest_price", label: "Lowest price", Icon: IndianRupee },
+  { value: "close_to_departure_point", label: "Close to departure point", Icon: MapPin },
+  { value: "close_to_arrival_point", label: "Close to arrival point", Icon: MapPin },
+  { value: "shortest_ride", label: "Shortest ride", Icon: Hourglass }
+];
+
+const departureOptions = [
+  { value: "before_0600", label: "Before 06:00" },
+  { value: "morning", label: "06:00 - 12:00" },
+  { value: "afternoon", label: "12:01 - 18:00" },
+  { value: "after_1800", label: "After 18:00" }
+];
+
+function FilterCheckbox({
+  checked,
+  label,
+  Icon,
+  onChange
+}: {
+  checked: boolean;
+  label: string;
+  Icon?: LucideIcon;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="flex min-h-[40px] items-center gap-3 rounded-xl px-2 py-1.5 text-left text-sm transition hover:bg-sand-light"
+      onClick={onChange}
+    >
+      <span
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 ${
+          checked ? "border-primary bg-primary text-white" : "border-sand bg-white"
+        }`}
+      >
+        {checked && <span className="h-2 w-2 rounded-sm bg-white" />}
+      </span>
+      <span className={`min-w-0 flex-1 ${checked ? "font-bold text-ink" : "font-semibold text-muted"}`}>{label}</span>
+      {Icon && <Icon size={18} className={checked ? "text-primary" : "text-muted"} />}
+    </button>
+  );
+}
 
 export default function SearchRides() {
   const [searchParams] = useSearchParams();
@@ -14,17 +75,21 @@ export default function SearchRides() {
   const [sourceArea, setSourceArea] = useState("");
   const [destinationArea, setDestinationArea] = useState("");
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(searchParams.get("date")));
-  const [departureAfter, setDepartureAfter] = useState("");
-  const [departureBefore, setDepartureBefore] = useState("");
+  const [departureWindows, setDepartureWindows] = useState<string[]>([]);
   const [carType, setCarType] = useState("");
   const [fuelType, setFuelType] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [driverRating, setDriverRating] = useState("");
   const [acAvailable, setAcAvailable] = useState("");
-  const [sortBy, setSortBy] = useState("date_time");
+  const [verifiedProfile, setVerifiedProfile] = useState(false);
+  const [instantBooking, setInstantBooking] = useState(false);
+  const [smokingAllowed, setSmokingAllowed] = useState(false);
+  const [petsAllowed, setPetsAllowed] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("earliest_departure");
   const [seats, setSeats] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -34,14 +99,17 @@ export default function SearchRides() {
       sourceArea,
       destinationArea,
       journeyDate,
-      departureAfter,
-      departureBefore,
+      departureWindows,
       carType,
       fuelType,
       minPrice,
       maxPrice,
       driverRating,
       acAvailable,
+      verifiedProfile,
+      instantBooking,
+      smokingAllowed,
+      petsAllowed,
       sortBy,
       seats
     ],
@@ -53,14 +121,17 @@ export default function SearchRides() {
           source_area: sourceArea || undefined,
           destination_area: destinationArea || undefined,
           journey_date: journeyDate || undefined,
-          departure_after: departureAfter || undefined,
-          departure_before: departureBefore || undefined,
+          departure_window: departureWindows.join(",") || undefined,
           car_type: carType || undefined,
           fuel_type: fuelType || undefined,
           min_price: minPrice || undefined,
           max_price: maxPrice || undefined,
           driver_rating: driverRating || undefined,
           ac_available: acAvailable || undefined,
+          verified_profile: verifiedProfile || undefined,
+          instant_booking: instantBooking || undefined,
+          smoking_allowed: smokingAllowed || undefined,
+          pets_allowed: petsAllowed || undefined,
           sort_by: sortBy,
           seats
         }
@@ -69,18 +140,25 @@ export default function SearchRides() {
     }
   });
 
+  function toggleDepartureWindow(value: string) {
+    setDepartureWindows((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
+  }
+
   function clearFilters() {
-    setSortBy("date_time");
+    setSortBy("earliest_departure");
     setSourceArea("");
     setDestinationArea("");
-    setDepartureAfter("");
-    setDepartureBefore("");
+    setDepartureWindows([]);
     setCarType("");
     setFuelType("");
     setMinPrice("");
     setMaxPrice("");
     setDriverRating("");
     setAcAvailable("");
+    setVerifiedProfile(false);
+    setInstantBooking(false);
+    setSmokingAllowed(false);
+    setPetsAllowed(false);
   }
 
   return (
@@ -139,7 +217,7 @@ export default function SearchRides() {
         {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
 
-      <div className="mt-3 grid gap-4 lg:mt-4 lg:grid-cols-[260px_1fr]">
+      <div className="mt-3 grid gap-4 lg:mt-4 lg:grid-cols-[280px_1fr]">
         {/* Left sidebar: sort + filters. Hidden on mobile until toggled, always shown on desktop. */}
         <aside className={`card h-max rounded-2xl p-4 lg:sticky lg:top-4 lg:block ${showFilters ? "block" : "hidden"}`}>
           <div className="flex items-center justify-between">
@@ -149,92 +227,149 @@ export default function SearchRides() {
             </button>
           </div>
           <div className="mt-3 flex flex-col gap-1">
-            {[
-              ["date_time", "Earliest departure"],
-              ["time", "Departure time"],
-              ["price", "Lowest price"]
-            ].map(([value, label]) => (
+            {sortOptions.map(({ value, label, Icon }) => (
               <button
                 key={value}
                 type="button"
-                className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-left text-sm transition hover:bg-sand-light"
+                className="flex min-h-[40px] items-center gap-3 rounded-xl px-2 py-1.5 text-left text-sm transition hover:bg-sand-light"
                 onClick={() => setSortBy(value)}
               >
                 <span
-                  className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
                     sortBy === value ? "border-primary" : "border-sand"
                   }`}
                 >
-                  {sortBy === value && <span className="h-2 w-2 rounded-full bg-primary" />}
+                  {sortBy === value && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
                 </span>
-                <span className={sortBy === value ? "font-bold text-ink" : "text-muted"}>{label}</span>
+                <span className={`min-w-0 flex-1 ${sortBy === value ? "font-bold text-ink" : "font-semibold text-muted"}`}>{label}</span>
+                <Icon size={18} className={sortBy === value ? "text-primary" : "text-muted"} />
               </button>
             ))}
           </div>
 
           <hr className="my-4 border-sand" />
 
-          <h2 className="text-base font-bold">Filters</h2>
-          <div className="mt-3 flex flex-col gap-3">
-            <label>
-              <span className="field-label">Pickup area</span>
-              <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
-            </label>
-            <label>
-              <span className="field-label">Stop or drop area</span>
-              <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
-            </label>
-            <div className="flex flex-col gap-2">
-              <TimePicker value={departureAfter} onChange={setDepartureAfter} label="After" />
-              <TimePicker value={departureBefore} onChange={setDepartureBefore} label="Before" />
+          <section>
+            <h2 className="text-base font-bold">Departure time</h2>
+            <div className="mt-3 flex flex-col gap-1">
+              {departureOptions.map((option) => (
+                <FilterCheckbox
+                  key={option.value}
+                  label={option.label}
+                  checked={departureWindows.includes(option.value)}
+                  onChange={() => toggleDepartureWindow(option.value)}
+                />
+              ))}
             </div>
-            <div className="grid grid-cols-2 gap-2">
+          </section>
+
+          <hr className="my-4 border-sand" />
+
+          <section>
+            <h2 className="text-base font-bold">Trust and safety</h2>
+            <div className="mt-3 flex flex-col gap-1">
+              <FilterCheckbox
+                label="Verified Profile"
+                checked={verifiedProfile}
+                onChange={() => setVerifiedProfile((current) => !current)}
+                Icon={ShieldCheck}
+              />
+            </div>
+          </section>
+
+          <hr className="my-4 border-sand" />
+
+          <section>
+            <h2 className="text-base font-bold">Amenities</h2>
+            <div className="mt-3 flex flex-col gap-1">
+              <FilterCheckbox
+                label="Instant Booking"
+                checked={instantBooking}
+                onChange={() => setInstantBooking((current) => !current)}
+                Icon={Zap}
+              />
+              <FilterCheckbox
+                label="Smoking allowed"
+                checked={smokingAllowed}
+                onChange={() => setSmokingAllowed((current) => !current)}
+                Icon={Cigarette}
+              />
+              <FilterCheckbox label="Pets allowed" checked={petsAllowed} onChange={() => setPetsAllowed((current) => !current)} Icon={PawPrint} />
+            </div>
+          </section>
+
+          <hr className="my-4 border-sand" />
+
+          <button
+            type="button"
+            className="flex w-full items-center justify-between text-left text-sm font-bold text-ink"
+            onClick={() => setShowMoreFilters((current) => !current)}
+            aria-expanded={showMoreFilters}
+          >
+            More ride details
+            {showMoreFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          {showMoreFilters && (
+            <div className="mt-3 flex flex-col gap-3">
               <label>
-                <span className="field-label">Min price</span>
-                <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="150" />
+                <span className="field-label">Pickup area</span>
+                <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
               </label>
               <label>
-                <span className="field-label">Max price</span>
-                <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="650" />
+                <span className="field-label">Stop or drop area</span>
+                <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
               </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label>
+                  <span className="field-label">Min price</span>
+                  <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="150" />
+                </label>
+                <label>
+                  <span className="field-label">Max price</span>
+                  <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="650" />
+                </label>
+              </div>
+              <label>
+                <span className="field-label">Min driver rating</span>
+                <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
+                  <option value="">Any rating</option>
+                  <option value="4">4.0+ stars</option>
+                  <option value="4.5">4.5+ stars</option>
+                  <option value="4.8">4.8+ stars</option>
+                </select>
+              </label>
+              <label>
+                <span className="field-label">Car category</span>
+                <select className="input" value={carType} onChange={(event) => setCarType(event.target.value)}>
+                  <option value="">All car categories</option>
+                  <option value="SUV">SUV</option>
+                  <option value="Sedan">Sedan</option>
+                  <option value="7 Seater">7 Seater</option>
+                </select>
+              </label>
+              <label>
+                <span className="field-label">Fuel type</span>
+                <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
+                  <option value="">All fuel types</option>
+                  <option value="Petrol">Petrol</option>
+                  <option value="CNG">CNG</option>
+                  <option value="EV">EV</option>
+                  <option value="Diesel">Diesel</option>
+                </select>
+              </label>
+              <label>
+                <span className="field-label">AC preference</span>
+                <select className="input" value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
+                  <option value="">AC and non-AC</option>
+                  <option value="true">AC only</option>
+                  <option value="false">Non-AC only</option>
+                </select>
+              </label>
+              <p className="text-xs text-muted">
+                Close-to-point sorting uses these pickup and drop areas when you provide them.
+              </p>
             </div>
-            <label>
-              <span className="field-label">Min driver rating</span>
-              <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
-                <option value="">Any rating</option>
-                <option value="4">4.0+ stars</option>
-                <option value="4.5">4.5+ stars</option>
-                <option value="4.8">4.8+ stars</option>
-              </select>
-            </label>
-            <label>
-              <span className="field-label">Car category</span>
-              <select className="input" value={carType} onChange={(event) => setCarType(event.target.value)}>
-                <option value="">All car categories</option>
-                <option value="SUV">SUV</option>
-                <option value="Sedan">Sedan</option>
-                <option value="7 Seater">7 Seater</option>
-              </select>
-            </label>
-            <label>
-              <span className="field-label">Fuel type</span>
-              <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
-                <option value="">All fuel types</option>
-                <option value="Petrol">Petrol</option>
-                <option value="CNG">CNG</option>
-                <option value="EV">EV</option>
-                <option value="Diesel">Diesel</option>
-              </select>
-            </label>
-            <label>
-              <span className="field-label">AC preference</span>
-              <select className="input" value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
-                <option value="">AC and non-AC</option>
-                <option value="true">AC only</option>
-                <option value="false">Non-AC only</option>
-              </select>
-            </label>
-          </div>
+          )}
         </aside>
 
         {/* Right: results list */}
