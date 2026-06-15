@@ -14,94 +14,80 @@ function formatRideDate(value: string) {
 
 export default function RideCard({ ride, actions, details }: { ride: Ride; actions?: ReactNode; details?: ReactNode }) {
   return (
-    <div className="card overflow-hidden p-5 sm:p-6">
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row">
-          <div>
+    <div className="card overflow-hidden p-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-lg font-bold">
+              <h3 className="text-base font-bold">
                 {ride.source_city} to {ride.destination_city}
               </h3>
               <VerifiedBadge verified={ride.driver_verified} />
             </div>
-            <p className="mt-1 text-muted">
+            <p className="mt-0.5 text-sm text-muted">
               {ride.vehicle.brand} {ride.vehicle.model} - {ride.ac_available ? "AC" : "Non-AC"}
             </p>
           </div>
-          <div className="text-left sm:text-right">
-            <p className="text-2xl font-bold">Rs. {ride.price_per_seat}</p>
-            <p className="text-xs text-muted">per seat</p>
+          <div className="shrink-0 text-right">
+            <p className="text-xl font-bold leading-none">Rs. {ride.price_per_seat}</p>
+            <p className="text-[11px] text-muted">per seat</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="chip-outline">
-            <Armchair size={14} />
-            {ride.available_seats} remaining seats
-          </span>
-          <span className="chip-outline">
-            <Star size={14} />
-            {ride.driver_rating || 4.5} rating
-          </span>
-        </div>
-
-        <hr className="border-sand" />
-
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-lg font-bold text-ink">
-          <span className="flex items-center gap-2">
-            <Calendar size={18} className="text-primary" />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm font-bold text-ink">
+          <span className="flex items-center gap-1.5">
+            <Calendar size={15} className="text-primary" />
             {formatRideDate(ride.journey_date)}
           </span>
-          <span className="flex items-center gap-2">
-            <Clock size={18} className="text-primary" />
+          <span className="flex items-center gap-1.5">
+            <Clock size={15} className="text-primary" />
             {ride.departure_time.slice(0, 5)}
           </span>
-        </div>
-
-        <div className="flex flex-col gap-2 text-sm text-muted md:flex-row md:flex-wrap md:gap-5">
-          <span className="flex items-center gap-2">
-            <MapPin size={16} />
+          <span className="flex items-center gap-1.5 text-muted">
+            <Armchair size={15} />
+            {ride.available_seats} seats
+          </span>
+          <span className="flex items-center gap-1.5 text-muted">
+            <Star size={15} />
+            {ride.driver_rating || 4.5}
+          </span>
+          <span className="flex items-center gap-1.5 text-muted">
+            <MapPin size={15} />
             {ride.distance_km} km
           </span>
-          {ride.route_stops.length > 0 && (
-            <span className="flex items-center gap-2">
-              <RouteIcon size={16} />
-              {ride.route_stops.join(" -> ")}
-            </span>
-          )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {ride.pickup_points.slice(0, 4).map((point) => (
-            <span key={point} className="rounded-full bg-sand-light px-3 py-1 text-xs font-semibold text-ink">
-              {point}
-            </span>
-          ))}
-        </div>
-
-        {actions && (
-          <div className="flex flex-wrap gap-2 border-t border-sand pt-4">
-            {actions}
+        {(ride.route_stops.length > 0 || ride.pickup_points.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+            {ride.route_stops.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <RouteIcon size={14} />
+                {ride.route_stops.join(" -> ")}
+              </span>
+            )}
+            {ride.pickup_points.length > 0 && (
+              <span className="truncate">Pickup: {ride.pickup_points.slice(0, 4).join(", ")}</span>
+            )}
           </div>
         )}
 
+        {actions && <div className="flex flex-wrap gap-2 border-t border-sand pt-3">{actions}</div>}
+
         {details && <div>{details}</div>}
 
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-bold text-muted">Hosted by {ride.driver_name}</p>
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sand-light px-2.5 py-1 text-[11px] font-bold text-muted">
-                <Car size={12} />
-                {ride.vehicle.car_type}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sand-light px-2.5 py-1 text-[11px] font-bold text-muted">
-                <Fuel size={12} />
-                {ride.vehicle.fuel_type}
-              </span>
-            </div>
+        <div className="flex items-center justify-between gap-3 border-t border-sand pt-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+            <span className="font-bold">{ride.driver_name}</span>
+            <span className="inline-flex items-center gap-1">
+              <Car size={12} />
+              {ride.vehicle.car_type}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Fuel size={12} />
+              {ride.vehicle.fuel_type}
+            </span>
           </div>
-          <Link to={`/rides/${ride.id}`} className="btn-primary">
+          <Link to={`/rides/${ride.id}`} className="btn-primary shrink-0 min-h-[36px] px-4 py-1.5">
             View ride
           </Link>
         </div>
