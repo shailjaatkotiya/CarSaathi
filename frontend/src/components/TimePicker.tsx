@@ -78,66 +78,61 @@ export default function TimePicker({
     onChange(nextValue);
   }
 
-  const timeLabel = formatTimeLabel(value || "07:00");
-
   return (
     <div className="flex h-full min-h-[52px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-ink md:min-h-[48px] md:rounded-2xl">
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">
         <Clock size={17} />
       </span>
-      <div className="min-w-0 flex-1">
-        <span className="block text-[11px] font-bold uppercase tracking-wide text-muted">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted">
           {label}
         </span>
-        <span className="block truncate text-sm font-bold text-primary">
-          {timeLabel}
-        </span>
-      </div>
-      <div className="flex items-center gap-1">
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={2}
-          aria-label="Hour"
-          className="w-10 rounded-lg border border-sand bg-white px-1 py-1 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
-          value={hoursInput}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
-            const safe = String(Math.min(12, Math.max(0, Number(raw) || 0))).padStart(2, "0");
-            setHoursInput(safe);
-            updateTime(safe, minutesInput, period);
-          }}
-        />
-        <span className="font-bold text-muted">:</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={2}
-          aria-label="Minute"
-          className="w-10 rounded-lg border border-sand bg-white px-1 py-1 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
-          value={minutesInput}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
-            const safe = String(Math.min(59, Math.max(0, Number(raw) || 0))).padStart(2, "0");
-            setMinutesInput(safe);
-            updateTime(hoursInput, safe, period);
-          }}
-        />
-        <select
-          aria-label="AM or PM"
-          className="rounded-lg border border-sand bg-white px-1 py-1 text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
-          value={period}
-          onChange={(e) => {
-            const next = e.target.value as "AM" | "PM";
-            setPeriod(next);
-            updateTime(hoursInput, minutesInput, next);
-          }}
-        >
-          <option value="AM">AM</option>
-          <option value="PM">PM</option>
-        </select>
+        <div className="flex items-center gap-1">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={2}
+            aria-label="Hour"
+            className="w-10 rounded-lg border border-sand bg-white px-1 py-0.5 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+            value={hoursInput}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
+              const safe = String(Math.min(12, Math.max(0, Number(raw) || 0))).padStart(2, "0");
+              setHoursInput(safe);
+              updateTime(safe, minutesInput, period);
+            }}
+          />
+          <span className="font-bold text-muted">:</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={2}
+            aria-label="Minute"
+            className="w-10 rounded-lg border border-sand bg-white px-1 py-0.5 text-center text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+            value={minutesInput}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, "").slice(0, 2);
+              const safe = String(Math.min(59, Math.max(0, Number(raw) || 0))).padStart(2, "0");
+              setMinutesInput(safe);
+              updateTime(hoursInput, safe, period);
+            }}
+          />
+          <select
+            aria-label="AM or PM"
+            className="rounded-lg border border-sand bg-white px-1 py-0.5 text-sm font-bold text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40"
+            value={period}
+            onChange={(e) => {
+              const next = e.target.value as "AM" | "PM";
+              setPeriod(next);
+              updateTime(hoursInput, minutesInput, next);
+            }}
+          >
+            <option value="AM">AM</option>
+            <option value="PM">PM</option>
+          </select>
+        </div>
       </div>
     </div>
   );
