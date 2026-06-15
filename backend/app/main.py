@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.core.exceptions import register_exception_handlers
 from app.database import Base, SessionLocal, engine, ensure_runtime_schema
 from app.routers import admin, auth, driver, passenger, payments, profile
 from app.seed import seed_database
@@ -9,6 +10,8 @@ from app.seed import seed_database
 settings = get_settings()
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
+
+register_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,

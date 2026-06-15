@@ -1,6 +1,6 @@
 import { Shield } from "lucide-react";
 import { useState } from "react";
-import { api } from "../api/client";
+import { profileApi } from "../api/profile";
 
 export default function VerificationPage() {
   const [aadhaar, setAadhaar] = useState("444455556666");
@@ -8,7 +8,7 @@ export default function VerificationPage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    const { data } = await api.post("/profile/aadhaar", { aadhaar_number: aadhaar });
+    const data = await profileApi.submitAadhaar(aadhaar);
     setStatus(`Submitted ${data.masked_aadhaar}. Verification review is pending.`);
   }
 

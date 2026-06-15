@@ -1,9 +1,15 @@
-import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users } from "lucide-react";
+import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, BookingActionResponse, loadRazorpayCheckout, Ride, User } from "../api/client";
+import { bookingsApi } from "../api/bookings";
+import { ridesApi } from "../api/rides";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { formatTimeAmPm } from "../lib/format";
+import { loadRazorpayCheckout } from "../lib/razorpay";
+import { queryKeys } from "../lib/queryKeys";
+import type { BookingActionResponse } from "../types";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useSessionStore } from "../store/session";
 
@@ -15,13 +21,6 @@ const ruleLabels: Record<string, string> = {
   no_alcohol: "No alcohol",
   no_tobacco: "No tobacco"
 };
-
-function formatAmPm(time: string) {
-  const [h, m] = time.slice(0, 5).split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 || 12;
-  return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
-}
 
 export default function RideDetail() {
   const { rideId } = useParams();
@@ -35,17 +34,14 @@ export default function RideDetail() {
   const token = useSessionStore((state) => state.token);
   const navigate = useNavigate();
   const { data: ride, refetch } = useQuery({
-    queryKey: ["ride", rideId],
-    queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
+    queryKey: queryKeys.rides.detail(rideId ?? ""),
+    queryFn: () => ridesApi.get(rideId!),
+    enabled: Boolean(rideId)
   });
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-    enabled: Boolean(token)
-  });
+  const { data: me } = useCurrentUser();
   const { data: fellowPassengers } = useQuery({
-    queryKey: ["ride-passengers", rideId],
-    queryFn: async () => (await api.get<{ name: string; pickup_point: string; drop_point: string; seats_booked: number }[]>(`/passenger/rides/${rideId}/passengers`)).data,
+    queryKey: queryKeys.rides.fellowPassengers(rideId ?? ""),
+    queryFn: () => ridesApi.fellowPassengers(rideId!),
     enabled: Boolean(rideId)
   });
   const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
@@ -75,7 +71,7 @@ export default function RideDetail() {
     }
     setPaying(true);
     try {
-      const { data } = await api.post<BookingActionResponse>(`/passenger/rides/${ride.id}/book`, {
+      const data = await bookingsApi.book(ride.id, {
         seats_booked: seats,
         pickup_point: pickup,
         drop_point: drop,
@@ -84,7 +80,7 @@ export default function RideDetail() {
       if (data.payment) {
         await payWithRazorpay(data);
       } else {
-        setMessage(`Booking ${data.booking.booking_code} created (${data.booking.status}). Pay cash to the driver at the end of the ride.`);
+        navigate("/booking-confirmation", { state: { bookingCode: data.booking.booking_code, status: data.booking.status, paymentMethod: "cash" } });
       }
     } catch (err) {
       const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
@@ -116,13 +112,13 @@ export default function RideDetail() {
         razorpay_signature: string;
       }) => {
         try {
-          const { data: confirmed } = await api.post("/passenger/payments/verify", {
+          const confirmed = await bookingsApi.verifyPayment({
             booking_id: data.booking.id,
             razorpay_order_id: resp.razorpay_order_id,
             razorpay_payment_id: resp.razorpay_payment_id,
             razorpay_signature: resp.razorpay_signature
           });
-          setMessage(`Payment successful. Booking ${confirmed.booking_code} is ${confirmed.status}.`);
+          navigate("/booking-confirmation", { state: { bookingCode: confirmed.booking_code, status: confirmed.status, paymentMethod: "online" } });
         } catch (err) {
           const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
           setError(detail || "Payment could not be verified. If money was deducted it will be refunded.");
@@ -157,9 +153,15 @@ export default function RideDetail() {
                   {ride.source_city} to {ride.destination_city}
                 </h1>
                 <VerifiedBadge verified={ride.driver_verified} />
+                {ride.women_only_preference && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2 py-0.5 text-xs font-bold text-pink-600">
+                    <UserRound size={12} />
+                    Women only
+                  </span>
+                )}
               </div>
               <p className="mt-0.5 text-sm text-muted">
-                {ride.distance_km} km · {ride.journey_date} · {formatAmPm(ride.departure_time)}
+                {ride.distance_km} km · {ride.journey_date} · {formatTimeAmPm(ride.departure_time)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -169,7 +171,7 @@ export default function RideDetail() {
               </div>
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Time</p>
-                <p className="text-sm font-bold text-primary-dark">{formatAmPm(ride.departure_time)}</p>
+                <p className="text-sm font-bold text-primary-dark">{formatTimeAmPm(ride.departure_time)}</p>
               </div>
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Price per seat</p>
@@ -306,16 +308,22 @@ export default function RideDetail() {
                   <span className="field-label">Drop-off or stop</span>
                   <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
                     <option value="">Select drop</option>
-                    {ride.route_stops.map((point) => (
-                      <option key={point} value={point}>
-                        {point} (in-between stop)
-                      </option>
-                    ))}
-                    {ride.drop_points.map((point) => (
-                      <option key={point} value={point}>
-                        {point}
-                      </option>
-                    ))}
+                    {ride.route_stops.length > 0 && (
+                      <optgroup label="In-between stops">
+                        {ride.route_stops.map((point) => (
+                          <option key={point} value={point}>
+                            {point}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label="Final drop points">
+                      {ride.drop_points.map((point) => (
+                        <option key={point} value={point}>
+                          {point}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                 </label>
                 <div>
@@ -361,10 +369,14 @@ export default function RideDetail() {
                     first.
                   </p>
                 )}
-                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
-                  {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
-                  {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
-                </button>
+                {ride.available_seats <= 0 ? (
+                  <p className="alert-warning">This ride is full. No seats remaining.</p>
+                ) : (
+                  <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
+                    {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
+                    {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
+                  </button>
+                )}
                 <p className="text-xs text-muted">
                   {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
                 </p>

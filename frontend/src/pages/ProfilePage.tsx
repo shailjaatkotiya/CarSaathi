@@ -24,15 +24,13 @@ import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api, User } from "../api/client";
+import { authApi } from "../api/auth";
+import { profileApi } from "../api/profile";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { queryKeys } from "../lib/queryKeys";
+import type { User } from "../types";
 import { useSessionStore } from "../store/session";
 import VerifiedBadge from "../components/VerifiedBadge";
-
-type VerificationStatus = {
-  status: "pending" | "verified" | "rejected";
-  masked_aadhaar?: string;
-  rejection_reason?: string;
-};
 
 type ProfileForm = {
   full_name: string;
@@ -119,15 +117,11 @@ export default function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-  });
+  const { data, isError, isLoading } = useCurrentUser();
 
   const { data: verification } = useQuery({
-    queryKey: ["profile-verification"],
-    queryFn: async () =>
-      (await api.get<VerificationStatus>("/profile/verification-status")).data,
+    queryKey: queryKeys.profile.verification,
+    queryFn: profileApi.verificationStatus,
     enabled: Boolean(data),
   });
 
@@ -138,19 +132,17 @@ export default function ProfilePage() {
   }, [data, isEditing]);
 
   const updateProfile = useMutation({
-    mutationFn: async () => {
-      const payload = {
+    mutationFn: () =>
+      profileApi.update({
         full_name: form.full_name.trim(),
         whatsapp_number: optionalText(form.whatsapp_number),
-      };
-      return (await api.put<User>("/profile", payload)).data;
-    },
+      }),
     onSuccess: async (updatedUser) => {
       setMessage("Profile updated successfully.");
       setError("");
       setIsEditing(false);
       setForm(formFromUser(updatedUser));
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.me });
     },
     onError: (err) => {
       const detail = axios.isAxiosError(err)
@@ -170,7 +162,7 @@ export default function ProfilePage() {
 
   async function handleLogout() {
     try {
-      await api.post("/auth/logout");
+      await authApi.logout();
     } finally {
       logout();
       queryClient.clear();
@@ -456,6 +448,17 @@ export default function ProfilePage() {
                   icon={<Car size={16} />}
                   label="My published rides"
                   to="/my-rides"
+                />
+              </SettingsGroup>
+            )}
+
+            {/* Booked rides (passenger) */}
+            {!isDriver && (
+              <SettingsGroup>
+                <SettingsRow
+                  icon={<Car size={16} />}
+                  label="My booked rides"
+                  to="/profile/passenger"
                 />
               </SettingsGroup>
             )}

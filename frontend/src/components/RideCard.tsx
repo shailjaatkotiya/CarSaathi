@@ -1,16 +1,9 @@
 import { Armchair, Calendar, Car, Clock, Fuel, MapPin, Route as RouteIcon, Star } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { Ride } from "../api/client";
+import { formatShortDate, formatTimeAmPm } from "../lib/format";
+import type { Ride } from "../types";
 import VerifiedBadge from "./VerifiedBadge";
-
-function formatRideDate(value: string) {
-  return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
-}
 
 export default function RideCard({ ride, actions, details }: { ride: Ride; actions?: ReactNode; details?: ReactNode }) {
   return (
@@ -37,11 +30,11 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm font-bold text-ink">
           <span className="flex items-center gap-1.5">
             <Calendar size={15} className="text-primary" />
-            {formatRideDate(ride.journey_date)}
+            {formatShortDate(ride.journey_date)}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock size={15} className="text-primary" />
-            {ride.departure_time.slice(0, 5)}
+            {formatTimeAmPm(ride.departure_time)}
           </span>
           <span className="flex items-center gap-1.5 text-muted">
             <Armchair size={15} />

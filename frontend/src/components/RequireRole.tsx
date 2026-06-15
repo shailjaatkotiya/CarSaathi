@@ -1,20 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { api, User } from "../api/client";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
+import type { UserRole } from "../types";
 
-type Role = "admin" | "driver" | "passenger";
-
-export default function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
+export default function RequireRole({ role, children }: { role: UserRole; children: ReactNode }) {
   const token = useSessionStore((state) => state.token);
   const location = useLocation();
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-    enabled: Boolean(token),
-    retry: false
-  });
+  const { data: user, isLoading } = useCurrentUser();
 
   const authTarget = `/auth?role=${role}`;
 

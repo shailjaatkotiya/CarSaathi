@@ -1,7 +1,9 @@
 import { Car, Fuel, Pencil } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { api } from "../api/client";
+import { driverApi, type VehiclePayload } from "../api/driver";
+import { queryKeys } from "../lib/queryKeys";
+import type { Vehicle } from "../types";
 import { carBrands } from "../data/carBrands";
 
 const categories = [
@@ -9,19 +11,6 @@ const categories = [
   { value: "SUV", icon: "SUV", hint: "Default 3 passenger seats" },
   { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" }
 ];
-
-type Vehicle = {
-  id: number;
-  brand: string;
-  model: string;
-  vehicle_number: string;
-  fuel_type: string;
-  car_type: string;
-  color: string;
-  seats: number;
-  photo_urls: string[];
-  is_verified: boolean;
-};
 
 function defaultPassengerSeats(carType: string) {
   return carType.toLowerCase().includes("7") ? 6 : 3;
@@ -37,8 +26,8 @@ export default function AddVehicle() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const { data: vehicles, refetch } = useQuery({
-    queryKey: ["driver-vehicles"],
-    queryFn: async () => (await api.get<Vehicle[]>("/driver/vehicles")).data
+    queryKey: queryKeys.driver.vehicles,
+    queryFn: driverApi.vehicles
   });
 
   function chooseCategory(value: string) {
@@ -73,13 +62,13 @@ export default function AddVehicle() {
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     const resolvedBrand = brand === "Other" ? customBrand.trim() : brand;
-    const body = { ...payload, brand: resolvedBrand, car_type: category, seats: passengerSeats, photo_urls: [] };
+    const body = { ...payload, brand: resolvedBrand, car_type: category, seats: passengerSeats, photo_urls: [] } as unknown as VehiclePayload;
     if (editingVehicle) {
-      await api.put(`/driver/vehicles/${editingVehicle.id}`, body);
+      await driverApi.updateVehicle(editingVehicle.id, body);
       setMessage("Vehicle updated.");
       setEditingVehicle(null);
     } else {
-      await api.post("/driver/vehicles", body);
+      await driverApi.addVehicle(body);
       setMessage("Vehicle added. Verification can be completed later.");
     }
     refetch();

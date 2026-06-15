@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, Ride } from "../api/client";
+import { driverApi } from "../api/driver";
+import { ridesApi } from "../api/rides";
+import { queryKeys } from "../lib/queryKeys";
 
 type MenuItem = {
   icon: React.ReactNode;
@@ -17,23 +19,21 @@ export default function YourPublication() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [cancelling, setCancelling] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const { data: ride } = useQuery({
-    queryKey: ["ride", rideId],
-    queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
+    queryKey: queryKeys.rides.detail(rideId ?? ""),
+    queryFn: () => ridesApi.get(rideId!),
+    enabled: Boolean(rideId)
   });
 
   const cancelRide = useMutation({
-    mutationFn: async () => {
-      await api.post(`/driver/rides/${rideId}/cancel`, { reason: "Driver cancelled from app" });
-    },
+    mutationFn: () => driverApi.cancelRide(Number(rideId)),
     onSuccess: () => {
       setMessage("Ride cancelled successfully.");
       setConfirmCancel(false);
-      queryClient.invalidateQueries({ queryKey: ["my-rides"] });
-      queryClient.invalidateQueries({ queryKey: ["driver-ride", rideId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.driver.rides });
+      queryClient.invalidateQueries({ queryKey: queryKeys.rides.detail(rideId ?? "") });
     },
     onError: (err) => {
       const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;

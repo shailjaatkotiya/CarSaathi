@@ -17,7 +17,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, Ride } from "../api/client";
+import { ridesApi } from "../api/rides";
+import { queryKeys } from "../lib/queryKeys";
 import RideListItem from "../components/RideListItem";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 
@@ -93,53 +94,30 @@ export default function SearchRides() {
 
   const hasRoute = Boolean(source.trim() && destination.trim());
 
+  const rideSearchParams = {
+    source: source.trim() || undefined,
+    destination: destination.trim() || undefined,
+    source_area: sourceArea || undefined,
+    destination_area: destinationArea || undefined,
+    journey_date: journeyDate || undefined,
+    departure_window: departureWindows.join(",") || undefined,
+    car_type: carType || undefined,
+    fuel_type: fuelType || undefined,
+    min_price: minPrice || undefined,
+    max_price: maxPrice || undefined,
+    driver_rating: driverRating || undefined,
+    ac_available: acAvailable || undefined,
+    verified_profile: verifiedProfile || undefined,
+    instant_booking: instantBooking || undefined,
+    smoking_allowed: smokingAllowed || undefined,
+    pets_allowed: petsAllowed || undefined,
+    sort_by: sortBy,
+    seats
+  };
+
   const { data: rawData, isLoading, refetch } = useQuery({
-    queryKey: [
-      "rides",
-      source,
-      destination,
-      sourceArea,
-      destinationArea,
-      journeyDate,
-      departureWindows,
-      carType,
-      fuelType,
-      minPrice,
-      maxPrice,
-      driverRating,
-      acAvailable,
-      verifiedProfile,
-      instantBooking,
-      smokingAllowed,
-      petsAllowed,
-      sortBy,
-      seats
-    ],
-    queryFn: async () => {
-      const response = await api.get<Ride[]>("/passenger/rides/search", {
-        params: {
-          source: source.trim() || undefined,
-          destination: destination.trim() || undefined,
-          source_area: sourceArea || undefined,
-          destination_area: destinationArea || undefined,
-          journey_date: journeyDate || undefined,
-          departure_window: departureWindows.join(",") || undefined,
-          car_type: carType || undefined,
-          fuel_type: fuelType || undefined,
-          min_price: minPrice || undefined,
-          max_price: maxPrice || undefined,
-          driver_rating: driverRating || undefined,
-          ac_available: acAvailable || undefined,
-          verified_profile: verifiedProfile || undefined,
-          instant_booking: instantBooking || undefined,
-          smoking_allowed: smokingAllowed || undefined,
-          pets_allowed: petsAllowed || undefined,
-          sort_by: sortBy,
-          seats
-        }
-      });
-      return response.data;
-    },
+    queryKey: queryKeys.rides.search(rideSearchParams),
+    queryFn: () => ridesApi.search(rideSearchParams),
     enabled: hasRoute
   });
 

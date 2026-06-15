@@ -7,16 +7,17 @@ import {
   CheckCircle2,
   ListChecks,
   MapPin,
-  Map as MapIcon,
   Route as RouteIcon,
   Zap
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, User } from "../api/client";
+import { useQuery } from "@tanstack/react-query";
+import { driverApi } from "../api/driver";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
 import { carBrands } from "../data/carBrands";
@@ -39,16 +40,6 @@ const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
   { value: "saved", label: "A saved vehicle", hint: "Choose one of the vehicles you added earlier" },
   { value: "new", label: "Add a new car", hint: "Type fresh car details for this ride" }
 ];
-
-type SavedVehicle = {
-  id: number;
-  brand: string;
-  model: string;
-  vehicle_number: string;
-  fuel_type: string;
-  car_type: string;
-  seats: number;
-};
 
 function formatRuleLabel(value: string) {
   return rideRules.find((rule) => rule.value === value)?.label ?? value.replace(/_/g, " ");
@@ -117,14 +108,10 @@ export default function CreateRide() {
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [womenOnly, setWomenOnly] = useState(false);
 
-  const { data: me } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-    enabled: Boolean(token)
-  });
+  const { data: me } = useCurrentUser();
   const { data: savedVehicles } = useQuery({
-    queryKey: ["driver-vehicles"],
-    queryFn: async () => (await api.get<SavedVehicle[]>("/driver/vehicles")).data,
+    queryKey: queryKeys.driver.vehicles,
+    queryFn: driverApi.vehicles,
     enabled: Boolean(token)
   });
 
@@ -175,13 +162,6 @@ export default function CreateRide() {
       }
     },
     {
-      key: "map",
-      title: "Pin pickup & drop on map",
-      subtitle: "Map selection arrives in a later update - skip for now.",
-      icon: <MapIcon size={20} />,
-      validate: () => null
-    },
-    {
       key: "datetime",
       title: "When do you leave?",
       subtitle: "Pick the journey date and departure time.",
@@ -195,11 +175,11 @@ export default function CreateRide() {
     {
       key: "points",
       title: "Pickup, stops & drop points",
-      subtitle: "Add at least 5 pickup and 5 drop points, comma separated.",
+      subtitle: "Add at least 1 pickup and 1 drop point, comma separated.",
       icon: <MapPin size={20} />,
       validate: () => {
-        if (countPoints(pickupPoints) < 5) return "Add minimum 5 pickup points.";
-        if (countPoints(dropPoints) < 5) return "Add minimum 5 drop points.";
+        if (countPoints(pickupPoints) < 1) return "Add at least 1 pickup point.";
+        if (countPoints(dropPoints) < 1) return "Add at least 1 drop point.";
         return null;
       }
     },
@@ -297,7 +277,7 @@ export default function CreateRide() {
           };
 
     try {
-      const { data } = await api.post("/driver/rides", {
+      const data = await driverApi.publishRide({
         ...carDetails,
         source_city: sourceCity,
         destination_city: destinationCity,
@@ -390,14 +370,6 @@ export default function CreateRide() {
                 </div>
               )}
 
-              {current.key === "map" && (
-                <div className="grid place-items-center gap-2 rounded-2xl border border-dashed border-sand bg-sand-light py-12 text-center">
-                  <MapIcon size={28} className="text-muted" />
-                  <p className="font-bold">Map selection coming soon</p>
-                  <p className="text-sm text-muted">Pin exact pickup and drop locations in a later update.</p>
-                </div>
-              )}
-
               {current.key === "datetime" && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label>
@@ -414,7 +386,7 @@ export default function CreateRide() {
               {current.key === "points" && (
                 <div className="flex flex-col gap-4">
                   <label>
-                    <span className="field-label">Pickup points - minimum 5 ({countPoints(pickupPoints)})</span>
+                    <span className="field-label">Pickup points - minimum 1 ({countPoints(pickupPoints)})</span>
                     <textarea className="input" rows={2} value={pickupPoints} onChange={(event) => setPickupPoints(event.target.value)} />
                     <span className="field-hint">Comma separated. Example: Bopal, Gota, Iscon.</span>
                   </label>
@@ -424,7 +396,7 @@ export default function CreateRide() {
                     <span className="field-hint">Optional stops passengers can choose before the final drop.</span>
                   </label>
                   <label>
-                    <span className="field-label">Drop points - minimum 5 ({countPoints(dropPoints)})</span>
+                    <span className="field-label">Drop points - minimum 1 ({countPoints(dropPoints)})</span>
                     <textarea className="input" rows={2} value={dropPoints} onChange={(event) => setDropPoints(event.target.value)} />
                     <span className="field-hint">Comma separated final-city drop points.</span>
                   </label>

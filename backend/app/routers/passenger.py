@@ -8,7 +8,7 @@ from app.core import cache
 from app.core.config import get_settings
 from app.database import get_db
 from app.dependencies import require_passenger
-from app.models import Booking, BookingStatus, CancellationReason, Payment, Ride, RideStatus, User
+from app.models import Booking, BookingStatus, Payment, Ride, RideStatus, User
 from app.schemas import (
     BookingActionOut,
     BookingCreate,
@@ -21,7 +21,8 @@ from app.schemas import (
     RideOut,
 )
 from app.services import razorpay_client
-from app.services.whatsapp import notify_booking_cancelled, notify_booking_created
+from app.services.booking_service import BookingService
+from app.services.whatsapp import notify_booking_created
 from app.utils.serializers import ride_to_out
 
 settings = get_settings()
@@ -367,25 +368,7 @@ def verify_payment(payload: PaymentVerifyRequest, passenger: User = Depends(requ
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
 def cancel_booking(booking_id: int, payload: CancellationRequest, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> Booking:
-    booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
-    if not booking:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    # Passengers may cancel only after the driver has approved (confirmed) the booking.
-    if booking.status != BookingStatus.confirmed:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You can cancel a ride only after the driver approves your booking",
-        )
-    booking.ride.available_seats += booking.seats_booked
-    cap_available_seats(booking.ride)
-    booking.status = BookingStatus.cancelled
-    booking.cancellation_reason = payload.reason
-    db.add(CancellationReason(user_id=passenger.id, booking_id=booking.id, reason=payload.reason))
-    notify_booking_cancelled(db, booking, payload.reason, "passenger")
-    db.commit()
-    db.refresh(booking)
-    cache.bump_rides_version()
-    return booking
+    return BookingService(db).cancel_for_passenger(booking_id, passenger.id, payload.reason)
 
 
 @router.get("/bookings", response_model=list[BookingOut])

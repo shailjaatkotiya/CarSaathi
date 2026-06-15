@@ -32,7 +32,14 @@ export default function App() {
             </RequireAuth>
           }
         />
-        <Route path="/driver/onboarding" element={<DriverOnboarding />} />
+        <Route
+          path="/driver/onboarding"
+          element={
+            <RequireRole role="driver">
+              <DriverOnboarding />
+            </RequireRole>
+          }
+        />
         <Route
           path="/driver/vehicle"
           element={

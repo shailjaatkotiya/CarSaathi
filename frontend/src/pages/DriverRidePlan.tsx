@@ -1,17 +1,9 @@
 import { ArrowLeft, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, Ride } from "../api/client";
-
-type RideBooking = {
-  id: number;
-  booking_code: string;
-  passenger_name: string;
-  seats_booked: number;
-  pickup_point: string;
-  drop_point: string;
-  status: string;
-};
+import { driverApi } from "../api/driver";
+import { ridesApi } from "../api/rides";
+import { queryKeys } from "../lib/queryKeys";
 
 function TimelineStop({
   time,
@@ -31,7 +23,7 @@ function TimelineStop({
         {!isLast && <span className="flex-1 w-0.5 bg-gray-300 my-1" />}
       </div>
       <div className={`pb-4 min-w-0 ${isLast ? "" : ""}`}>
-        <p className="text-base font-bold">{time} &nbsp; {city}</p>
+        <p className="text-base font-bold">{time ? <>{time} &nbsp; </> : null}{city}</p>
         {address && <p className="text-xs text-muted mt-0.5 leading-relaxed">{address}</p>}
       </div>
     </div>
@@ -48,13 +40,14 @@ export default function DriverRidePlan() {
   const navigate = useNavigate();
 
   const { data: ride } = useQuery({
-    queryKey: ["ride", rideId],
-    queryFn: async () => (await api.get<Ride>(`/passenger/rides/${rideId}`)).data
+    queryKey: queryKeys.rides.detail(rideId ?? ""),
+    queryFn: () => ridesApi.get(rideId!),
+    enabled: Boolean(rideId)
   });
 
   const { data: bookings } = useQuery({
-    queryKey: ["ride-bookings", rideId],
-    queryFn: async () => (await api.get<RideBooking[]>(`/driver/rides/${rideId}/bookings`)).data,
+    queryKey: queryKeys.driver.rideBookings(rideId ?? ""),
+    queryFn: () => driverApi.rideBookings(rideId!),
     enabled: Boolean(rideId)
   });
 
@@ -116,7 +109,7 @@ export default function DriverRidePlan() {
           address={pickupAddr}
         />
         <TimelineStop
-          time="—"
+          time=""
           city={ride.destination_city}
           address={dropAddr}
           isLast

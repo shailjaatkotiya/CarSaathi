@@ -1,9 +1,9 @@
 import { Car, User as UserIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { api, User } from "../api/client";
+import { authApi } from "../api/auth";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -14,21 +14,16 @@ export default function Layout({ children }: { children: ReactNode }) {
     // Exchange the stored token for a fresh one on app load so an open tab
     // does not silently expire mid-session.
     if (!token) return;
-    api
-      .post<{ access_token: string }>("/auth/refresh")
-      .then(({ data }) => setToken(data.access_token))
+    authApi
+      .refresh()
+      .then((data) => setToken(data.access_token))
       .catch(() => {
         /* 401 handled by the api interceptor */
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const { data: user } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-    enabled: Boolean(token),
-    retry: false
-  });
+  const { data: user } = useCurrentUser();
 
   return (
     <div className="min-h-screen">

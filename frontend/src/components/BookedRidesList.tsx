@@ -1,44 +1,11 @@
 import { Calendar, Car, Clock, Flag, MapPin, MessageCircle, Palette, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import axios from "axios";
-import { api, whatsappLink } from "../api/client";
-
-// Booking status mirrors the driver's action: confirmed = driver accepted.
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending",
-  confirmed: "Accepted",
-  rejected: "Rejected",
-  cancelled: "Cancelled",
-  completed: "Completed"
-};
-
-type Booking = {
-  id: number;
-  booking_code: string;
-  ride_id: number;
-  driver_id: number;
-  driver_name: string;
-  driver_whatsapp?: string | null;
-  car_number?: string | null;
-  car_color?: string | null;
-  route: string;
-  journey_date: string;
-  departure_time: string;
-  seats_booked: number;
-  pickup_point: string;
-  drop_point: string;
-  status: string;
-  total_amount: number;
-};
-
-function formatRideDate(value: string) {
-  return new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
-}
+import { bookingsApi } from "../api/bookings";
+import { whatsappLink, formatShortDate } from "../lib/format";
+import { queryKeys } from "../lib/queryKeys";
+import { bookingStatusLabel, CANCELLABLE_BOOKING_STATUSES } from "../constants/booking";
+import type { Booking, BookingStatus } from "../types";
 
 function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: string) => void }) {
   const [reason, setReason] = useState("");
@@ -51,7 +18,7 @@ function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: s
       return;
     }
     try {
-      await api.post("/passenger/reports", {
+      await bookingsApi.report({
         reported_user_id: booking.driver_id,
         ride_id: booking.ride_id,
         reason: reason.trim()
@@ -86,12 +53,12 @@ export default function BookedRidesList() {
   const [message, setMessage] = useState("");
   const [reportBookingId, setReportBookingId] = useState<number | null>(null);
   const { data: passengerBookings, refetch } = useQuery({
-    queryKey: ["passenger-profile-bookings"],
-    queryFn: async () => (await api.get<Booking[]>("/passenger/bookings")).data
+    queryKey: queryKeys.passenger.bookings,
+    queryFn: bookingsApi.list
   });
 
   async function cancelBooking(bookingId: number) {
-    await api.post(`/passenger/bookings/${bookingId}/cancel`, { reason: "Passenger cancelled from profile" });
+    await bookingsApi.cancel(bookingId, "Passenger cancelled from profile");
     setMessage("Booking cancelled. WhatsApp cancellation message has been logged.");
     refetch();
   }
@@ -118,7 +85,7 @@ export default function BookedRidesList() {
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 <span className="flex items-center gap-1.5">
                   <Calendar size={15} className="text-primary" />
-                  {formatRideDate(booking.journey_date)}
+                  {formatShortDate(booking.journey_date)}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock size={15} className="text-primary" />
@@ -143,7 +110,7 @@ export default function BookedRidesList() {
                 {booking.seats_booked} seats - {booking.pickup_point} to {booking.drop_point}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="chip">{STATUS_LABEL[booking.status] ?? booking.status}</span>
+                <span className="chip">{bookingStatusLabel(booking.status)}</span>
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
                 {whatsappLink(booking.driver_whatsapp) && (
@@ -160,8 +127,8 @@ export default function BookedRidesList() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
-              {/* Cancel only after the driver approves (confirmed = accepted). */}
-              {booking.status === "confirmed" && (
+              {/* Cancel while waiting for approval (pending) or after it is confirmed. */}
+              {CANCELLABLE_BOOKING_STATUSES.includes(booking.status as BookingStatus) && (
                 <button type="button" className="btn-danger" onClick={() => cancelBooking(booking.id)}>
                   <XCircle size={16} />
                   Cancel

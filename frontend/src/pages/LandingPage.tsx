@@ -1,8 +1,8 @@
 import { ArrowRight, BadgeCheck, Car, ListChecks, Map, MapPin, Search, Shield, Users } from "lucide-react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { api, User } from "../api/client";
+import type { User } from "../types";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
 import RideFlow from "../components/RideFlow";
 import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
@@ -27,22 +27,12 @@ const features = [
 
 export default function LandingPage() {
   const token = useSessionStore((state) => state.token);
-  const { data: user } = useQuery({
-    queryKey: ["me"],
-    queryFn: async () => (await api.get<User>("/auth/me")).data,
-    enabled: Boolean(token),
-    retry: false
-  });
+  const { data: user } = useCurrentUser();
 
-  if (token) {
-    return <HomeForUser user={user} />;
-  }
-  return <GuestLanding />;
+  // Guests and signed-in users share the same home; HomeForUser adapts its
+  // CTAs and hero copy from the (possibly undefined) user.
+  return <HomeForUser user={token ? user : undefined} />;
 }
-
-/* ------------------------------------------------------------------ */
-/* Pre-login: dark black/white/grey rental-style landing               */
-/* ------------------------------------------------------------------ */
 
 function RideSearchBar() {
   const navigate = useNavigate();
@@ -75,12 +65,6 @@ function RideSearchBar() {
         <ArrowRight size={18} />
       </button>
     </form>
-  );
-}
-
-function GuestLanding() {
-  return (
-    <HomeForUser />
   );
 }
 

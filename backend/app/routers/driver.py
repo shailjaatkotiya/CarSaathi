@@ -36,10 +36,10 @@ def validate_publish_window(payload: RideCreate) -> None:
 
 
 def validate_stop_counts(payload: RideCreate) -> None:
-    if len(payload.pickup_points) < 5:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add minimum 5 pickup points")
-    if len(payload.drop_points) < 5:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add minimum 5 drop points")
+    if len(payload.pickup_points) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add at least 1 pickup point")
+    if len(payload.drop_points) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please add at least 1 drop point")
 
 
 def clean_optional(value: str | None) -> str | None:
@@ -241,6 +241,23 @@ def cancel_ride(ride_id: int, payload: CancellationRequest, driver: User = Depen
     db.commit()
     cache.bump_rides_version()
     return {"message": "Ride cancelled"}
+
+
+@router.post("/rides/{ride_id}/complete")
+def complete_ride(ride_id: int, driver: User = Depends(require_driver), db: Session = Depends(get_db)) -> dict:
+    ride = db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver.id).first()
+    if not ride:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found")
+    if ride.status == RideStatus.cancelled:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A cancelled ride cannot be completed")
+    ride.status = RideStatus.completed
+    # Confirmed bookings become completed so passengers can review/report.
+    for booking in ride.bookings:
+        if booking.status == BookingStatus.confirmed:
+            booking.status = BookingStatus.completed
+    db.commit()
+    cache.bump_rides_version()
+    return {"message": "Ride marked completed"}
 
 
 @router.get("/rides/{ride_id}/bookings", response_model=list[DriverBookingOut])

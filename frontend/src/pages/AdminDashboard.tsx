@@ -1,35 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import { api, User } from "../api/client";
+import { adminApi } from "../api/admin";
+import { queryKeys } from "../lib/queryKeys";
 import MetricCard from "../components/MetricCard";
 import { useSessionStore } from "../store/session";
-
-type AdminRide = {
-  id: number;
-  route: string;
-  date: string;
-  driver: string;
-  available_seats: number;
-  status: string;
-};
-
-type AdminBooking = {
-  id: number;
-  booking_code: string;
-  route: string;
-  passenger: string;
-  seats: number;
-  status: string;
-};
-
-type AdminReport = {
-  id: number;
-  reporter_id: number;
-  reported_user_id: number;
-  reason: string;
-  status: string;
-};
 
 type AdminTab = "users" | "rides" | "bookings" | "reports";
 
@@ -43,7 +18,7 @@ function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
     event.preventDefault();
     setError("");
     try {
-      const { data } = await api.post("/admin/login", { email, password });
+      const data = await adminApi.login(email, password);
       setToken(data.access_token);
       onLoggedIn();
     } catch (err) {
@@ -78,26 +53,26 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState("");
 
   const { data: users, error: usersError, refetch: refetchUsers } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: async () => (await api.get<User[]>("/admin/users")).data,
+    queryKey: queryKeys.admin.users,
+    queryFn: adminApi.users,
     enabled: Boolean(token),
     retry: false
   });
   const { data: rides } = useQuery({
-    queryKey: ["admin-rides"],
-    queryFn: async () => (await api.get<AdminRide[]>("/admin/rides")).data,
+    queryKey: queryKeys.admin.rides,
+    queryFn: adminApi.rides,
     enabled: Boolean(token) && Boolean(users),
     retry: false
   });
   const { data: bookings } = useQuery({
-    queryKey: ["admin-bookings"],
-    queryFn: async () => (await api.get<AdminBooking[]>("/admin/bookings")).data,
+    queryKey: queryKeys.admin.bookings,
+    queryFn: adminApi.bookings,
     enabled: Boolean(token) && Boolean(users),
     retry: false
   });
   const { data: reports } = useQuery({
-    queryKey: ["admin-reports"],
-    queryFn: async () => (await api.get<AdminReport[]>("/admin/reports")).data,
+    queryKey: queryKeys.admin.reports,
+    queryFn: adminApi.reports,
     enabled: Boolean(token) && Boolean(users),
     retry: false
   });
@@ -115,19 +90,19 @@ export default function AdminDashboard() {
   }
 
   async function verifyUser(userId: number) {
-    await api.post(`/admin/users/${userId}/verify`);
+    await adminApi.verifyUser(userId);
     setMessage("User verified.");
     refetchUsers();
   }
 
   async function rejectUser(userId: number) {
-    await api.post(`/admin/users/${userId}/reject`, { reason: "Rejected by admin from dashboard" });
+    await adminApi.rejectUser(userId, "Rejected by admin from dashboard");
     setMessage("User verification rejected.");
     refetchUsers();
   }
 
   async function blockUser(userId: number) {
-    await api.post(`/admin/users/${userId}/block`, { reason: "Blocked by admin from dashboard" });
+    await adminApi.blockUser(userId, "Blocked by admin from dashboard");
     setMessage("User blocked.");
     refetchUsers();
   }

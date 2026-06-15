@@ -2,10 +2,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { api, User } from "../api/client";
+import { authApi } from "../api/auth";
+import { queryKeys } from "../lib/queryKeys";
 import { useSessionStore } from "../store/session";
+import type { UserRole } from "../types";
 
-type AuthRole = "passenger" | "driver" | "admin";
+type AuthRole = UserRole;
 
 function authErrorMessage(err: unknown) {
   if (!axios.isAxiosError(err)) {
@@ -56,9 +58,9 @@ export default function AuthPage() {
   // switch accounts (e.g. a passenger choosing to publish a ride as a driver).
   useEffect(() => {
     if (!token || switchRole) return;
-    api
-      .get<User>("/auth/me")
-      .then(({ data }) => navigate(from || homeForRole(data.role), { replace: true }))
+    authApi
+      .me()
+      .then((data) => navigate(from || homeForRole(data.role), { replace: true }))
       .catch(() => {
         /* invalid token handled by interceptor */
       });
@@ -67,28 +69,32 @@ export default function AuthPage() {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
-    const payload =
-      mode === "login"
-        ? { email: normalizedEmail, password: password.trim() }
-        : {
-            full_name: fullName.trim(),
-            email: normalizedEmail,
-            password: password.trim(),
-            whatsapp_number: whatsappNumber.trim() || null,
-            role: registerRole
-          };
 
     setIsSubmitting(true);
     setError("");
     setMessage("");
     try {
-      const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
-      const { data } = await api.post(endpoint, payload);
+      const data =
+        mode === "login"
+          ? await authApi.login({ email: normalizedEmail, password: password.trim() })
+          : await authApi.register({
+              full_name: fullName.trim(),
+              email: normalizedEmail,
+              password: password.trim(),
+              whatsapp_number: whatsappNumber.trim() || null,
+              role: registerRole
+            });
       setToken(data.access_token);
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.me });
       // Detect the role from the account and route accordingly.
-      const me = (await api.get<User>("/auth/me")).data;
+      const me = await authApi.me();
       setMessage("Logged in successfully.");
+      // A brand-new driver has no WhatsApp number or vehicle yet — send them
+      // through onboarding instead of straight to the (blocked) publish form.
+      if (mode === "register" && me.role === "driver") {
+        navigate("/driver/onboarding", { replace: true });
+        return;
+      }
       navigate(from || homeForRole(me.role), { replace: true });
     } catch (err) {
       setError(authErrorMessage(err));

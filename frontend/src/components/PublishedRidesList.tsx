@@ -2,21 +2,11 @@ import { CheckCircle2, ChevronDown, ChevronUp, ClipboardList, MessageCircle, XCi
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { api, Ride, whatsappLink } from "../api/client";
+import { driverApi } from "../api/driver";
+import { whatsappLink } from "../lib/format";
+import { queryKeys } from "../lib/queryKeys";
+import type { DriverBooking, Ride } from "../types";
 import RideCard from "./RideCard";
-
-type RideBooking = {
-  id: number;
-  booking_code: string;
-  passenger_id: number;
-  passenger_name: string;
-  passenger_whatsapp?: string;
-  seats_booked: number;
-  pickup_point: string;
-  drop_point: string;
-  status: string;
-  total_amount: number;
-};
 
 function RideBookings({
   rideId,
@@ -28,19 +18,19 @@ function RideBookings({
   onRideChanged: () => void;
 }) {
   const { data: bookings, isLoading, refetch } = useQuery({
-    queryKey: ["ride-bookings", rideId],
-    queryFn: async () => (await api.get<RideBooking[]>(`/driver/rides/${rideId}/bookings`)).data
+    queryKey: queryKeys.driver.rideBookings(rideId),
+    queryFn: () => driverApi.rideBookings(rideId)
   });
 
   async function acceptBooking(bookingId: number) {
-    await api.post(`/driver/bookings/${bookingId}/accept`);
+    await driverApi.acceptBooking(bookingId);
     onMessage("Booking accepted. Passenger confirmation WhatsApp has been logged.");
     await refetch();
     onRideChanged();
   }
 
   async function rejectBooking(bookingId: number) {
-    await api.post(`/driver/bookings/${bookingId}/reject`);
+    await driverApi.rejectBooking(bookingId);
     onMessage("Booking rejected. Passenger WhatsApp cancellation message has been logged and seats were released.");
     await refetch();
     onRideChanged();
@@ -101,13 +91,19 @@ export default function PublishedRidesList() {
   const [message, setMessage] = useState("");
   const [expandedRideId, setExpandedRideId] = useState<number | null>(null);
   const { data, refetch } = useQuery({
-    queryKey: ["my-rides"],
-    queryFn: async () => (await api.get<Ride[]>("/driver/rides")).data
+    queryKey: queryKeys.driver.rides,
+    queryFn: driverApi.rides
   });
 
   async function cancelRide(rideId: number) {
-    await api.post(`/driver/rides/${rideId}/cancel`, { reason: "Driver cancelled from app" });
+    await driverApi.cancelRide(rideId);
     setMessage("Ride cancelled. WhatsApp cancellation messages have been logged for booked passengers.");
+    refetch();
+  }
+
+  async function completeRide(rideId: number) {
+    await driverApi.completeRide(rideId);
+    setMessage("Ride marked completed. Passengers can now review or report it.");
     refetch();
   }
 
@@ -132,7 +128,13 @@ export default function PublishedRidesList() {
                   {expandedRideId === ride.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   {expandedRideId === ride.id ? "Hide passengers" : "View passengers"}
                 </button>
-                {ride.status !== "cancelled" && (
+                {ride.status !== "cancelled" && ride.status !== "completed" && (
+                  <button type="button" className="btn-outline self-start" onClick={() => completeRide(ride.id)}>
+                    <CheckCircle2 size={16} />
+                    Mark completed
+                  </button>
+                )}
+                {ride.status !== "cancelled" && ride.status !== "completed" && (
                   <button type="button" className="btn-danger self-start" onClick={() => cancelRide(ride.id)}>
                     <XCircle size={16} />
                     Cancel
