@@ -433,14 +433,12 @@ export default function CreateRide() {
               {current.key === "datetime" && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label>
-                    <span className="field-label">Journey date</span>
                     <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Journey date" />
-                    <span className="field-hint">Up to 10 days ahead.</span>
+                    {/* <span className="field-hint">Up to 10 days ahead.</span> */}
                   </label>
                   <label>
-                    <span className="field-label">Departure time</span>
                     <TimePicker value={departureTime} onChange={setDepartureTime} label="Departure time" />
-                    <span className="field-hint">At least 3 hours from now.</span>
+                    {/* <span className="field-hint">At least 3 hours from now.</span> */}
                   </label>
                 </div>
               )}

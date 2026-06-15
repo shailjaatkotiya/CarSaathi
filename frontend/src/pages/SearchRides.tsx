@@ -184,15 +184,9 @@ export default function SearchRides() {
               <span className="field-label">Stop or drop area</span>
               <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              <label>
-                <span className="field-label">After</span>
-                <TimePicker value={departureAfter} onChange={setDepartureAfter} label="After" />
-              </label>
-              <label>
-                <span className="field-label">Before</span>
-                <TimePicker value={departureBefore} onChange={setDepartureBefore} label="Before" />
-              </label>
+            <div className="flex flex-col gap-2">
+              <TimePicker value={departureAfter} onChange={setDepartureAfter} label="After" />
+              <TimePicker value={departureBefore} onChange={setDepartureBefore} label="Before" />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <label>
