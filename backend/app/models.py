@@ -57,6 +57,7 @@ class User(Base):
     personal_car_number: Mapped[str | None] = mapped_column(String(30))
     personal_car_fuel_type: Mapped[str | None] = mapped_column(String(30))
     personal_car_category: Mapped[str | None] = mapped_column(String(40))
+    personal_car_color: Mapped[str | None] = mapped_column(String(40))
     personal_car_seats: Mapped[int | None] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -127,6 +128,7 @@ class Vehicle(Base):
     vehicle_number: Mapped[str] = mapped_column(String(30), unique=True)
     fuel_type: Mapped[str] = mapped_column(String(30))
     car_type: Mapped[str] = mapped_column(String(40), default="Sedan")
+    color: Mapped[str] = mapped_column(String(40), default="White")
     seats: Mapped[int] = mapped_column(Integer)
     photo_urls: Mapped[str] = mapped_column(Text, default="")
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -214,6 +216,18 @@ class Booking(Base):
     @property
     def driver_name(self) -> str:
         return self.ride.driver.full_name
+
+    @property
+    def driver_whatsapp(self) -> str | None:
+        return self.ride.driver.whatsapp_number
+
+    @property
+    def car_number(self) -> str | None:
+        return self.ride.vehicle.vehicle_number
+
+    @property
+    def car_color(self) -> str | None:
+        return self.ride.vehicle.color
 
     @property
     def route(self) -> str:

@@ -24,6 +24,7 @@ type ProfileForm = {
   personal_car_number: string;
   personal_car_fuel_type: string;
   personal_car_category: string;
+  personal_car_color: string;
   personal_car_seats: string;
 };
 
@@ -36,6 +37,7 @@ const emptyForm: ProfileForm = {
   personal_car_number: "",
   personal_car_fuel_type: "",
   personal_car_category: "",
+  personal_car_color: "",
   personal_car_seats: ""
 };
 
@@ -50,6 +52,7 @@ function formFromUser(user?: User): ProfileForm {
     personal_car_number: user.personal_car_number || "",
     personal_car_fuel_type: user.personal_car_fuel_type || "",
     personal_car_category: user.personal_car_category || "",
+    personal_car_color: user.personal_car_color || "",
     personal_car_seats: user.personal_car_seats ? String(user.personal_car_seats) : ""
   };
 }
@@ -149,6 +152,7 @@ export default function ProfilePage() {
         personal_car_number: optionalText(form.personal_car_number)?.toUpperCase() || null,
         personal_car_fuel_type: optionalText(form.personal_car_fuel_type),
         personal_car_category: optionalText(form.personal_car_category),
+        personal_car_color: optionalText(form.personal_car_color),
         personal_car_seats: optionalNumber(form.personal_car_seats)
       };
       return (await api.put<User>("/profile", payload)).data;
@@ -341,8 +345,14 @@ export default function ProfilePage() {
                   <input className="input" value={form.personal_car_model} onChange={(event) => setField("personal_car_model", event.target.value)} placeholder="City, Aura, Dzire" />
                 </label>
                 <label>
-                  <span className="field-label">Vehicle number optional</span>
+                  <span className="field-label">Vehicle number</span>
                   <input className="input" value={form.personal_car_number} onChange={(event) => setField("personal_car_number", event.target.value)} placeholder="GJ01AB1234" />
+                  <span className="field-hint">Required to add a car</span>
+                </label>
+                <label>
+                  <span className="field-label">Car color</span>
+                  <input className="input" value={form.personal_car_color} onChange={(event) => setField("personal_car_color", event.target.value)} placeholder="White" />
+                  <span className="field-hint">Defaults to White</span>
                 </label>
                 <label>
                   <span className="field-label">Fuel type optional</span>
@@ -373,6 +383,7 @@ export default function ProfilePage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <DetailTile label="Car" value={[data?.personal_car_brand, data?.personal_car_model].filter(Boolean).join(" ")} icon={<Car size={16} className="text-primary" />} />
                 <DetailTile label="Vehicle number" value={data?.personal_car_number} />
+                <DetailTile label="Color" value={data?.personal_car_color} />
                 <DetailTile label="Fuel type" value={data?.personal_car_fuel_type} />
                 <DetailTile label="Category" value={data?.personal_car_category} />
                 <DetailTile label="Seats" value={data?.personal_car_seats} />

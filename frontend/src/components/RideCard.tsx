@@ -86,6 +86,7 @@ export default function RideCard({ ride, actions, details }: { ride: Ride; actio
               <Fuel size={12} />
               {ride.vehicle.fuel_type}
             </span>
+            <span className="inline-flex items-center gap-1 font-semibold text-ink">{ride.vehicle.vehicle_number}</span>
           </div>
           <Link to={`/rides/${ride.id}`} className="btn-primary shrink-0 min-h-[36px] px-4 py-1.5">
             View ride

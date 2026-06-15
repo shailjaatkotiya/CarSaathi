@@ -62,6 +62,7 @@ class UserOut(BaseModel):
     personal_car_number: str | None
     personal_car_fuel_type: str | None
     personal_car_category: str | None
+    personal_car_color: str | None
     personal_car_seats: int | None
     verification_status: VerificationStatus
     is_blocked: bool
@@ -81,6 +82,7 @@ class ProfileUpdate(BaseModel):
     personal_car_number: str | None = None
     personal_car_fuel_type: str | None = None
     personal_car_category: str | None = None
+    personal_car_color: str | None = None
     personal_car_seats: int | None = Field(default=None, ge=1, le=8)
     driving_license_number: str | None = None
     bio: str | None = None
@@ -106,8 +108,22 @@ class VehicleCreate(BaseModel):
     vehicle_number: str
     fuel_type: str
     car_type: str = "Sedan"
+    color: str = "White"
     seats: int = Field(ge=1, le=8)
     photo_urls: list[str] = []
+
+    @field_validator("vehicle_number")
+    @classmethod
+    def require_vehicle_number(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Vehicle number is required")
+        return value.upper()
+
+    @field_validator("color")
+    @classmethod
+    def normalize_color(cls, value: str) -> str:
+        return value.strip() or "White"
 
 
 class VehicleOut(VehicleCreate):
@@ -133,6 +149,7 @@ class RideCreate(BaseModel):
     vehicle_number: str | None = None
     fuel_type: str | None = None
     car_type: str | None = None
+    car_color: str | None = None
     car_seats: int | None = Field(default=None, ge=1, le=8)
     source_city: str
     destination_city: str
@@ -204,6 +221,9 @@ class BookingOut(BaseModel):
     passenger_id: int
     driver_id: int
     driver_name: str
+    driver_whatsapp: str | None = None
+    car_number: str | None = None
+    car_color: str | None = None
     route: str
     journey_date: date
     departure_time: time
