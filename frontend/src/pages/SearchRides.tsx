@@ -91,7 +91,9 @@ export default function SearchRides() {
   const [showFilters, setShowFilters] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
+  const hasRoute = Boolean(source.trim() && destination.trim());
+
+  const { data: rawData, isLoading, refetch } = useQuery({
     queryKey: [
       "rides",
       source,
@@ -137,7 +139,16 @@ export default function SearchRides() {
         }
       });
       return response.data;
-    }
+    },
+    enabled: hasRoute
+  });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const data = rawData?.filter((ride) => {
+    if (ride.journey_date !== todayStr) return true;
+    const [h, m] = ride.departure_time.slice(0, 5).split(":").map(Number);
+    return h * 60 + m > nowMinutes;
   });
 
   function toggleDepartureWindow(value: string) {
@@ -374,28 +385,38 @@ export default function SearchRides() {
 
         {/* Right: results list */}
         <div className="min-w-0">
-          <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h1 className="text-lg font-bold md:text-xl">
-              {source || "All cities"} {destination ? `-> ${destination}` : ""}
-            </h1>
-            {data && (
-              <span className="shrink-0 text-sm text-muted">
-                {data.length} ride{data.length === 1 ? "" : "s"} available
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col gap-3">
-            {isLoading && <p className="alert-info">Loading rides...</p>}
-            {data?.map((ride) => <RideListItem key={ride.id} ride={ride} />)}
-            {data?.length === 0 &&
-              (journeyDate ? (
-                <p className="alert-warning">
-                  No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
-                </p>
-              ) : (
-                <p className="alert-warning">No rides found for this route.</p>
-              ))}
-          </div>
+          {!hasRoute ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+              <Search size={40} className="text-muted/40" />
+              <p className="text-base font-bold text-ink">Where are you headed?</p>
+              <p className="text-sm text-muted">Enter both a pickup city and a destination to see available rides.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-3 flex items-baseline justify-between gap-2">
+                <h1 className="text-lg font-bold md:text-xl">
+                  {source} → {destination}
+                </h1>
+                {data && (
+                  <span className="shrink-0 text-sm text-muted">
+                    {data.length} ride{data.length === 1 ? "" : "s"} available
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-3">
+                {isLoading && <p className="alert-info">Loading rides...</p>}
+                {data?.map((ride) => <RideListItem key={ride.id} ride={ride} />)}
+                {data?.length === 0 && !isLoading &&
+                  (journeyDate ? (
+                    <p className="alert-warning">
+                      No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
+                    </p>
+                  ) : (
+                    <p className="alert-warning">No rides found for this route.</p>
+                  ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

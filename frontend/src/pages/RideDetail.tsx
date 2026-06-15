@@ -16,6 +16,13 @@ const ruleLabels: Record<string, string> = {
   no_tobacco: "No tobacco"
 };
 
+function formatAmPm(time: string) {
+  const [h, m] = time.slice(0, 5).split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
+}
+
 export default function RideDetail() {
   const { rideId } = useParams();
   const [seats, setSeats] = useState(1);
@@ -152,7 +159,7 @@ export default function RideDetail() {
                 <VerifiedBadge verified={ride.driver_verified} />
               </div>
               <p className="mt-0.5 text-sm text-muted">
-                {ride.distance_km} km · {ride.journey_date} · {ride.departure_time.slice(0, 5)}
+                {ride.distance_km} km · {ride.journey_date} · {formatAmPm(ride.departure_time)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -162,7 +169,7 @@ export default function RideDetail() {
               </div>
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Time</p>
-                <p className="text-sm font-bold text-primary-dark">{ride.departure_time.slice(0, 5)}</p>
+                <p className="text-sm font-bold text-primary-dark">{formatAmPm(ride.departure_time)}</p>
               </div>
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Price per seat</p>
@@ -354,7 +361,7 @@ export default function RideDetail() {
                     first.
                   </p>
                 )}
-                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying}>
+                <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
                   {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
                   {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
                 </button>
