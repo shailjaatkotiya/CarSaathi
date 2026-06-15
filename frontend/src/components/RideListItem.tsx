@@ -1,4 +1,4 @@
-import { Armchair, Car, Fuel, Route as RouteIcon, Snowflake, Star } from "lucide-react";
+import { Armchair, Car, Fuel, Route as RouteIcon, Snowflake, Star, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Ride } from "../api/client";
 import VerifiedBadge from "./VerifiedBadge";
@@ -45,7 +45,13 @@ export default function RideListItem({ ride }: { ride: Ride }) {
               <Star size={13} />
               {ride.driver_rating || 4.5}
             </span>
-            <VerifiedBadge verified={ride.driver_verified} />
+            {ride.driver_verified && <VerifiedBadge verified />}
+            {ride.auto_confirm_bookings && (
+              <span className="inline-flex items-center gap-1 font-bold text-primary">
+                <Zap size={13} />
+                Instant
+              </span>
+            )}
             <span className="inline-flex items-center gap-1">
               <Armchair size={13} />
               {ride.available_seats} seats

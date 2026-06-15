@@ -43,7 +43,6 @@ def update_profile(payload: ProfileUpdate, user: User = Depends(get_current_user
 
     for field in [
         "full_name",
-        "age",
         "whatsapp_number",
         "personal_car_brand",
         "personal_car_model",

@@ -43,6 +43,7 @@ export type Ride = {
   smoking_allowed: boolean;
   ac_available: boolean;
   women_only_preference: boolean;
+  auto_confirm_bookings: boolean;
   status: string;
   driver_name: string;
   driver_rating: number;
@@ -132,7 +133,6 @@ export type User = {
   full_name: string;
   email: string;
   role: "admin" | "driver" | "passenger";
-  age?: number;
   whatsapp_number?: string;
   personal_car_brand?: string;
   personal_car_model?: string;

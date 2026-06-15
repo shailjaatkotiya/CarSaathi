@@ -42,7 +42,6 @@ def ensure_runtime_schema() -> None:
 def _ensure_sqlite_schema() -> None:
     user_columns = {
         "role": "VARCHAR(20) DEFAULT 'passenger'",
-        "age": "INTEGER",
         "personal_car_brand": "VARCHAR(80)",
         "personal_car_model": "VARCHAR(80)",
         "personal_car_number": "VARCHAR(30)",

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { Calendar, Car, Clock, Flag, MapPin, MessageCircle, Palette, Star, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -121,27 +122,11 @@ function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: s
     </div>
   );
 }
+=======
+import BookedRidesList from "../components/BookedRidesList";
+>>>>>>> Stashed changes
 
 export default function PassengerProfilePage() {
-  const [message, setMessage] = useState("");
-  const [openForm, setOpenForm] = useState<{ bookingId: number; type: "review" | "report" } | null>(null);
-  const { data: passengerBookings, refetch } = useQuery({
-    queryKey: ["passenger-profile-bookings"],
-    queryFn: async () => (await api.get<Booking[]>("/passenger/bookings")).data
-  });
-
-  async function cancelBooking(bookingId: number) {
-    await api.post(`/passenger/bookings/${bookingId}/cancel`, { reason: "Passenger cancelled from profile" });
-    setMessage("Booking cancelled. WhatsApp cancellation message has been logged.");
-    refetch();
-  }
-
-  function handleFormDone(text: string) {
-    setMessage(text);
-    setOpenForm(null);
-    refetch();
-  }
-
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-5 md:py-7">
       <div className="flex flex-col gap-3">
@@ -149,6 +134,7 @@ export default function PassengerProfilePage() {
           <h1 className="text-xl font-bold md:text-2xl">Booked Rides</h1>
           <p className="mt-1 text-sm text-muted">Your booked rides that are not completed yet.</p>
         </div>
+<<<<<<< Updated upstream
         {message && <p className="alert-success">{message}</p>}
 
         {passengerBookings?.map((booking) => (
@@ -249,6 +235,9 @@ export default function PassengerProfilePage() {
         ))}
 
         {passengerBookings?.length === 0 && <p className="alert-info">No unfinished booked rides yet.</p>}
+=======
+        <BookedRidesList />
+>>>>>>> Stashed changes
       </div>
     </div>
   );

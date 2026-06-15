@@ -1,4 +1,4 @@
-import { Search, Users } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, SlidersHorizontal, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -23,6 +23,7 @@ export default function SearchRides() {
   const [acAvailable, setAcAvailable] = useState("");
   const [sortBy, setSortBy] = useState("date_time");
   const [seats, setSeats] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -125,9 +126,21 @@ export default function SearchRides() {
         </button>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[260px_1fr]">
-        {/* Left sidebar: sort + filters */}
-        <aside className="card h-max rounded-2xl p-4 lg:sticky lg:top-4">
+      {/* Mobile-only toggle: show/hide sort + filters (sidebar is always visible on desktop) */}
+      <button
+        type="button"
+        className="btn-outline mt-3 w-full justify-center gap-2 lg:hidden"
+        onClick={() => setShowFilters((current) => !current)}
+        aria-expanded={showFilters}
+      >
+        <SlidersHorizontal size={16} />
+        {showFilters ? "Hide filters" : "Sort & filters"}
+        {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+
+      <div className="mt-3 grid gap-4 lg:mt-4 lg:grid-cols-[260px_1fr]">
+        {/* Left sidebar: sort + filters. Hidden on mobile until toggled, always shown on desktop. */}
+        <aside className={`card h-max rounded-2xl p-4 lg:sticky lg:top-4 lg:block ${showFilters ? "block" : "hidden"}`}>
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold">Sort by</h2>
             <button type="button" className="text-xs font-bold text-muted transition hover:text-primary" onClick={clearFilters}>

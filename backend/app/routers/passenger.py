@@ -8,7 +8,7 @@ from app.core import cache
 from app.core.config import get_settings
 from app.database import get_db
 from app.dependencies import require_passenger
-from app.models import Booking, BookingStatus, CancellationReason, Payment, Review, Ride, RideStatus, User
+from app.models import Booking, BookingStatus, CancellationReason, Payment, Ride, RideStatus, User
 from app.schemas import (
     BookingActionOut,
     BookingCreate,
@@ -17,7 +17,6 @@ from app.schemas import (
     PaymentInitOut,
     PaymentVerifyRequest,
     ReportCreate,
-    ReviewCreate,
     RideOut,
 )
 from app.services import razorpay_client
@@ -270,21 +269,6 @@ def booking_history(passenger: User = Depends(require_passenger), db: Session = 
         .order_by(Booking.created_at.desc())
         .all()
     )
-
-
-@router.post("/bookings/{booking_id}/review")
-def rate_driver(booking_id: int, payload: ReviewCreate, passenger: User = Depends(require_passenger), db: Session = Depends(get_db)) -> dict:
-    booking = db.query(Booking).filter(Booking.id == booking_id, Booking.passenger_id == passenger.id).first()
-    if not booking:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
-    review = Review(booking_id=booking.id, reviewer_id=passenger.id, reviewee_id=booking.ride.driver_id, rating=payload.rating, comment=payload.comment)
-    db.add(review)
-    driver = booking.ride.driver
-    total = driver.rating_average * driver.rating_count + payload.rating
-    driver.rating_count += 1
-    driver.rating_average = round(total / driver.rating_count, 2)
-    db.commit()
-    return {"message": "Review submitted"}
 
 
 @router.post("/reports")

@@ -55,7 +55,6 @@ class UserOut(BaseModel):
     full_name: str
     email: EmailStr
     role: UserRole
-    age: int | None
     whatsapp_number: str | None
     personal_car_brand: str | None
     personal_car_model: str | None
@@ -75,7 +74,6 @@ class UserOut(BaseModel):
 class ProfileUpdate(BaseModel):
     full_name: str | None = None
     email: EmailStr | None = None
-    age: int | None = Field(default=None, ge=18, le=100)
     whatsapp_number: str | None = None
     personal_car_brand: str | None = None
     personal_car_model: str | None = None

@@ -8,6 +8,8 @@ import { api, User } from "../api/client";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 import VerifiedBadge from "../components/VerifiedBadge";
+import BookedRidesList from "../components/BookedRidesList";
+import PublishedRidesList from "../components/PublishedRidesList";
 
 type VerificationStatus = {
   status: "pending" | "verified" | "rejected";
@@ -17,7 +19,6 @@ type VerificationStatus = {
 
 type ProfileForm = {
   full_name: string;
-  age: string;
   whatsapp_number: string;
   personal_car_brand: string;
   personal_car_model: string;
@@ -30,7 +31,6 @@ type ProfileForm = {
 
 const emptyForm: ProfileForm = {
   full_name: "",
-  age: "",
   whatsapp_number: "",
   personal_car_brand: "",
   personal_car_model: "",
@@ -45,7 +45,6 @@ function formFromUser(user?: User): ProfileForm {
   if (!user) return emptyForm;
   return {
     full_name: user.full_name || "",
-    age: user.age ? String(user.age) : "",
     whatsapp_number: user.whatsapp_number || "",
     personal_car_brand: user.personal_car_brand || "",
     personal_car_model: user.personal_car_model || "",
@@ -145,7 +144,6 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const payload = {
         full_name: form.full_name.trim(),
-        age: optionalNumber(form.age),
         whatsapp_number: optionalText(form.whatsapp_number),
         personal_car_brand: optionalText(form.personal_car_brand),
         personal_car_model: optionalText(form.personal_car_model),
@@ -229,14 +227,10 @@ export default function ProfilePage() {
                 {data?.full_name?.slice(0, 1).toUpperCase() || "R"}
               </span>
               {isEditing ? (
-                <div className="grid flex-1 gap-2 sm:grid-cols-3">
+                <div className="grid flex-1 gap-2 sm:grid-cols-2">
                   <label>
                     <span className="field-label">Name</span>
                     <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
-                  </label>
-                  <label>
-                    <span className="field-label">Age</span>
-                    <input className="input" type="number" min={18} max={100} value={form.age} onChange={(event) => setField("age", event.target.value)} />
                   </label>
                   <label>
                     <span className="field-label">Number</span>
@@ -253,13 +247,12 @@ export default function ProfilePage() {
                     <Phone size={15} />
                     {data?.whatsapp_number || "Number not added"}
                   </p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-                    {data?.age ? <span>Age {data.age}</span> : null}
-                    <span className="flex items-center gap-1">
+                  {isDriver && (
+                    <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
                       <Star size={14} />
                       {data?.rating_average || 0} ({data?.rating_count || 0})
-                    </span>
-                  </p>
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -420,10 +413,8 @@ export default function ProfilePage() {
             open={openRides}
             onToggle={() => setOpenRides((current) => !current)}
           >
-            <p className="text-sm text-muted">Published rides with all passengers who booked each ride.</p>
-            <Link to="/my-rides" className="btn-primary mt-3">
-              View published rides
-            </Link>
+            <p className="mb-3 text-sm text-muted">Published rides with all passengers who booked each ride.</p>
+            {openRides && <PublishedRidesList />}
           </Section>
         )}
 
@@ -434,10 +425,8 @@ export default function ProfilePage() {
             open={openRides}
             onToggle={() => setOpenRides((current) => !current)}
           >
-            <p className="text-sm text-muted">Booked unfinished rides for this passenger account.</p>
-            <Link to="/profile/passenger" className="btn-primary mt-3">
-              View booked rides
-            </Link>
+            <p className="mb-3 text-sm text-muted">Booked unfinished rides for this passenger account.</p>
+            {openRides && <BookedRidesList />}
           </Section>
         )}
       </div>

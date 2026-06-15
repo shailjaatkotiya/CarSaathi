@@ -48,7 +48,6 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.passenger)
-    age: Mapped[int | None] = mapped_column(Integer)
     mobile_number: Mapped[str | None] = mapped_column(String(20))
     whatsapp_number: Mapped[str | None] = mapped_column(String(20))
     emergency_contact: Mapped[str | None] = mapped_column(String(20))
