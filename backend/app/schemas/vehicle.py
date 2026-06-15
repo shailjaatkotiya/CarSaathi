@@ -9,7 +9,7 @@ class VehicleCreate(BaseModel):
     car_type: str = "Sedan"
     color: str = "White"
     seats: int = Field(ge=1, le=8)
-    photo_urls: list[str] = []
+    photo_urls: list[str] = Field(default_factory=list)
 
     @field_validator("vehicle_number")
     @classmethod

@@ -3,7 +3,17 @@ from datetime import date, time, timedelta
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
-from app.models import AdminUser, DriverProfile, PassengerProfile, Ride, RideDropPoint, RidePickupPoint, User, UserRole, Vehicle, VerificationStatus
+from app.models import (
+    AdminUser,
+    DriverProfile,
+    PassengerProfile,
+    Ride,
+    RideDropPoint,
+    RidePickupPoint,
+    User,
+    Vehicle,
+    VerificationStatus,
+)
 
 
 DRIVER_DEMO_EMAILS = {
@@ -17,7 +27,9 @@ DRIVER_DEMO_EMAILS = {
 PASSENGER_DEMO_EMAILS = {"shailja@gmail.com"}
 
 
-def tagged_notes(notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str) -> str:
+def tagged_notes(
+    notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str
+) -> str:
     return "\n\n".join(
         [
             notes,
@@ -35,44 +47,40 @@ def ensure_default_admin(db: Session) -> None:
             full_name="Carthi Admin",
             email="admin@carthi.in",
             password_hash=hash_password("Admin@123"),
-            role=UserRole.admin,
             verification_status=VerificationStatus.verified,
         )
         db.add(admin)
         db.flush()
-    admin.role = UserRole.admin
     if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
         db.add(AdminUser(user_id=admin.id))
     db.commit()
 
 
-def ensure_demo_roles(db: Session) -> None:
+def ensure_demo_profiles(db: Session) -> None:
     for user in db.query(User).all():
-        if user.email in DRIVER_DEMO_EMAILS:
-            user.role = UserRole.driver
-        elif user.email in PASSENGER_DEMO_EMAILS:
-            user.role = UserRole.passenger
+        if user.email in DRIVER_DEMO_EMAILS and not user.driver_profile:
+            db.add(DriverProfile(user_id=user.id))
+        if user.email in PASSENGER_DEMO_EMAILS and not user.passenger_profile:
+            db.add(PassengerProfile(user_id=user.id))
     db.commit()
 
 
 def seed_database(db: Session) -> None:
     if db.query(User).first():
         ensure_default_admin(db)
-        ensure_demo_roles(db)
+        ensure_demo_profiles(db)
         return
 
     shubham = User(
         full_name="Shubham",
         email="shubham@gmail.com",
         password_hash=hash_password("driver@123"),
-        role=UserRole.driver,
         verification_status=VerificationStatus.pending,
     )
     shailja = User(
         full_name="Shailja",
         email="shailja@gmail.com",
         password_hash=hash_password("passenger@123"),
-        role=UserRole.passenger,
         verification_status=VerificationStatus.pending,
     )
     dummy_drivers = [
@@ -80,7 +88,6 @@ def seed_database(db: Session) -> None:
             full_name="Aarav Patel",
             email="aarav.driver@carthi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.8,
             rating_count=26,
@@ -89,7 +96,6 @@ def seed_database(db: Session) -> None:
             full_name="Mehul Shah",
             email="mehul.driver@carthi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.6,
             rating_count=19,
@@ -98,7 +104,6 @@ def seed_database(db: Session) -> None:
             full_name="Rohan Trivedi",
             email="rohan.driver@carthi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.9,
             rating_count=34,
@@ -107,7 +112,6 @@ def seed_database(db: Session) -> None:
             full_name="Nikhil Desai",
             email="nikhil.driver@carthi.in",
             password_hash=hash_password("driver@123"),
-            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.7,
             rating_count=22,
@@ -121,8 +125,14 @@ def seed_database(db: Session) -> None:
         db.add(
             DriverProfile(
                 user_id=driver.id,
-                driving_license_number=None if driver is shubham else f"GJ-DRV-{driver.id:06d}",
-                bio=None if driver is shubham else "Verified Gujarat intercity driver with clean car and planned halts.",
+                driving_license_number=(
+                    None if driver is shubham else f"GJ-DRV-{driver.id:06d}"
+                ),
+                bio=(
+                    None
+                    if driver is shubham
+                    else "Verified Gujarat intercity driver with clean car and planned halts."
+                ),
                 auto_confirm_bookings=False,
                 completed_trips=0 if driver is shubham else 18 + driver.id,
                 total_earnings=0 if driver is shubham else 22000 + driver.id * 1200,
@@ -132,11 +142,61 @@ def seed_database(db: Session) -> None:
     ensure_default_admin(db)
 
     vehicles = [
-        Vehicle(driver_id=dummy_drivers[0].id, brand="Maruti Suzuki", model="Dzire", vehicle_number="GJ01AA1234", fuel_type="Petrol", car_type="Sedan", seats=3, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[0].id, brand="Hyundai", model="Creta", vehicle_number="GJ01BB5678", fuel_type="Diesel", car_type="SUV", seats=3, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[1].id, brand="Toyota", model="Innova Crysta", vehicle_number="GJ03CC9012", fuel_type="CNG", car_type="7 Seater", seats=6, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[2].id, brand="Honda", model="Amaze", vehicle_number="GJ10DD7890", fuel_type="Petrol", car_type="Sedan", seats=3, photo_urls="", is_verified=True),
-        Vehicle(driver_id=dummy_drivers[3].id, brand="Tata", model="Nexon EV", vehicle_number="GJ05EE3456", fuel_type="EV", car_type="SUV", seats=3, photo_urls="", is_verified=True),
+        Vehicle(
+            driver_id=dummy_drivers[0].id,
+            brand="Maruti Suzuki",
+            model="Dzire",
+            vehicle_number="GJ01AA1234",
+            fuel_type="Petrol",
+            car_type="Sedan",
+            seats=3,
+            photo_urls="",
+            is_verified=True,
+        ),
+        Vehicle(
+            driver_id=dummy_drivers[0].id,
+            brand="Hyundai",
+            model="Creta",
+            vehicle_number="GJ01BB5678",
+            fuel_type="Diesel",
+            car_type="SUV",
+            seats=3,
+            photo_urls="",
+            is_verified=True,
+        ),
+        Vehicle(
+            driver_id=dummy_drivers[1].id,
+            brand="Toyota",
+            model="Innova Crysta",
+            vehicle_number="GJ03CC9012",
+            fuel_type="CNG",
+            car_type="7 Seater",
+            seats=6,
+            photo_urls="",
+            is_verified=True,
+        ),
+        Vehicle(
+            driver_id=dummy_drivers[2].id,
+            brand="Honda",
+            model="Amaze",
+            vehicle_number="GJ10DD7890",
+            fuel_type="Petrol",
+            car_type="Sedan",
+            seats=3,
+            photo_urls="",
+            is_verified=True,
+        ),
+        Vehicle(
+            driver_id=dummy_drivers[3].id,
+            brand="Tata",
+            model="Nexon EV",
+            vehicle_number="GJ05EE3456",
+            fuel_type="EV",
+            car_type="SUV",
+            seats=3,
+            photo_urls="",
+            is_verified=True,
+        ),
     ]
     db.add_all(vehicles)
     db.flush()
@@ -153,9 +213,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(7, 30),
             "available_seats": 3,
             "price_per_seat": 320,
-            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "SG Highway", "Satellite"],
+            "pickup_points": [
+                "Bopal",
+                "Gota",
+                "Iscon Cross Road",
+                "SG Highway",
+                "Satellite",
+            ],
             "route_stops": ["Limbdi", "Chotila"],
-            "drop_points": ["Gondal Road", "Kalawad Road", "Rajkot Bus Stand", "University Road", "Mavdi Circle"],
+            "drop_points": [
+                "Gondal Road",
+                "Kalawad Road",
+                "Rajkot Bus Stand",
+                "University Road",
+                "Mavdi Circle",
+            ],
             "route_notes": "Morning sedan ride with a tea halt near Limbdi.",
             "driver_instructions": "Please arrive 10 minutes early. One cabin bag only.",
         },
@@ -168,9 +240,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(16, 0),
             "available_seats": 2,
             "price_per_seat": 350,
-            "pickup_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "pickup_points": [
+                "Rajkot Bus Stand",
+                "Kalawad Road",
+                "Gondal Road",
+                "University Road",
+                "Mavdi Circle",
+            ],
             "route_stops": ["Chotila", "Limbdi"],
-            "drop_points": ["Iscon Cross Road", "Bopal", "Gota", "Satellite", "SG Highway"],
+            "drop_points": [
+                "Iscon Cross Road",
+                "Bopal",
+                "Gota",
+                "Satellite",
+                "SG Highway",
+            ],
             "route_notes": "Evening SUV ride with AC and flexible halts.",
             "driver_instructions": "Confirm pickup point on WhatsApp before departure.",
         },
@@ -183,9 +267,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(9, 15),
             "available_seats": 5,
             "price_per_seat": 190,
-            "pickup_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "pickup_points": [
+                "Rajkot Bus Stand",
+                "Kalawad Road",
+                "Gondal Road",
+                "University Road",
+                "Mavdi Circle",
+            ],
             "route_stops": ["Dhrol", "Reliance Circle"],
-            "drop_points": ["Jamnagar Bus Stand", "Patel Colony", "Reliance Circle", "Digjam Circle", "Railway Station"],
+            "drop_points": [
+                "Jamnagar Bus Stand",
+                "Patel Colony",
+                "Reliance Circle",
+                "Digjam Circle",
+                "Railway Station",
+            ],
             "route_notes": "7 seater CNG ride for groups and families.",
             "driver_instructions": "No extra children without seat booking.",
         },
@@ -198,9 +294,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(18, 45),
             "available_seats": 3,
             "price_per_seat": 180,
-            "pickup_points": ["Jamnagar Bus Stand", "Patel Colony", "Reliance Circle", "Digjam Circle", "Railway Station"],
+            "pickup_points": [
+                "Jamnagar Bus Stand",
+                "Patel Colony",
+                "Reliance Circle",
+                "Digjam Circle",
+                "Railway Station",
+            ],
             "route_stops": ["Dhrol", "Paddhari"],
-            "drop_points": ["Rajkot Bus Stand", "Kalawad Road", "Gondal Road", "University Road", "Mavdi Circle"],
+            "drop_points": [
+                "Rajkot Bus Stand",
+                "Kalawad Road",
+                "Gondal Road",
+                "University Road",
+                "Mavdi Circle",
+            ],
             "route_notes": "Petrol sedan office-return ride.",
             "driver_instructions": "Small bags preferred. No tobacco inside car.",
             "ac_available": False,
@@ -214,9 +322,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(6, 45),
             "available_seats": 3,
             "price_per_seat": 420,
-            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "Prahladnagar", "Narol"],
+            "pickup_points": [
+                "Bopal",
+                "Gota",
+                "Iscon Cross Road",
+                "Prahladnagar",
+                "Narol",
+            ],
             "route_stops": ["Vadodara", "Bharuch", "Ankleshwar"],
-            "drop_points": ["Adajan", "Varachha", "Surat Railway Station", "Athwa Gate", "Piplod"],
+            "drop_points": [
+                "Adajan",
+                "Varachha",
+                "Surat Railway Station",
+                "Athwa Gate",
+                "Piplod",
+            ],
             "route_notes": "EV SUV ride via Expressway with charging buffer.",
             "driver_instructions": "Carry compact luggage. Charging halt may take 15 minutes.",
         },
@@ -229,9 +349,21 @@ def seed_database(db: Session) -> None:
             "departure_time": time(12, 0),
             "available_seats": 3,
             "price_per_seat": 200,
-            "pickup_points": ["Bopal", "Gota", "Iscon Cross Road", "Narol", "Maninagar"],
+            "pickup_points": [
+                "Bopal",
+                "Gota",
+                "Iscon Cross Road",
+                "Narol",
+                "Maninagar",
+            ],
             "route_stops": ["Nadiad", "Anand"],
-            "drop_points": ["Alkapuri", "Fatehgunj", "Gotri", "Akota", "Vadodara Railway Station"],
+            "drop_points": [
+                "Alkapuri",
+                "Fatehgunj",
+                "Gotri",
+                "Akota",
+                "Vadodara Railway Station",
+            ],
             "route_notes": "Short petrol sedan ride.",
             "driver_instructions": "No music unless all passengers agree.",
             "ac_available": False,
@@ -245,7 +377,9 @@ def seed_database(db: Session) -> None:
         route_stops = item.pop("route_stops")
         driver_instructions = item.pop("driver_instructions")
         ac_available = item.pop("ac_available", True)
-        notes = tagged_notes(item.pop("route_notes"), route_stops, common_rules, driver_instructions)
+        notes = tagged_notes(
+            item.pop("route_notes"), route_stops, common_rules, driver_instructions
+        )
         ride = Ride(
             driver_id=vehicle.driver_id,
             vehicle_id=vehicle.id,
@@ -261,7 +395,9 @@ def seed_database(db: Session) -> None:
         )
         db.add(ride)
         db.flush()
-        db.add_all([RidePickupPoint(ride_id=ride.id, name=name) for name in pickup_points])
+        db.add_all(
+            [RidePickupPoint(ride_id=ride.id, name=name) for name in pickup_points]
+        )
         db.add_all([RideDropPoint(ride_id=ride.id, name=name) for name in drop_points])
 
     db.commit()

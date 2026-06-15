@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
-import RequireRole from "./components/RequireRole";
 import AddVehicle from "./pages/AddVehicle";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
@@ -35,25 +34,25 @@ export default function App() {
         <Route
           path="/driver/onboarding"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <DriverOnboarding />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
           path="/driver/vehicle"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <AddVehicle />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
           path="/driver/create-ride"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <CreateRide />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route path="/search" element={<SearchRides />} />
@@ -63,25 +62,25 @@ export default function App() {
         <Route
           path="/my-rides"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <MyRides />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
           path="/my-rides/:rideId"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <DriverRidePlan />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
           path="/my-rides/:rideId/edit"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <YourPublication />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
@@ -95,17 +94,17 @@ export default function App() {
         <Route
           path="/profile/driver"
           element={
-            <RequireRole role="driver">
+            <RequireAuth>
               <Navigate to="/my-rides" replace />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route
           path="/profile/passenger"
           element={
-            <RequireRole role="passenger">
+            <RequireAuth>
               <PassengerProfilePage />
-            </RequireRole>
+            </RequireAuth>
           }
         />
         <Route path="/admin" element={<AdminDashboard />} />

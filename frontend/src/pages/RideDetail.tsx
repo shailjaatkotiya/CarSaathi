@@ -1,11 +1,11 @@
 import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { apiErrorMessage } from "../lib/apiError";
 import { formatTimeAmPm } from "../lib/format";
 import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
@@ -83,8 +83,7 @@ export default function RideDetail() {
         navigate("/booking-confirmation", { state: { bookingCode: data.booking.booking_code, status: data.booking.status, paymentMethod: "cash" } });
       }
     } catch (err) {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setError(detail || "Could not book the ride. Please try again.");
+      setError(apiErrorMessage(err, "Could not book the ride. Please try again."));
     } finally {
       setPaying(false);
     }
@@ -120,8 +119,7 @@ export default function RideDetail() {
           });
           navigate("/booking-confirmation", { state: { bookingCode: confirmed.booking_code, status: confirmed.status, paymentMethod: "online" } });
         } catch (err) {
-          const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-          setError(detail || "Payment could not be verified. If money was deducted it will be refunded.");
+          setError(apiErrorMessage(err, "Payment could not be verified. If money was deducted it will be refunded."));
         }
       },
       modal: {

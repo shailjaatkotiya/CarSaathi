@@ -25,7 +25,13 @@ from app.models import (
 )
 from app.repositories.booking_repository import BookingRepository
 from app.repositories.ride_repository import RideRepository
-from app.schemas import BookingActionOut, BookingCreate, BookingOut, PaymentInitOut, ReportCreate
+from app.schemas import (
+    BookingActionOut,
+    BookingCreate,
+    BookingOut,
+    PaymentInitOut,
+    ReportCreate,
+)
 from app.services import razorpay_client
 from app.services.ride_seats import cap_available_seats
 from app.services.ride_time import ride_departure_has_passed
@@ -44,11 +50,17 @@ class BookingService:
         self.rides = RideRepository(db)
 
     # ----- booking ----------------------------------------------------------
-    def book(self, ride_id: int, passenger: User, payload: BookingCreate) -> BookingActionOut:
+    def book(
+        self, ride_id: int, passenger: User, payload: BookingCreate
+    ) -> BookingActionOut:
         if not (passenger.whatsapp_number and passenger.whatsapp_number.strip()):
-            raise ValidationError("Please add your WhatsApp contact number in My Profile before booking a ride")
+            raise ValidationError(
+                "Please add your WhatsApp contact number in My Profile before booking a ride"
+            )
         if payload.payment_method == "online" and not razorpay_client.is_configured():
-            raise ValidationError("Online payment is not available right now. Please choose Pay by cash.")
+            raise ValidationError(
+                "Online payment is not available right now. Please choose Pay by cash."
+            )
 
         ride = self.rides.lock_active(ride_id)
         if not ride or ride.status != RideStatus.active:
@@ -63,7 +75,10 @@ class BookingService:
         ride_output = ride_to_out(ride)
         valid_pickups = ride_output.pickup_points
         valid_drops = ride_output.drop_points + ride_output.route_stops
-        if payload.pickup_point not in valid_pickups or payload.drop_point not in valid_drops:
+        if (
+            payload.pickup_point not in valid_pickups
+            or payload.drop_point not in valid_drops
+        ):
             raise ValidationError("Invalid pickup or drop point")
 
         total_amount = payload.seats_booked * ride.price_per_seat
@@ -75,7 +90,11 @@ class BookingService:
             booking_status = BookingStatus.pending
             payment = Payment(method="online", status="created", amount=total_amount)
         else:
-            booking_status = BookingStatus.confirmed if ride.auto_confirm_bookings else BookingStatus.pending
+            booking_status = (
+                BookingStatus.confirmed
+                if ride.auto_confirm_bookings
+                else BookingStatus.pending
+            )
             payment = Payment(method="cash", status="pending_cash", amount=total_amount)
 
         booking = Booking(
@@ -96,10 +115,16 @@ class BookingService:
         payment_init: PaymentInitOut | None = None
         if payload.payment_method == "online":
             try:
-                order = razorpay_client.create_order(total_amount, receipt=booking.booking_code)
-            except Exception as exc:  # noqa: BLE001 - surface a clean error, roll back the reservation
+                order = razorpay_client.create_order(
+                    total_amount, receipt=booking.booking_code
+                )
+            except (
+                Exception
+            ) as exc:  # noqa: BLE001 - surface a clean error, roll back the reservation
                 self.db.rollback()
-                raise ValidationError("Could not start the payment. Please try again.") from exc
+                raise ValidationError(
+                    "Could not start the payment. Please try again."
+                ) from exc
             payment.razorpay_order_id = order["id"]
             payment_init = PaymentInitOut(
                 razorpay_order_id=order["id"],
@@ -114,7 +139,9 @@ class BookingService:
         self.db.commit()
         self.db.refresh(booking)
         cache.bump_rides_version()
-        return BookingActionOut(booking=BookingOut.model_validate(booking), payment=payment_init)
+        return BookingActionOut(
+            booking=BookingOut.model_validate(booking), payment=payment_init
+        )
 
     # ----- payment verification --------------------------------------------
     def verify_payment(self, payload, passenger: User) -> Booking:
@@ -122,18 +149,27 @@ class BookingService:
         if not booking or not booking.payment:
             raise NotFoundError("Booking not found")
         payment = booking.payment
-        if payment.method != "online" or payment.razorpay_order_id != payload.razorpay_order_id:
+        if (
+            payment.method != "online"
+            or payment.razorpay_order_id != payload.razorpay_order_id
+        ):
             raise ValidationError("Payment does not match this booking")
         if payment.status == "paid":
             return booking  # idempotent
         if not razorpay_client.verify_payment_signature(
-            payload.razorpay_order_id, payload.razorpay_payment_id, payload.razorpay_signature
+            payload.razorpay_order_id,
+            payload.razorpay_payment_id,
+            payload.razorpay_signature,
         ):
             raise ValidationError("Payment verification failed")
 
         payment.status = "paid"
         payment.provider_reference = payload.razorpay_payment_id
-        booking.status = BookingStatus.confirmed if booking.ride.auto_confirm_bookings else BookingStatus.pending
+        booking.status = (
+            BookingStatus.confirmed
+            if booking.ride.auto_confirm_bookings
+            else BookingStatus.pending
+        )
         notify_booking_created(self.db, booking)
         self.db.commit()
         self.db.refresh(booking)
@@ -141,7 +177,9 @@ class BookingService:
         return booking
 
     # ----- cancel -----------------------------------------------------------
-    def cancel_for_passenger(self, booking_id: int, passenger_id: int, reason: str) -> Booking:
+    def cancel_for_passenger(
+        self, booking_id: int, passenger_id: int, reason: str
+    ) -> Booking:
         booking = self.bookings.get_for_passenger(booking_id, passenger_id)
         if not booking:
             raise NotFoundError("Booking not found")
@@ -152,7 +190,11 @@ class BookingService:
         cap_available_seats(booking.ride)
         booking.status = BookingStatus.cancelled
         booking.cancellation_reason = reason
-        self.db.add(CancellationReason(user_id=passenger_id, booking_id=booking.id, reason=reason))
+        self.db.add(
+            CancellationReason(
+                user_id=passenger_id, booking_id=booking.id, reason=reason
+            )
+        )
         notify_booking_cancelled(self.db, booking, reason, "passenger")
         self.db.commit()
         self.db.refresh(booking)

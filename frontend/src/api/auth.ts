@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { TokenResponse, User, UserRole } from "../types";
+import type { TokenResponse, User } from "../types";
 
 export type LoginPayload = { email: string; password: string };
 export type RegisterPayload = {
@@ -7,7 +7,6 @@ export type RegisterPayload = {
   email: string;
   password: string;
   whatsapp_number?: string | null;
-  role: UserRole;
 };
 
 export const authApi = {

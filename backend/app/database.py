@@ -21,14 +21,22 @@ class Base(DeclarativeBase):
 
 # Additive columns introduced after the original create_all run. create_all
 # never ALTERs existing tables, so these are applied at startup on every engine.
-PAYMENT_COLUMNS: dict[str, dict[str, str]] = {
+RUNTIME_COLUMNS: dict[str, dict[str, str]] = {
+    "users": {
+        "personal_car_brand": "VARCHAR(80)",
+        "personal_car_model": "VARCHAR(80)",
+        "personal_car_number": "VARCHAR(30)",
+        "personal_car_fuel_type": "VARCHAR(30)",
+        "personal_car_category": "VARCHAR(40)",
+        "personal_car_color": "VARCHAR(40)",
+        "personal_car_seats": "INTEGER",
+    },
     "bookings": {"payment_method": "VARCHAR(20) DEFAULT 'cash'"},
     "payments": {
         "method": "VARCHAR(20) DEFAULT 'cash'",
         "razorpay_order_id": "VARCHAR(120)",
     },
     "vehicles": {"color": "VARCHAR(40) DEFAULT 'White'"},
-    "users": {"personal_car_color": "VARCHAR(40)"},
 }
 
 
@@ -40,35 +48,31 @@ def ensure_runtime_schema() -> None:
 
 
 def _ensure_sqlite_schema() -> None:
-    user_columns = {
-        "role": "VARCHAR(20) DEFAULT 'passenger'",
-        "personal_car_brand": "VARCHAR(80)",
-        "personal_car_model": "VARCHAR(80)",
-        "personal_car_number": "VARCHAR(30)",
-        "personal_car_fuel_type": "VARCHAR(30)",
-        "personal_car_category": "VARCHAR(40)",
-        "personal_car_seats": "INTEGER",
-    }
     with engine.begin() as connection:
-        existing_columns = {row[1] for row in connection.execute(text("PRAGMA table_info(users)"))}
-        for column_name, column_type in user_columns.items():
-            if column_name not in existing_columns:
-                connection.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
-        for table, columns in PAYMENT_COLUMNS.items():
-            existing = {row[1] for row in connection.execute(text(f"PRAGMA table_info({table})"))}
+        for table, columns in RUNTIME_COLUMNS.items():
+            existing = {
+                row[1]
+                for row in connection.execute(text(f"PRAGMA table_info({table})"))
+            }
             for column_name, column_type in columns.items():
                 if column_name not in existing:
-                    connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type}"))
+                    connection.execute(
+                        text(
+                            f"ALTER TABLE {table} ADD COLUMN {column_name} {column_type}"
+                        )
+                    )
         remove_booking_point_limit(connection)
 
 
 def _ensure_postgres_schema() -> None:
     # Postgres supports ADD COLUMN IF NOT EXISTS, so no introspection needed.
     with engine.begin() as connection:
-        for table, columns in PAYMENT_COLUMNS.items():
+        for table, columns in RUNTIME_COLUMNS.items():
             for column_name, column_type in columns.items():
                 connection.execute(
-                    text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column_name} {column_type}")
+                    text(
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column_name} {column_type}"
+                    )
                 )
 
 
@@ -87,7 +91,9 @@ def booking_point_limit_exists(connection) -> bool:
             continue
         index_columns = [
             column[2]
-            for column in connection.execute(text(f"PRAGMA index_info({sqlite_identifier(index_name)})"))
+            for column in connection.execute(
+                text(f"PRAGMA index_info({sqlite_identifier(index_name)})")
+            )
         ]
         if index_columns == target_columns:
             return True
@@ -154,10 +160,22 @@ def remove_booking_point_limit(connection) -> None:
         )
     )
     connection.execute(text("DROP TABLE bookings"))
-    connection.execute(text("ALTER TABLE bookings_without_point_limit RENAME TO bookings"))
-    connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_bookings_booking_code ON bookings (booking_code)"))
-    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_bookings_ride_id ON bookings (ride_id)"))
-    connection.execute(text("CREATE INDEX IF NOT EXISTS ix_bookings_passenger_id ON bookings (passenger_id)"))
+    connection.execute(
+        text("ALTER TABLE bookings_without_point_limit RENAME TO bookings")
+    )
+    connection.execute(
+        text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_bookings_booking_code ON bookings (booking_code)"
+        )
+    )
+    connection.execute(
+        text("CREATE INDEX IF NOT EXISTS ix_bookings_ride_id ON bookings (ride_id)")
+    )
+    connection.execute(
+        text(
+            "CREATE INDEX IF NOT EXISTS ix_bookings_passenger_id ON bookings (passenger_id)"
+        )
+    )
     connection.execute(text("PRAGMA foreign_keys=ON"))
 
 

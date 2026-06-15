@@ -10,13 +10,13 @@ import {
   Route as RouteIcon,
   Zap
 } from "lucide-react";
-import axios from "axios";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
@@ -300,8 +300,7 @@ export default function CreateRide() {
       });
       setMessage(`Ride published successfully as listing #${data.id}.`);
     } catch (err) {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setError(detail || "Could not publish the ride. Please check the backend is running and try again.");
+      setError(apiErrorMessage(err, "Could not publish the ride. Please check the backend is running and try again."));
     }
   }
 

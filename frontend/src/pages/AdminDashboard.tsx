@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import { adminApi } from "../api/admin";
+import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 import MetricCard from "../components/MetricCard";
 import { useSessionStore } from "../store/session";
@@ -22,8 +23,7 @@ function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
       setToken(data.access_token);
       onLoggedIn();
     } catch (err) {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setError(detail || "Admin login failed.");
+      setError(apiErrorMessage(err, "Admin login failed."));
     }
   }
 

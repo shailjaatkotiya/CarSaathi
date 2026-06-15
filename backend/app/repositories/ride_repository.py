@@ -10,7 +10,11 @@ class RideRepository(BaseRepository[Ride]):
     model = Ride
 
     def get_for_driver(self, ride_id: int, driver_id: int) -> Ride | None:
-        return self.db.query(Ride).filter(Ride.id == ride_id, Ride.driver_id == driver_id).first()
+        return (
+            self.db.query(Ride)
+            .filter(Ride.id == ride_id, Ride.driver_id == driver_id)
+            .first()
+        )
 
     def list_for_driver(self, driver_id: int) -> list[Ride]:
         return (

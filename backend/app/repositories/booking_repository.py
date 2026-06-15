@@ -25,18 +25,36 @@ class BookingRepository(BaseRepository[Booking]):
         )
 
     def get_by_code(self, booking_code: str) -> Booking | None:
-        return self.db.query(Booking).filter(Booking.booking_code == booking_code).first()
+        return (
+            self.db.query(Booking).filter(Booking.booking_code == booking_code).first()
+        )
 
     def get_by_order_id(self, order_id: str) -> Booking | None:
         from app.models import Payment
 
-        payment = self.db.query(Payment).filter(Payment.razorpay_order_id == order_id).first()
+        payment = (
+            self.db.query(Payment).filter(Payment.razorpay_order_id == order_id).first()
+        )
         return payment.booking if payment else None
 
     def list_active_for_passenger(self, passenger_id: int) -> list[Booking]:
         return (
             self.db.query(Booking)
-            .filter(Booking.passenger_id == passenger_id, Booking.status != BookingStatus.completed)
+            .filter(
+                Booking.passenger_id == passenger_id,
+                Booking.status != BookingStatus.completed,
+            )
+            .order_by(Booking.created_at.desc())
+            .all()
+        )
+
+    def list_active_for_driver(self, driver_id: int) -> list[Booking]:
+        return (
+            self.db.query(Booking)
+            .join(Ride)
+            .filter(
+                Ride.driver_id == driver_id, Booking.status != BookingStatus.completed
+            )
             .order_by(Booking.created_at.desc())
             .all()
         )

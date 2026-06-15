@@ -1,7 +1,18 @@
 import enum
 from datetime import date, datetime, time
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, Integer, String, Text, Time
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    Time,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -28,12 +39,6 @@ class BookingStatus(str, enum.Enum):
     completed = "completed"
 
 
-class UserRole(str, enum.Enum):
-    admin = "admin"
-    driver = "driver"
-    passenger = "passenger"
-
-
 class NotificationStatus(str, enum.Enum):
     sent = "sent"
     failed = "failed"
@@ -47,7 +52,6 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.passenger)
     mobile_number: Mapped[str | None] = mapped_column(String(20))
     whatsapp_number: Mapped[str | None] = mapped_column(String(20))
     emergency_contact: Mapped[str | None] = mapped_column(String(20))
@@ -60,14 +64,22 @@ class User(Base):
     personal_car_seats: Mapped[int | None] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
-    verification_status: Mapped[VerificationStatus] = mapped_column(Enum(VerificationStatus), default=VerificationStatus.pending)
+    verification_status: Mapped[VerificationStatus] = mapped_column(
+        Enum(VerificationStatus), default=VerificationStatus.pending
+    )
     rating_average: Mapped[float] = mapped_column(Float, default=0)
     rating_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    driver_profile: Mapped["DriverProfile"] = relationship(back_populates="user", uselist=False)
-    passenger_profile: Mapped["PassengerProfile"] = relationship(back_populates="user", uselist=False)
-    aadhaar_verification: Mapped["AadhaarVerification"] = relationship(back_populates="user", uselist=False, foreign_keys="AadhaarVerification.user_id")
+    driver_profile: Mapped["DriverProfile"] = relationship(
+        back_populates="user", uselist=False
+    )
+    passenger_profile: Mapped["PassengerProfile"] = relationship(
+        back_populates="user", uselist=False
+    )
+    aadhaar_verification: Mapped["AadhaarVerification"] = relationship(
+        back_populates="user", uselist=False, foreign_keys="AadhaarVerification.user_id"
+    )
     vehicles: Mapped[list["Vehicle"]] = relationship(back_populates="driver")
     rides: Mapped[list["Ride"]] = relationship(back_populates="driver")
     bookings: Mapped[list["Booking"]] = relationship(back_populates="passenger")
@@ -108,13 +120,17 @@ class AadhaarVerification(Base):
     aadhaar_token: Mapped[str] = mapped_column(String(128), index=True)
     encrypted_aadhaar: Mapped[str] = mapped_column(Text)
     masked_aadhaar: Mapped[str] = mapped_column(String(20))
-    status: Mapped[VerificationStatus] = mapped_column(Enum(VerificationStatus), default=VerificationStatus.pending)
+    status: Mapped[VerificationStatus] = mapped_column(
+        Enum(VerificationStatus), default=VerificationStatus.pending
+    )
     submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime)
     reviewed_by_admin_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     rejection_reason: Mapped[str | None] = mapped_column(Text)
 
-    user: Mapped[User] = relationship(back_populates="aadhaar_verification", foreign_keys=[user_id])
+    user: Mapped[User] = relationship(
+        back_populates="aadhaar_verification", foreign_keys=[user_id]
+    )
 
 
 class Vehicle(Base):
@@ -157,14 +173,20 @@ class Ride(Base):
     ac_available: Mapped[bool] = mapped_column(Boolean, default=True)
     women_only_preference: Mapped[bool] = mapped_column(Boolean, default=False)
     auto_confirm_bookings: Mapped[bool] = mapped_column(Boolean, default=False)
-    status: Mapped[RideStatus] = mapped_column(Enum(RideStatus), default=RideStatus.active)
+    status: Mapped[RideStatus] = mapped_column(
+        Enum(RideStatus), default=RideStatus.active
+    )
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     driver: Mapped[User] = relationship(back_populates="rides")
     vehicle: Mapped[Vehicle] = relationship(back_populates="rides")
-    pickup_points: Mapped[list["RidePickupPoint"]] = relationship(back_populates="ride", cascade="all, delete-orphan")
-    drop_points: Mapped[list["RideDropPoint"]] = relationship(back_populates="ride", cascade="all, delete-orphan")
+    pickup_points: Mapped[list["RidePickupPoint"]] = relationship(
+        back_populates="ride", cascade="all, delete-orphan"
+    )
+    drop_points: Mapped[list["RideDropPoint"]] = relationship(
+        back_populates="ride", cascade="all, delete-orphan"
+    )
     bookings: Mapped[list["Booking"]] = relationship(back_populates="ride")
 
 
@@ -198,7 +220,9 @@ class Booking(Base):
     seats_booked: Mapped[int] = mapped_column(Integer)
     pickup_point: Mapped[str] = mapped_column(String(120))
     drop_point: Mapped[str] = mapped_column(String(120))
-    status: Mapped[BookingStatus] = mapped_column(Enum(BookingStatus), default=BookingStatus.pending)
+    status: Mapped[BookingStatus] = mapped_column(
+        Enum(BookingStatus), default=BookingStatus.pending
+    )
     total_amount: Mapped[int] = mapped_column(Integer)
     payment_method: Mapped[str] = mapped_column(String(20), default="cash")
     cancellation_reason: Mapped[str | None] = mapped_column(Text)
@@ -283,7 +307,9 @@ class NotificationLog(Base):
     template_name: Mapped[str] = mapped_column(String(80))
     recipient: Mapped[str] = mapped_column(String(40))
     payload: Mapped[str] = mapped_column(Text)
-    status: Mapped[NotificationStatus] = mapped_column(Enum(NotificationStatus), default=NotificationStatus.mocked)
+    status: Mapped[NotificationStatus] = mapped_column(
+        Enum(NotificationStatus), default=NotificationStatus.mocked
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -292,7 +318,9 @@ class AdminUser(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
-    permissions: Mapped[str] = mapped_column(Text, default="users,rides,bookings,verification,reports")
+    permissions: Mapped[str] = mapped_column(
+        Text, default="users,rides,bookings,verification,reports"
+    )
 
 
 class ReportedUser(Base):

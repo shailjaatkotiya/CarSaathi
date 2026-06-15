@@ -20,6 +20,7 @@ from app.models import (
     User,
     Vehicle,
 )
+from app.repositories.booking_repository import BookingRepository
 from app.repositories.ride_repository import RideRepository
 from app.repositories.vehicle_repository import VehicleRepository
 from app.schemas import RideCreate
@@ -39,21 +40,34 @@ def _clean_optional(value: str | None) -> str | None:
     return value or None
 
 
-def _build_route_notes(notes: str | None, route_stops: list[str], ride_rules: list[str], driver_instructions: str | None) -> str | None:
+def _build_route_notes(
+    notes: str | None,
+    route_stops: list[str],
+    ride_rules: list[str],
+    driver_instructions: str | None,
+) -> str | None:
     parts = [notes.strip()] if notes and notes.strip() else []
     if route_stops:
         parts.append(f"[route_stops]{'|'.join(route_stops)}[/route_stops]")
     if ride_rules:
         parts.append(f"[ride_rules]{'|'.join(ride_rules)}[/ride_rules]")
     if driver_instructions and driver_instructions.strip():
-        parts.append(f"[driver_instructions]{driver_instructions.strip()}[/driver_instructions]")
+        parts.append(
+            f"[driver_instructions]{driver_instructions.strip()}[/driver_instructions]"
+        )
     return "\n\n".join(parts) if parts else None
 
 
 def _has_car_details(payload: RideCreate) -> bool:
     return all(
         _clean_optional(value)
-        for value in [payload.car_brand, payload.car_model, payload.vehicle_number, payload.fuel_type, payload.car_type]
+        for value in [
+            payload.car_brand,
+            payload.car_model,
+            payload.vehicle_number,
+            payload.fuel_type,
+            payload.car_type,
+        ]
     )
 
 
@@ -62,18 +76,23 @@ class DriverRideService:
         self.db = db
         self.rides = RideRepository(db)
         self.vehicles = VehicleRepository(db)
+        self.bookings = BookingRepository(db)
 
     # ----- publishing -------------------------------------------------------
     def publish(self, driver: User, payload: RideCreate) -> Ride:
         if not (driver.whatsapp_number and driver.whatsapp_number.strip()):
-            raise ValidationError("Please add your WhatsApp contact number in My Profile before publishing a ride")
+            raise ValidationError(
+                "Please add your WhatsApp contact number in My Profile before publishing a ride"
+            )
         self._validate_stop_counts(payload)
         vehicle = self._resolve_vehicle(driver, payload)
         if payload.available_seats < 1:
             raise ValidationError("Minimum 1 seat must be available before publishing")
         max_seats = default_available_seats(vehicle.car_type)
         if payload.available_seats > max_seats:
-            raise ValidationError(f"{vehicle.car_type} rides can publish up to {max_seats} passenger seats")
+            raise ValidationError(
+                f"{vehicle.car_type} rides can publish up to {max_seats} passenger seats"
+            )
         self._validate_publish_window(payload)
 
         ride = Ride(
@@ -88,7 +107,12 @@ class DriverRideService:
             available_seats=payload.available_seats,
             total_seats=payload.available_seats,
             price_per_seat=payload.price_per_seat,
-            route_notes=_build_route_notes(payload.route_notes, payload.route_stops, payload.ride_rules, payload.driver_instructions),
+            route_notes=_build_route_notes(
+                payload.route_notes,
+                payload.route_stops,
+                payload.ride_rules,
+                payload.driver_instructions,
+            ),
             luggage_allowance=payload.luggage_allowance,
             smoking_allowed=payload.smoking_allowed,
             ac_available=payload.ac_available,
@@ -97,8 +121,15 @@ class DriverRideService:
         )
         self.db.add(ride)
         self.db.flush()
-        self.db.add_all([RidePickupPoint(ride_id=ride.id, name=name) for name in payload.pickup_points])
-        self.db.add_all([RideDropPoint(ride_id=ride.id, name=name) for name in payload.drop_points])
+        self.db.add_all(
+            [
+                RidePickupPoint(ride_id=ride.id, name=name)
+                for name in payload.pickup_points
+            ]
+        )
+        self.db.add_all(
+            [RideDropPoint(ride_id=ride.id, name=name) for name in payload.drop_points]
+        )
         self.db.commit()
         self.db.refresh(ride)
         cache.bump_rides_version()
@@ -109,9 +140,13 @@ class DriverRideService:
         journey_at = datetime.combine(payload.journey_date, payload.departure_time)
         now = datetime.now()
         if journey_at < now + timedelta(hours=3):
-            raise ValidationError("Ride must be published at least 3 hours before departure")
+            raise ValidationError(
+                "Ride must be published at least 3 hours before departure"
+            )
         if journey_at > now + timedelta(days=10):
-            raise ValidationError("Ride can be published maximum 10 days before departure")
+            raise ValidationError(
+                "Ride can be published maximum 10 days before departure"
+            )
 
     @staticmethod
     def _validate_stop_counts(payload: RideCreate) -> None:
@@ -133,13 +168,17 @@ class DriverRideService:
         if normalized:
             existing = self.vehicles.get_by_number(normalized)
             if existing and existing.driver_id != driver.id:
-                raise ValidationError("Vehicle number already belongs to another driver")
+                raise ValidationError(
+                    "Vehicle number already belongs to another driver"
+                )
             if existing:
                 self._apply_vehicle_details(existing, payload)
                 return existing
 
         if not _has_car_details(payload):
-            raise ValidationError("Car brand, model, number, fuel type, and category are required before publishing a ride")
+            raise ValidationError(
+                "Car brand, model, number, fuel type, and category are required before publishing a ride"
+            )
         vehicle = Vehicle(
             driver_id=driver.id,
             brand=_clean_optional(payload.car_brand) or "",
@@ -191,7 +230,9 @@ class DriverRideService:
             if booking.status in {BookingStatus.pending, BookingStatus.confirmed}:
                 booking.status = BookingStatus.cancelled
                 booking.cancellation_reason = f"Driver cancelled ride: {reason}"
-        self.db.add(CancellationReason(user_id=driver.id, ride_id=ride.id, reason=reason))
+        self.db.add(
+            CancellationReason(user_id=driver.id, ride_id=ride.id, reason=reason)
+        )
         self.db.commit()
         cache.bump_rides_version()
 
@@ -220,6 +261,24 @@ class DriverRideService:
         notify_booking_created(self.db, booking, notify_driver=False)
         return booking
 
+    def accept_booking_for_driver(self, booking_id: int, driver: User) -> Booking:
+        booking = self.bookings.get_for_driver(booking_id, driver.id)
+        if not booking:
+            raise NotFoundError("Booking not found")
+        booking = self.accept_booking(booking)
+        self.db.commit()
+        self.db.refresh(booking)
+        return booking
+
+    def accept_booking_by_code(self, booking_code: str) -> Booking:
+        booking = self.bookings.get_by_code(booking_code)
+        if not booking:
+            raise NotFoundError("Booking not found")
+        booking = self.accept_booking(booking)
+        self.db.commit()
+        self.db.refresh(booking)
+        return booking
+
     def reject_booking(self, booking: Booking, reason: str) -> Booking:
         if booking.status in {BookingStatus.rejected, BookingStatus.cancelled}:
             return booking
@@ -231,3 +290,28 @@ class DriverRideService:
         booking.cancellation_reason = reason
         notify_booking_rejected_by_driver(self.db, booking, reason)
         return booking
+
+    def reject_booking_for_driver(
+        self, booking_id: int, driver: User, reason: str
+    ) -> Booking:
+        booking = self.bookings.get_for_driver(booking_id, driver.id)
+        if not booking:
+            raise NotFoundError("Booking not found")
+        booking = self.reject_booking(booking, reason)
+        self.db.commit()
+        self.db.refresh(booking)
+        cache.bump_rides_version()
+        return booking
+
+    def reject_booking_by_code(self, booking_code: str, reason: str) -> Booking:
+        booking = self.bookings.get_by_code(booking_code)
+        if not booking:
+            raise NotFoundError("Booking not found")
+        booking = self.reject_booking(booking, reason)
+        self.db.commit()
+        self.db.refresh(booking)
+        cache.bump_rides_version()
+        return booking
+
+    def active_bookings(self, driver: User) -> list[Booking]:
+        return self.bookings.list_active_for_driver(driver.id)

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { driverApi } from "../api/driver";
+import { bookingStatusLabel } from "../constants/booking";
 import { whatsappLink } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
 import type { DriverBooking, Ride } from "../types";
@@ -64,7 +65,7 @@ function RideBookings({
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <span className="chip self-start sm:self-end">
-              {booking.status} - Rs. {booking.total_amount}
+              {bookingStatusLabel(booking.status)} - Rs. {booking.total_amount}
             </span>
             {booking.status === "pending" && (
               <div className="flex w-full gap-2 sm:w-auto">

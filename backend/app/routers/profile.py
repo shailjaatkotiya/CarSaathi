@@ -16,12 +16,20 @@ def profile_me(user: User = Depends(get_current_user)) -> User:
 
 
 @router.put("", response_model=UserOut)
-def update_profile(payload: ProfileUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+def update_profile(
+    payload: ProfileUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
     return ProfileService(db).update(user, payload)
 
 
 @router.post("/aadhaar", response_model=VerificationOut)
-def upload_aadhaar(payload: AadhaarUploadRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> VerificationOut:
+def upload_aadhaar(
+    payload: AadhaarUploadRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> VerificationOut:
     return ProfileService(db).submit_aadhaar(user, payload)
 
 

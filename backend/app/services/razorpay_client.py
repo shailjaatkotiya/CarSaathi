@@ -27,7 +27,9 @@ def create_order(amount_rupees: int, receipt: str) -> dict:
     """Create a Razorpay order. Amount is converted rupees -> paise (x100)."""
     import razorpay  # lazy: only needed when online payment is actually used
 
-    client = razorpay.Client(auth=(settings.razorpay_key_id, settings.razorpay_key_secret))
+    client = razorpay.Client(
+        auth=(settings.razorpay_key_id, settings.razorpay_key_secret)
+    )
     return client.order.create(
         {
             "amount": amount_rupees * 100,

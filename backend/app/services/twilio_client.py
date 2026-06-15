@@ -2,6 +2,7 @@
 
 Used by the synchronous request path in app.services.whatsapp.
 """
+
 import json
 import logging
 

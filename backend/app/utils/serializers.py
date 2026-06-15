@@ -43,7 +43,12 @@ def clean_route_notes(notes: str | None) -> str | None:
         return notes
     cleaned = re.sub(r"\[route_stops\].*?\[/route_stops\]", "", notes, flags=re.DOTALL)
     cleaned = re.sub(r"\[ride_rules\].*?\[/ride_rules\]", "", cleaned, flags=re.DOTALL)
-    cleaned = re.sub(r"\[driver_instructions\].*?\[/driver_instructions\]", "", cleaned, flags=re.DOTALL)
+    cleaned = re.sub(
+        r"\[driver_instructions\].*?\[/driver_instructions\]",
+        "",
+        cleaned,
+        flags=re.DOTALL,
+    )
     return cleaned.strip() or None
 
 
@@ -72,7 +77,9 @@ def ride_to_out(ride: Ride) -> RideOut:
         driver_verified=ride.driver.verification_status.value == "verified",
         route_stops=_extract_list(ride.route_notes, "route_stops"),
         ride_rules=_extract_list(ride.route_notes, "ride_rules"),
-        driver_instructions=(_extract_list(ride.route_notes, "driver_instructions") or [None])[0],
+        driver_instructions=(
+            _extract_list(ride.route_notes, "driver_instructions") or [None]
+        )[0],
         vehicle=VehicleOut(
             id=ride.vehicle.id,
             brand=ride.vehicle.brand,

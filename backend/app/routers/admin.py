@@ -19,35 +19,55 @@ def admin_login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenRe
 
 
 @router.get("/users", response_model=list[UserOut])
-def users(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[User]:
+def users(
+    _: User = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[User]:
     return AdminService(db).list_users()
 
 
 @router.post("/users/{user_id}/verify", response_model=UserOut)
-def verify_user(user_id: int, admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> User:
+def verify_user(
+    user_id: int, admin: User = Depends(require_admin), db: Session = Depends(get_db)
+) -> User:
     return AdminService(db).verify_user(user_id, admin.id)
 
 
 @router.post("/users/{user_id}/reject", response_model=UserOut)
-def reject_user(user_id: int, payload: AdminDecision, admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> User:
+def reject_user(
+    user_id: int,
+    payload: AdminDecision,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> User:
     return AdminService(db).reject_user(user_id, admin.id, payload.reason)
 
 
 @router.post("/users/{user_id}/block", response_model=UserOut)
-def block_user(user_id: int, _: AdminDecision, admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> User:
+def block_user(
+    user_id: int,
+    _: AdminDecision,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> User:
     return AdminService(db).block_user(user_id, admin.id)
 
 
 @router.get("/rides")
-def rides(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[dict]:
+def rides(
+    _: User = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[dict]:
     return AdminService(db).list_rides()
 
 
 @router.get("/bookings")
-def bookings(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[dict]:
+def bookings(
+    _: User = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[dict]:
     return AdminService(db).list_bookings()
 
 
 @router.get("/reports")
-def reports(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[dict]:
+def reports(
+    _: User = Depends(require_admin), db: Session = Depends(get_db)
+) -> list[dict]:
     return AdminService(db).list_reports()

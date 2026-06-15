@@ -1,10 +1,10 @@
 import { ArrowLeft, Banknote, Map, Route, Users, Zap } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { driverApi } from "../api/driver";
 import { ridesApi } from "../api/rides";
+import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 
 type MenuItem = {
@@ -36,8 +36,7 @@ export default function YourPublication() {
       queryClient.invalidateQueries({ queryKey: queryKeys.rides.detail(rideId ?? "") });
     },
     onError: (err) => {
-      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined;
-      setError(detail || "Could not cancel the ride.");
+      setError(apiErrorMessage(err, "Could not cancel the ride."));
     }
   });
 

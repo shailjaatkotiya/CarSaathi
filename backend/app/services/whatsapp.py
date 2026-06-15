@@ -64,13 +64,18 @@ def _content_sid_for(template_name: str) -> str | None:
     return getattr(get_settings(), f"twilio_content_sid_{template_name}", "") or None
 
 
-def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, payload: dict) -> NotificationLog:
+def log_whatsapp(
+    db: Session, user: User, booking: Booking, template_name: str, payload: dict
+) -> NotificationLog:
     settings = get_settings()
     recipient = user.whatsapp_number or "missing"
     use_twilio = settings.whatsapp_provider == "twilio"
     # WhatsApp rejects template sends with empty variables, and freeform
     # bodies would render literal "None" — substitute a dash instead.
-    payload = {key: value if value is not None and str(value).strip() else "-" for key, value in payload.items()}
+    payload = {
+        key: value if value is not None and str(value).strip() else "-"
+        for key, value in payload.items()
+    }
 
     if not use_twilio:
         status = NotificationStatus.mocked
@@ -97,7 +102,9 @@ def log_whatsapp(db: Session, user: User, booking: Booking, template_name: str, 
     return log
 
 
-def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = True) -> None:
+def notify_booking_created(
+    db: Session, booking: Booking, notify_driver: bool = True
+) -> None:
     ride = booking.ride
     driver = ride.driver
     passenger = booking.passenger
@@ -141,7 +148,9 @@ def notify_booking_created(db: Session, booking: Booking, notify_driver: bool = 
         )
 
 
-def notify_booking_cancelled(db: Session, booking: Booking, reason: str, cancelled_by: str) -> None:
+def notify_booking_cancelled(
+    db: Session, booking: Booking, reason: str, cancelled_by: str
+) -> None:
     ride = booking.ride
     passenger = booking.passenger
     driver = ride.driver
@@ -156,12 +165,18 @@ def notify_booking_cancelled(db: Session, booking: Booking, reason: str, cancell
         "cancelled_by": cancelled_by,
         "reason": reason,
     }
-    passenger_template = "passenger_driver_cancelled" if cancelled_by == "driver" else "passenger_booking_cancelled"
+    passenger_template = (
+        "passenger_driver_cancelled"
+        if cancelled_by == "driver"
+        else "passenger_booking_cancelled"
+    )
     log_whatsapp(db, passenger, booking, passenger_template, payload)
     log_whatsapp(db, driver, booking, "driver_booking_cancelled", payload)
 
 
-def notify_booking_rejected_by_driver(db: Session, booking: Booking, reason: str) -> None:
+def notify_booking_rejected_by_driver(
+    db: Session, booking: Booking, reason: str
+) -> None:
     ride = booking.ride
     payload = {
         "booking_id": booking.booking_code,
@@ -177,6 +192,10 @@ def notify_booking_rejected_by_driver(db: Session, booking: Booking, reason: str
 
 
 def notify_ride_cancelled(db: Session, ride, reason: str) -> None:
-    active_bookings = [booking for booking in ride.bookings if booking.status.value in {"pending", "confirmed"}]
+    active_bookings = [
+        booking
+        for booking in ride.bookings
+        if booking.status.value in {"pending", "confirmed"}
+    ]
     for booking in active_bookings:
         notify_booking_cancelled(db, booking, reason, "driver")

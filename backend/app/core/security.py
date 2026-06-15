@@ -21,15 +21,21 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 def create_access_token(subject: str) -> str:
     settings = get_settings()
-    expires = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    expires = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.access_token_expire_minutes
+    )
     payload = {"sub": subject, "exp": expires}
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 def decode_token(token: str) -> str | None:
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         subject = payload.get("sub")
         return str(subject) if subject else None
     except JWTError:

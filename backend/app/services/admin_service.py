@@ -7,7 +7,14 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError, ValidationError
-from app.models import AadhaarVerification, Booking, ReportedUser, Ride, User, VerificationStatus
+from app.models import (
+    AadhaarVerification,
+    Booking,
+    ReportedUser,
+    Ride,
+    User,
+    VerificationStatus,
+)
 from app.repositories.booking_repository import BookingRepository
 from app.repositories.ride_repository import RideRepository
 from app.repositories.user_repository import UserRepository
@@ -27,7 +34,11 @@ class AdminService:
         return user
 
     def _aadhaar_for(self, user_id: int) -> AadhaarVerification | None:
-        return self.db.query(AadhaarVerification).filter(AadhaarVerification.user_id == user_id).first()
+        return (
+            self.db.query(AadhaarVerification)
+            .filter(AadhaarVerification.user_id == user_id)
+            .first()
+        )
 
     def verify_user(self, user_id: int, admin_id: int) -> User:
         user = self._require_user(user_id)
@@ -101,5 +112,7 @@ class AdminService:
                 "reason": report.reason,
                 "status": report.status,
             }
-            for report in self.db.query(ReportedUser).order_by(ReportedUser.created_at.desc()).all()
+            for report in self.db.query(ReportedUser)
+            .order_by(ReportedUser.created_at.desc())
+            .all()
         ]

@@ -1,47 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { authApi } from "../api/auth";
+import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 import { useSessionStore } from "../store/session";
-import type { UserRole } from "../types";
 
-type AuthRole = UserRole;
-
-function authErrorMessage(err: unknown) {
-  if (!axios.isAxiosError(err)) {
-    return "Could not continue. Please check your details and try again.";
-  }
-
-  const detail = err.response?.data?.detail;
-  if (typeof detail === "string") {
-    return detail;
-  }
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item?.msg).filter(Boolean).join(". ") || "Please check your details and try again.";
-  }
-  if (err.code === "ERR_NETWORK") {
-    return "Could not reach the backend. Please make sure the API server is running on port 8000.";
-  }
-  return "Could not continue. Please check your details and try again.";
-}
-
-// Where to land after auth, based on the detected account role.
-function homeForRole(role: string) {
-  if (role === "driver") return "/driver/create-ride";
-  if (role === "admin") return "/admin";
-  return "/search";
-}
+const AUTH_HOME = "/search";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
-  // ?switch=driver lets a logged-in passenger sign into a driver account instead.
-  const switchRole = searchParams.get("switch") === "driver" ? "driver" : null;
+  const next = searchParams.get("next");
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [registerRole, setRegisterRole] = useState<AuthRole>(switchRole ?? "passenger");
-  const [email, setEmail] = useState(switchRole === "driver" ? "shubham@gmail.com" : "shailja@gmail.com");
-  const [password, setPassword] = useState(switchRole === "driver" ? "driver@123" : "passenger@123");
+  const [email, setEmail] = useState("shailja@gmail.com");
+  const [password, setPassword] = useState("passenger@123");
   const [fullName, setFullName] = useState("Shailja");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [message, setMessage] = useState("");
@@ -52,19 +24,17 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const from = (location.state as { from?: string } | null)?.from || null;
+  const from = (location.state as { from?: string } | null)?.from || next || null;
 
-  // Already signed in? Send them to their role home — unless they came here to
-  // switch accounts (e.g. a passenger choosing to publish a ride as a driver).
   useEffect(() => {
-    if (!token || switchRole) return;
+    if (!token) return;
     authApi
       .me()
-      .then((data) => navigate(from || homeForRole(data.role), { replace: true }))
+      .then(() => navigate(from || AUTH_HOME, { replace: true }))
       .catch(() => {
         /* invalid token handled by interceptor */
       });
-  }, [from, navigate, token, switchRole]);
+  }, [from, navigate, token]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -82,22 +52,14 @@ export default function AuthPage() {
               email: normalizedEmail,
               password: password.trim(),
               whatsapp_number: whatsappNumber.trim() || null,
-              role: registerRole
             });
       setToken(data.access_token);
       await queryClient.invalidateQueries({ queryKey: queryKeys.me });
-      // Detect the role from the account and route accordingly.
-      const me = await authApi.me();
+      await authApi.me();
       setMessage("Logged in successfully.");
-      // A brand-new driver has no WhatsApp number or vehicle yet — send them
-      // through onboarding instead of straight to the (blocked) publish form.
-      if (mode === "register" && me.role === "driver") {
-        navigate("/driver/onboarding", { replace: true });
-        return;
-      }
-      navigate(from || homeForRole(me.role), { replace: true });
+      navigate(from || AUTH_HOME, { replace: true });
     } catch (err) {
-      setError(authErrorMessage(err));
+      setError(apiErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -108,15 +70,11 @@ export default function AuthPage() {
       <div className="card rounded-3xl p-6 md:p-10">
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div>
-            <h1 className="text-3xl font-bold">
-              {switchRole ? "Login as a driver to publish" : mode === "login" ? "Login" : "Create your account"}
-            </h1>
+            <h1 className="text-3xl font-bold">{mode === "login" ? "Login" : "Create your account"}</h1>
             <p className="mt-2 text-muted">
-              {switchRole
-                ? "Publishing a ride needs a driver account. Login as a driver, or register a new driver account, to continue."
-                : mode === "login"
-                ? "Enter your email and password. We detect your driver or passenger account automatically."
-                : "Passenger accounts book rides. Driver accounts publish rides and manage car details."}
+              {mode === "login"
+                ? "Enter your email and password to book, publish, and manage rides from one account."
+                : "Create one account for your profile, bookings, vehicles, and published rides."}
             </p>
           </div>
 
@@ -137,15 +95,6 @@ export default function AuthPage() {
 
           {mode === "register" && (
             <>
-              <label>
-                <span className="field-label">Register as</span>
-                <select className="input" value={registerRole} onChange={(event) => setRegisterRole(event.target.value as AuthRole)}>
-                  <option value="passenger">Passenger</option>
-                  <option value="driver">Driver</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <span className="field-hint">Passenger is selected by default for new accounts.</span>
-              </label>
               <label>
                 <span className="field-label">Full name</span>
                 <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />

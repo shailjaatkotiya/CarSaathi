@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, ValidationError
 from app.core.security import aadhaar_token, encrypt_aadhaar, mask_aadhaar
-from app.models import AadhaarVerification, DriverProfile, PassengerProfile, User, VerificationStatus
+from app.models import (
+    AadhaarVerification,
+    DriverProfile,
+    PassengerProfile,
+    User,
+    VerificationStatus,
+)
 from app.repositories.user_repository import UserRepository
 from app.schemas import AadhaarUploadRequest, ProfileUpdate, VerificationOut
 
@@ -32,7 +38,11 @@ USER_WRITABLE_FIELDS = [
 ]
 
 DRIVER_PROFILE_FIELDS = ["driving_license_number", "bio", "auto_confirm_bookings"]
-PASSENGER_PROFILE_FIELDS = ["preferred_pickup_point", "preferred_drop_point", "women_only_preference"]
+PASSENGER_PROFILE_FIELDS = [
+    "preferred_pickup_point",
+    "preferred_drop_point",
+    "women_only_preference",
+]
 
 
 class ProfileService:
@@ -50,7 +60,8 @@ class ProfileService:
 
         merged_number = updates.get("personal_car_number", user.personal_car_number)
         has_car_detail = any(
-            (updates[field] if field in updates else getattr(user, field)) not in (None, "")
+            (updates[field] if field in updates else getattr(user, field))
+            not in (None, "")
             for field in PERSONAL_CAR_FIELDS
         )
         if has_car_detail and not (merged_number and str(merged_number).strip()):
@@ -61,7 +72,9 @@ class ProfileService:
                 setattr(user, field, updates[field])
 
         # Default personal car colour to White once any car detail exists.
-        if has_car_detail and not (user.personal_car_color and user.personal_car_color.strip()):
+        if has_car_detail and not (
+            user.personal_car_color and user.personal_car_color.strip()
+        ):
             user.personal_car_color = "White"
 
         self._apply_driver_profile(user, updates)
@@ -76,7 +89,10 @@ class ProfileService:
             for field in DRIVER_PROFILE_FIELDS:
                 if field in updates:
                     setattr(user.driver_profile, field, updates[field])
-        elif any(updates.get(field) is not None for field in ["driving_license_number", "bio"]):
+        elif any(
+            updates.get(field) is not None
+            for field in ["driving_license_number", "bio"]
+        ):
             self.db.add(
                 DriverProfile(
                     user_id=user.id,
@@ -90,7 +106,10 @@ class ProfileService:
             for field in PASSENGER_PROFILE_FIELDS:
                 if field in updates:
                     setattr(user.passenger_profile, field, updates[field])
-        elif any(updates.get(field) is not None for field in ["preferred_pickup_point", "preferred_drop_point"]):
+        elif any(
+            updates.get(field) is not None
+            for field in ["preferred_pickup_point", "preferred_drop_point"]
+        ):
             self.db.add(
                 PassengerProfile(
                     user_id=user.id,
@@ -99,7 +118,9 @@ class ProfileService:
                 )
             )
 
-    def submit_aadhaar(self, user: User, payload: AadhaarUploadRequest) -> VerificationOut:
+    def submit_aadhaar(
+        self, user: User, payload: AadhaarUploadRequest
+    ) -> VerificationOut:
         masked = mask_aadhaar(payload.aadhaar_number)
         existing = user.aadhaar_verification
         if existing:

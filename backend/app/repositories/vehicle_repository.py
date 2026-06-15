@@ -17,7 +17,11 @@ class VehicleRepository(BaseRepository[Vehicle]):
         )
 
     def get_by_number(self, vehicle_number: str) -> Vehicle | None:
-        return self.db.query(Vehicle).filter(Vehicle.vehicle_number == vehicle_number).first()
+        return (
+            self.db.query(Vehicle)
+            .filter(Vehicle.vehicle_number == vehicle_number)
+            .first()
+        )
 
     def list_for_driver(self, driver_id: int) -> list[Vehicle]:
         return self.db.query(Vehicle).filter(Vehicle.driver_id == driver_id).all()

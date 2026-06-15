@@ -37,10 +37,10 @@ const appSteps: FlowStep[] = [
     tag: "Profile"
   },
   {
-    title: "Choose a role",
-    body: "Drivers publish a journey; passengers search and book an available ride.",
+    title: "Choose an action",
+    body: "Use the same account to publish a journey, search rides, and manage requests.",
     icon: Compass,
-    tag: "Role"
+    tag: "Action"
   }
 ];
 
@@ -191,77 +191,14 @@ function SectionHeader({
   );
 }
 
-// Role-aware "how it works" guide, lifted from the old Explore page.
-// driver -> publishing + approval loop; passenger -> search/book/cancel;
-// guest/undefined -> account setup overview plus both side summaries.
-export default function RideFlow({ role }: { role?: string }) {
-  if (role === "driver") {
-    return (
-      <div className="flex flex-col gap-5">
-        <section className="card p-4 md:p-5">
-          <SectionHeader
-            eyebrow="Driver workflow"
-            title="Publish a ride, then manage passengers"
-            body="Add car information, add ride details, publish, then accept, reject, or cancel from the driver dashboard."
-            icon={Car}
-          />
-          <FlowRow steps={driverSteps} />
-          <div className="mt-4 rounded-2xl border border-sand bg-cream p-4">
-            <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
-              {driverLoopSteps.map((step, index) => (
-                <div key={step.title} className="contents">
-                  <StepCard step={step} compact />
-                  {index < driverLoopSteps.length - 1 && (
-                    <div className="flex items-center justify-center">
-                      <ArrowDown className="text-primary md:hidden" size={20} />
-                      <ArrowRight className="hidden text-primary md:block" size={22} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-3 md:grid-cols-3">
-          {ruleCards.map((card) => (
-            <StepCard key={card.title} step={card} compact />
-          ))}
-        </section>
-      </div>
-    );
-  }
-
-  if (role === "passenger") {
-    return (
-      <div className="flex flex-col gap-5">
-        <section className="card p-4 md:p-5">
-          <SectionHeader
-            eyebrow="Passenger workflow"
-            title="Search, book, and cancel when plans change"
-            body="Search available rides, open the details, book seats, then manage unfinished bookings from your passenger profile."
-            icon={Search}
-          />
-          <FlowRow steps={passengerSteps} />
-        </section>
-
-        <section className="grid gap-3 md:grid-cols-3">
-          {ruleCards.map((card) => (
-            <StepCard key={card.title} step={card} compact />
-          ))}
-        </section>
-      </div>
-    );
-  }
-
-  // Guest overview
+export default function RideFlow() {
   return (
     <div className="flex flex-col gap-5">
       <section className="card-soft p-4 md:p-5">
         <SectionHeader
           eyebrow="How Carthi works"
           title="Set up your user before any ride action"
-          body="Every important action comes back to one logged-in user, so profile, driver data, and passenger bookings stay separated."
+          body="Every important action comes back to one logged-in user, so profile, vehicles, published rides, and booked rides stay connected."
           icon={BadgeCheck}
         />
         <FlowRow steps={appSteps} compact />
@@ -269,13 +206,19 @@ export default function RideFlow({ role }: { role?: string }) {
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="card p-4 md:p-5">
-          <SectionHeader eyebrow="Driver side" title="Publish a journey" body="Car > ride details > publish > accept or reject passengers." icon={Car} />
+          <SectionHeader eyebrow="Publish" title="Create a journey" body="Car > ride details > publish > accept or reject passengers." icon={Car} />
           <FlowRow steps={driverSteps} compact />
         </div>
         <div className="card p-4 md:p-5">
-          <SectionHeader eyebrow="Passenger side" title="Find a seat" body="Search > ride details > book > cancel from booked rides." icon={Search} />
+          <SectionHeader eyebrow="Book" title="Find a seat" body="Search > ride details > book > cancel from booked rides." icon={Search} />
           <FlowRow steps={passengerSteps} compact />
         </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        {ruleCards.map((card) => (
+          <StepCard key={card.title} step={card} compact />
+        ))}
       </section>
     </div>
   );

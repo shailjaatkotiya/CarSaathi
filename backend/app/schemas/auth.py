@@ -1,7 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models import UserRole
-
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -13,7 +11,6 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     whatsapp_number: str | None = None
-    role: UserRole = UserRole.passenger
 
     @field_validator("full_name")
     @classmethod
@@ -40,7 +37,6 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-    role: UserRole | None = None
 
     @field_validator("email")
     @classmethod

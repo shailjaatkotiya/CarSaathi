@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     aadhaar_encryption_key: str = ""
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176,http://localhost:5177,http://127.0.0.1:5177"
+    cors_origins: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176,http://localhost:5177,http://127.0.0.1:5177"
+    )
     public_api_base_url: str = "http://localhost:8000/api/v1"
     # Empty = caching disabled; e.g. redis://localhost:6379/0
     redis_url: str = ""
@@ -34,11 +36,15 @@ class Settings(BaseSettings):
     razorpay_webhook_secret: str = ""
     payment_currency: str = "INR"
 
-    model_config = SettingsConfigDict(env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore"
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:
-        origins = [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        origins = [
+            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+        ]
         if self.environment == "local":
             origins.extend(
                 [

@@ -14,11 +14,15 @@ class UserRepository(BaseRepository[User]):
 
     def email_taken_by_other(self, email: str, user_id: int) -> bool:
         return (
-            self.db.query(User).filter(User.email == email, User.id != user_id).first() is not None
+            self.db.query(User).filter(User.email == email, User.id != user_id).first()
+            is not None
         )
 
     def is_admin(self, user_id: int) -> bool:
-        return self.db.query(AdminUser).filter(AdminUser.user_id == user_id).first() is not None
+        return (
+            self.db.query(AdminUser).filter(AdminUser.user_id == user_id).first()
+            is not None
+        )
 
     def list_newest_first(self) -> list[User]:
         return self.db.query(User).order_by(User.created_at.desc()).all()

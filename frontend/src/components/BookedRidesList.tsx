@@ -2,6 +2,7 @@ import { Calendar, Car, Clock, Flag, MapPin, MessageCircle, Palette, XCircle } f
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { bookingsApi } from "../api/bookings";
+import { apiErrorMessage } from "../lib/apiError";
 import { whatsappLink, formatShortDate } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
 import { bookingStatusLabel, CANCELLABLE_BOOKING_STATUSES } from "../constants/booking";
@@ -24,8 +25,8 @@ function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: s
         reason: reason.trim()
       });
       onDone("Report submitted. Our admin team will review it.");
-    } catch {
-      setError("Could not submit the report. Please try again.");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Could not submit the report. Please try again."));
     }
   }
 

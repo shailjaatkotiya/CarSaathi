@@ -30,8 +30,8 @@ class RideCreate(BaseModel):
     ac_available: bool = True
     women_only_preference: bool = False
     auto_confirm_bookings: bool = False
-    route_stops: list[str] = []
-    ride_rules: list[str] = []
+    route_stops: list[str] = Field(default_factory=list)
+    ride_rules: list[str] = Field(default_factory=list)
     driver_instructions: str | None = None
 
 
