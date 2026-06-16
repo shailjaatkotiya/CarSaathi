@@ -22,6 +22,11 @@ export const queryKeys = {
     bookings: ["passenger-profile-bookings"] as const
   },
 
+  navigation: {
+    ride: (rideId: string | number, pickup: string, drop: string) =>
+      ["navigation", "ride", rideId, pickup, drop] as const
+  },
+
   profile: {
     verification: ["profile-verification"] as const
   },

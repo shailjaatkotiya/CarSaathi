@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { driverApi } from "../api/driver";
 import { ridesApi } from "../api/rides";
+import NavigationPanel from "../components/NavigationPanel";
 import { queryKeys } from "../lib/queryKeys";
 
 function TimelineStop({
@@ -115,6 +116,8 @@ export default function DriverRidePlan() {
           isLast
         />
       </div>
+
+      <NavigationPanel rideId={ride.id} pickupPoint={pickupAddr} dropPoint={dropAddr} />
 
       <div className="border-t border-sand my-4" />
 

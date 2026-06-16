@@ -10,6 +10,7 @@ import { formatTimeAmPm } from "../lib/format";
 import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
 import type { BookingActionResponse } from "../types";
+import NavigationPanel from "../components/NavigationPanel";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useSessionStore } from "../store/session";
 
@@ -333,6 +334,12 @@ export default function RideDetail() {
                     </optgroup>
                   </select>
                 </label>
+                <NavigationPanel
+                  rideId={ride.id}
+                  pickupPoint={pickup}
+                  dropPoint={drop}
+                  disabledReason={!token ? "Login as a passenger to view route navigation." : undefined}
+                />
                 <div>
                   <span className="field-label">Payment method</span>
                   <div className="mt-1 grid grid-cols-2 gap-2">

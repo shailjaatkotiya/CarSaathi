@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
     payment_currency: str = "INR"
+    # Amazon Location Service. Keep API keys server-side only; the frontend
+    # calls backend navigation endpoints and never receives this value.
+    amazon_location_api_key: str = ""
+    amazon_location_region: str = "ap-south-1"
+    amazon_location_language: str = "en"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore"

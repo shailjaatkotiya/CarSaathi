@@ -87,6 +87,28 @@ export type FellowPassenger = {
   seats_booked: number;
 };
 
+export type NavigationPlace = {
+  label: string;
+  query: string;
+  position: number[];
+};
+
+export type NavigationStep = {
+  instruction: string;
+  distance_meters: number;
+  duration_seconds: number;
+};
+
+export type NavigationRoute = {
+  provider: "amazon-location";
+  origin: NavigationPlace;
+  destination: NavigationPlace;
+  distance_meters: number;
+  duration_seconds: number;
+  steps: NavigationStep[];
+  geometry: number[][];
+};
+
 export type User = {
   id: number;
   full_name: string;
