@@ -1,7 +1,8 @@
 import re
 
-from app.models import Booking, Ride
+from app.models import Booking, Ride, RideStatus
 from app.schemas import DriverBookingOut, RideOut, VehicleOut
+from app.services.ride_time import ride_has_ended
 
 
 def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
@@ -53,6 +54,11 @@ def clean_route_notes(notes: str | None) -> str | None:
 
 
 def ride_to_out(ride: Ride) -> RideOut:
+    # An active ride that has ended (past the on-going window) is shown as
+    # completed even if a background job has not flipped the stored status yet.
+    effective_status = ride.status
+    if ride.status == RideStatus.active and ride_has_ended(ride):
+        effective_status = RideStatus.completed
     return RideOut(
         id=ride.id,
         source_city=ride.source_city,
@@ -71,7 +77,7 @@ def ride_to_out(ride: Ride) -> RideOut:
         ac_available=ride.ac_available,
         women_only_preference=ride.women_only_preference,
         auto_confirm_bookings=ride.auto_confirm_bookings,
-        status=ride.status,
+        status=effective_status,
         driver_name=ride.driver.full_name,
         driver_rating=ride.driver.rating_average,
         driver_verified=ride.driver.verification_status.value == "verified",

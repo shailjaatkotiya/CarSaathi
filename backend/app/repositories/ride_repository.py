@@ -17,10 +17,11 @@ class RideRepository(BaseRepository[Ride]):
         )
 
     def list_for_driver(self, driver_id: int) -> list[Ride]:
+        # Latest ride date/time first.
         return (
             self.db.query(Ride)
             .filter(Ride.driver_id == driver_id)
-            .order_by(Ride.journey_date.desc())
+            .order_by(Ride.journey_date.desc(), Ride.departure_time.desc())
             .all()
         )
 

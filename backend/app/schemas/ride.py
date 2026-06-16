@@ -17,7 +17,9 @@ class RideCreate(BaseModel):
     car_seats: int | None = Field(default=None, ge=1, le=8)
     source_city: str
     destination_city: str
-    distance_km: int
+    # Distance is no longer entered by the driver; it will be filled from the
+    # map integration later. Kept on the model with a 0 default for now.
+    distance_km: int = 0
     journey_date: date
     departure_time: time
     available_seats: int = Field(ge=1, le=8)

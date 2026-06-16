@@ -5,21 +5,24 @@ import {
   CalendarCheck,
   Car,
   CheckCircle2,
+  Download,
   ListChecks,
   MapPin,
   Route as RouteIcon,
   Zap
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
+import { formatShortDate, formatTimeAmPm } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
+import AutoGrowTextarea from "../components/AutoGrowTextarea";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
@@ -36,9 +39,10 @@ const defaultRuleValues = ["no_pets", "no_smoking", "no_alcohol", "no_tobacco"];
 
 type CarMode = "saved" | "new";
 
+// "Add a new car" is the primary (default) option; a saved vehicle is secondary.
 const carModeOptions: { value: CarMode; label: string; hint: string }[] = [
-  { value: "saved", label: "A saved vehicle", hint: "Choose one of the vehicles you added earlier" },
-  { value: "new", label: "Add a new car", hint: "Type fresh car details for this ride" }
+  { value: "new", label: "Add a new car", hint: "Type fresh car details for this ride" },
+  { value: "saved", label: "A saved vehicle", hint: "Choose one of the vehicles you added earlier" }
 ];
 
 function formatRuleLabel(value: string) {
@@ -70,8 +74,58 @@ function StepShell({ title, subtitle, icon, children }: { title: string; subtitl
   );
 }
 
+// Draw the published-ride summary onto a canvas and trigger a PNG download.
+function downloadRideImage(lines: [string, string][], title: string) {
+  const scale = 2;
+  const width = 640;
+  const rowHeight = 54;
+  const top = 150;
+  const height = top + lines.length * rowHeight + 50;
+  const canvas = document.createElement("canvas");
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = "#FFF8EC";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#546B41";
+  ctx.fillRect(0, 0, width, 90);
+  ctx.fillStyle = "#FFF8EC";
+  ctx.font = "bold 30px Arial";
+  ctx.fillText("Carthi", 32, 56);
+  ctx.fillStyle = "#171717";
+  ctx.font = "bold 22px Arial";
+  ctx.fillText(title, 32, 128);
+
+  lines.forEach(([label, value], index) => {
+    const y = top + index * rowHeight;
+    ctx.fillStyle = "#737373";
+    ctx.font = "bold 14px Arial";
+    ctx.fillText(label.toUpperCase(), 32, y);
+    ctx.fillStyle = "#171717";
+    ctx.font = "600 18px Arial";
+    ctx.fillText(value, 32, y + 24);
+    ctx.strokeStyle = "#DCCCAC";
+    ctx.beginPath();
+    ctx.moveTo(32, y + 36);
+    ctx.lineTo(width - 32, y + 36);
+    ctx.stroke();
+  });
+
+  const url = canvas.toDataURL("image/png");
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "carthi-published-ride.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 export default function CreateRide() {
   const token = useSessionStore((state) => state.token);
+  const navigate = useNavigate();
   const defaultRideDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   // All fields are controlled so values survive while steps mount/unmount.
@@ -81,16 +135,15 @@ export default function CreateRide() {
 
   const [sourceCity, setSourceCity] = useState("Rajkot");
   const [destinationCity, setDestinationCity] = useState("Jamnagar");
-  const [distanceKm, setDistanceKm] = useState("96");
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
   const [departureTime, setDepartureTime] = useState("07:30");
   const [pricePerSeat, setPricePerSeat] = useState("180");
 
-  const [pickupPoints, setPickupPoints] = useState("Rajkot Bus Stand, Kalawad Road, Gondal Road, University Road, Mavdi Circle");
+  const [pickupPoints, setPickupPoints] = useState("Rajkot Bus Stand, Kalawad Road, Gondal Road");
   const [routeStops, setRouteStops] = useState("Dhrol, Reliance Circle");
   const [dropPoints, setDropPoints] = useState("Jamnagar Bus Stand, Patel Colony, Reliance Circle, Digjam Circle, Railway Station");
 
-  const [carMode, setCarMode] = useState<CarMode>("saved");
+  const [carMode, setCarMode] = useState<CarMode>("new");
   const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
   const [newCarBrandOther, setNewCarBrandOther] = useState("");
   const [carModel, setCarModel] = useState("Swift Dzire");
@@ -107,6 +160,9 @@ export default function CreateRide() {
   const [routeNotes, setRouteNotes] = useState("Short route with one optional water break.");
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [womenOnly, setWomenOnly] = useState(false);
+
+  // Summary captured at publish time so the success screen can redraw the image.
+  const summaryRef = useRef<[string, string][]>([]);
 
   const { data: me } = useCurrentUser();
   const { data: savedVehicles } = useQuery({
@@ -147,8 +203,8 @@ export default function CreateRide() {
 
   const missingWhatsapp = Boolean(me) && !me?.whatsapp_number?.trim();
 
-  // Steps in order. Map step is intentionally an empty placeholder for a later
-  // iteration. Validate returns an error string (or null) before advancing.
+  // Steps in order. Validate returns an error string (or null) before advancing.
+  // No separate review step - the last data step publishes directly.
   const steps = [
     {
       key: "route",
@@ -157,7 +213,6 @@ export default function CreateRide() {
       icon: <RouteIcon size={20} />,
       validate: () => {
         if (!sourceCity.trim() || !destinationCity.trim()) return "Enter both source and destination city.";
-        if (!Number(distanceKm) || Number(distanceKm) <= 0) return "Enter a valid route distance in km.";
         return null;
       }
     },
@@ -175,10 +230,12 @@ export default function CreateRide() {
     {
       key: "points",
       title: "Pickup, stops & drop points",
-      subtitle: "Add at least 1 pickup and 1 drop point, comma separated.",
+      subtitle: "Add 1 to 5 pickup points and at least 1 drop point, comma separated.",
       icon: <MapPin size={20} />,
       validate: () => {
-        if (countPoints(pickupPoints) < 1) return "Add at least 1 pickup point.";
+        const pickups = countPoints(pickupPoints);
+        if (pickups < 1) return "Add at least 1 pickup point.";
+        if (pickups > 5) return "Add at most 5 pickup points.";
         if (countPoints(dropPoints) < 1) return "Add at least 1 drop point.";
         return null;
       }
@@ -186,7 +243,7 @@ export default function CreateRide() {
     {
       key: "car",
       title: "Which car will you drive?",
-      subtitle: "Use your profile car, a saved vehicle, or add a new one.",
+      subtitle: "Add a new car, or pick a saved vehicle.",
       icon: <Car size={20} />,
       validate: () => {
         if (carMode === "saved" && !selectedVehicleId) return "Select one of your saved vehicles.";
@@ -222,13 +279,6 @@ export default function CreateRide() {
       subtitle: "Instant booking, luggage, and route notes.",
       icon: <Zap size={20} />,
       validate: () => null
-    },
-    {
-      key: "review",
-      title: "Review & publish",
-      subtitle: "Check everything before going live.",
-      icon: <CheckCircle2 size={20} />,
-      validate: () => null
     }
   ];
 
@@ -247,7 +297,29 @@ export default function CreateRide() {
 
   function goBack() {
     setError("");
+    // First step has nowhere to go inside the flow - return to Home.
+    if (step === 0) {
+      navigate("/");
+      return;
+    }
     setStep((value) => Math.max(value - 1, 0));
+  }
+
+  function buildSummary(): [string, string][] {
+    const car =
+      carMode === "saved" && selectedVehicle
+        ? `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.vehicle_number})`
+        : `${resolvedNewBrand} ${carModel} (${vehicleNumber}, ${carColor})`;
+    return [
+      ["From", sourceCity],
+      ["To", destinationCity],
+      ["Date", formatShortDate(journeyDate)],
+      ["Time", formatTimeAmPm(departureTime)],
+      ["Car", car],
+      ["Seats & price", `${availableSeats} seats - Rs. ${pricePerSeat}/seat`],
+      ["Pickup points", pickupPoints],
+      ["Drop points", dropPoints]
+    ];
   }
 
   async function publish() {
@@ -277,11 +349,10 @@ export default function CreateRide() {
           };
 
     try {
-      const data = await driverApi.publishRide({
+      await driverApi.publishRide({
         ...carDetails,
         source_city: sourceCity,
         destination_city: destinationCity,
-        distance_km: Number(distanceKm),
         journey_date: journeyDate,
         departure_time: departureTime,
         available_seats: availableSeats,
@@ -298,7 +369,10 @@ export default function CreateRide() {
         women_only_preference: womenOnly,
         auto_confirm_bookings: autoConfirm
       });
-      setMessage(`Ride published successfully as listing #${data.id}.`);
+      summaryRef.current = buildSummary();
+      setMessage("Ride published successfully.");
+      // Auto-download an image of the published ride details.
+      downloadRideImage(summaryRef.current, `${sourceCity} to ${destinationCity}`);
     } catch (err) {
       setError(apiErrorMessage(err, "Could not publish the ride. Please check the backend is running and try again."));
     }
@@ -315,19 +389,21 @@ export default function CreateRide() {
         </div>
 
         {/* Progress: step count + bar. Identical on desktop and mobile. */}
-        <div>
-          <div className="flex items-center justify-between text-xs font-bold text-muted">
-            <span>
-              Step {step + 1} of {steps.length}
-            </span>
-            <span>{current.title}</span>
+        {!message && (
+          <div>
+            <div className="flex items-center justify-between text-xs font-bold text-muted">
+              <span>
+                Step {step + 1} of {steps.length}
+              </span>
+              <span>{current.title}</span>
+            </div>
+            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-sand">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+            </div>
           </div>
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-sand">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
+        )}
 
-        {missingWhatsapp && (
+        {missingWhatsapp && !message && (
           <p className="alert-warning">
             A WhatsApp contact number is required to publish a ride.{" "}
             <Link to="/profile" className="font-bold underline">
@@ -344,67 +420,63 @@ export default function CreateRide() {
             </span>
             <h2 className="text-lg font-bold">Ride published</h2>
             <p className="alert-success">{message}</p>
-            <Link to="/my-rides" className="btn-primary">
-              View published rides
-            </Link>
+            <p className="text-sm text-muted">An image of your published ride details has been downloaded to your device.</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => downloadRideImage(summaryRef.current, `${sourceCity} to ${destinationCity}`)}
+              >
+                <Download size={16} />
+                Download image again
+              </button>
+              <Link to="/my-rides" className="btn-primary">
+                View published rides
+              </Link>
+            </div>
           </div>
         ) : (
           <>
             <StepShell title={current.title} subtitle={current.subtitle} icon={current.icon}>
               {current.key === "route" && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Source city</span>
-                    <input className="input" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} placeholder="Rajkot" />
-                  </label>
-                  <label>
-                    <span className="field-label">Destination city</span>
-                    <input className="input" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} placeholder="Jamnagar" />
-                  </label>
-                  <label className="sm:col-span-2">
-                    <span className="field-label">Distance in km</span>
-                    <input className="input" type="number" value={distanceKm} onChange={(event) => setDistanceKm(event.target.value)} placeholder="96" />
-                    <span className="field-hint">Approx route distance.</span>
-                  </label>
+                  <input className="input" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} placeholder="Source city" />
+                  <input className="input" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} placeholder="Destination city" />
                 </div>
               )}
 
               {current.key === "datetime" && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Journey date" />
-                    {/* <span className="field-hint">Up to 10 days ahead.</span> */}
-                  </label>
-                  <label>
-                    <TimePicker value={departureTime} onChange={setDepartureTime} label="Departure time" />
-                    {/* <span className="field-hint">At least 3 hours from now.</span> */}
-                  </label>
+                  <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Journey date" />
+                  <TimePicker value={departureTime} onChange={setDepartureTime} label="Departure time" />
                 </div>
               )}
 
               {current.key === "points" && (
                 <div className="flex flex-col gap-4">
-                  <label>
-                    <span className="field-label">Pickup points - minimum 1 ({countPoints(pickupPoints)})</span>
-                    <textarea className="input" rows={2} value={pickupPoints} onChange={(event) => setPickupPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated. Example: Bopal, Gota, Iscon.</span>
-                  </label>
-                  <label>
-                    <span className="field-label">In-between stops ({countPoints(routeStops)})</span>
-                    <textarea className="input" rows={2} value={routeStops} onChange={(event) => setRouteStops(event.target.value)} />
-                    <span className="field-hint">Optional stops passengers can choose before the final drop.</span>
-                  </label>
-                  <label>
-                    <span className="field-label">Drop points - minimum 1 ({countPoints(dropPoints)})</span>
-                    <textarea className="input" rows={2} value={dropPoints} onChange={(event) => setDropPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated final-city drop points.</span>
-                  </label>
+                  <AutoGrowTextarea
+                    value={pickupPoints}
+                    onChange={(event) => setPickupPoints(event.target.value)}
+                    placeholder="Pickup points (1-5, comma separated). Example: Bopal, Gota, Iscon"
+                  />
+                  <span className="field-hint">Pickup points - 1 to 5 ({countPoints(pickupPoints)})</span>
+                  <AutoGrowTextarea
+                    value={routeStops}
+                    onChange={(event) => setRouteStops(event.target.value)}
+                    placeholder="In-between stops, comma separated (optional)"
+                  />
+                  <AutoGrowTextarea
+                    value={dropPoints}
+                    onChange={(event) => setDropPoints(event.target.value)}
+                    placeholder="Drop points (at least 1, comma separated)"
+                  />
+                  <span className="field-hint">Drop points ({countPoints(dropPoints)})</span>
                 </div>
               )}
 
               {current.key === "car" && (
                 <div className="flex flex-col gap-4">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     {carModeOptions.map((option) => (
                       <button
                         key={option.value}
@@ -419,7 +491,6 @@ export default function CreateRide() {
                       </button>
                     ))}
                   </div>
-
 
                   {carMode === "saved" &&
                     (savedVehicles?.length ? (
@@ -455,8 +526,7 @@ export default function CreateRide() {
 
                   {carMode === "new" && (
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label>
-                        <span className="field-label">Car brand</span>
+                      <div>
                         <select className="input" value={newCarBrand} onChange={(event) => setNewCarBrand(event.target.value)}>
                           {carBrands.map((item) => (
                             <option key={item} value={item}>
@@ -468,36 +538,21 @@ export default function CreateRide() {
                         {newCarBrand === "Other" && (
                           <input className="input mt-2" value={newCarBrandOther} onChange={(event) => setNewCarBrandOther(event.target.value)} placeholder="Enter brand name" />
                         )}
-                      </label>
-                      <label>
-                        <span className="field-label">Car model</span>
-                        <input className="input" value={carModel} onChange={(event) => setCarModel(event.target.value)} placeholder="Swift Dzire" />
-                      </label>
-                      <label>
-                        <span className="field-label">Vehicle number</span>
-                        <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value)} placeholder="GJ01AB1234" />
-                      </label>
-                      <label>
-                        <span className="field-label">Fuel type</span>
-                        <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
-                          <option value="Petrol">Petrol</option>
-                          <option value="CNG">CNG</option>
-                          <option value="EV">EV</option>
-                          <option value="Diesel">Diesel</option>
-                        </select>
-                      </label>
-                      <label>
-                        <span className="field-label">Car color</span>
-                        <input className="input" value={carColor} onChange={(event) => setCarColor(event.target.value)} placeholder="White" />
-                      </label>
-                      <label>
-                        <span className="field-label">Car category</span>
-                        <select className="input" value={newCarType} onChange={(event) => setNewCarType(event.target.value)}>
-                          <option value="SUV">SUV</option>
-                          <option value="Sedan">Sedan</option>
-                          <option value="7 Seater">7 Seater</option>
-                        </select>
-                      </label>
+                      </div>
+                      <input className="input" value={carModel} onChange={(event) => setCarModel(event.target.value)} placeholder="Car model" />
+                      <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value)} placeholder="Vehicle number" />
+                      <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
+                        <option value="Petrol">Petrol</option>
+                        <option value="CNG">CNG</option>
+                        <option value="EV">EV</option>
+                        <option value="Diesel">Diesel</option>
+                      </select>
+                      <input className="input" value={carColor} onChange={(event) => setCarColor(event.target.value)} placeholder="Car color" />
+                      <select className="input" value={newCarType} onChange={(event) => setNewCarType(event.target.value)}>
+                        <option value="SUV">SUV</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="7 Seater">7 Seater</option>
+                      </select>
                     </div>
                   )}
                 </div>
@@ -505,8 +560,7 @@ export default function CreateRide() {
 
               {current.key === "seatsprice" && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Available seats</span>
+                  <div>
                     <input
                       className="input"
                       type="number"
@@ -514,16 +568,16 @@ export default function CreateRide() {
                       max={maxAvailableSeats}
                       value={availableSeats}
                       onChange={(event) => setAvailableSeats(Number(event.target.value))}
+                      placeholder="Available seats"
                     />
                     <span className="field-hint">
                       {selectedCarType?.toLowerCase().includes("7") ? "7 Seater allows up to 6." : "Sedan and SUV allow up to 3."}
                     </span>
-                  </label>
-                  <label>
-                    <span className="field-label">Price per seat</span>
-                    <input className="input" type="number" value={pricePerSeat} onChange={(event) => setPricePerSeat(event.target.value)} placeholder="180" />
+                  </div>
+                  <div>
+                    <input className="input" type="number" value={pricePerSeat} onChange={(event) => setPricePerSeat(event.target.value)} placeholder="Price per seat" />
                     <span className="field-hint">Amount each passenger pays.</span>
-                  </label>
+                  </div>
                 </div>
               )}
 
@@ -542,11 +596,11 @@ export default function CreateRide() {
                       </label>
                     ))}
                   </div>
-                  <label>
-                    <span className="field-label">Extra instructions</span>
-                    <textarea className="input" rows={2} value={extraInstructions} onChange={(event) => setExtraInstructions(event.target.value)} />
-                    <span className="field-hint">Any extra note passengers must read before booking.</span>
-                  </label>
+                  <AutoGrowTextarea
+                    value={extraInstructions}
+                    onChange={(event) => setExtraInstructions(event.target.value)}
+                    placeholder="Extra instructions passengers must read before booking"
+                  />
                 </div>
               )}
 
@@ -591,46 +645,13 @@ export default function CreateRide() {
                   </button>
 
                   {/* Additional details */}
-                  <label>
-                    <span className="field-label">Additional details</span>
-                    <textarea
-                      className="input"
-                      rows={3}
-                      value={routeNotes}
-                      onChange={(event) => setRouteNotes(event.target.value)}
-                      placeholder="Flexible about where and when to meet? Not taking the motorway? Got limited space in your boot? Keep passengers in the loop."
-                    />
-                  </label>
+                  <AutoGrowTextarea
+                    value={routeNotes}
+                    onChange={(event) => setRouteNotes(event.target.value)}
+                    placeholder="Flexible about where and when to meet? Not taking the motorway? Got limited space in your boot? Keep passengers in the loop."
+                  />
 
-                  <label>
-                    <span className="field-label">Luggage allowance</span>
-                    <input className="input" value={luggageAllowance} onChange={(event) => setLuggageAllowance(event.target.value)} placeholder="One cabin bag per passenger" />
-                  </label>
-                </div>
-              )}
-
-              {current.key === "review" && (
-                <div className="flex flex-col gap-3 text-sm">
-                  {[
-                    ["Route", `${sourceCity} -> ${destinationCity} · ${distanceKm} km`],
-                    ["When", `${journeyDate} · ${departureTime}`],
-                    [
-                      "Car",
-                      carMode === "saved" && selectedVehicle
-                        ? `${selectedVehicle.brand} ${selectedVehicle.model} · ${selectedVehicle.vehicle_number}`
-                        : `${resolvedNewBrand} ${carModel} · ${vehicleNumber} · ${carColor}`
-                    ],
-                    ["Seats & price", `${availableSeats} seats · Rs. ${pricePerSeat}/seat`],
-                    ["Pickup points", `${countPoints(pickupPoints)} added`],
-                    ["Drop points", `${countPoints(dropPoints)} added`],
-                    ["Instant booking", autoConfirm ? "On" : "Off"],
-                    ["Women only", womenOnly ? "Yes" : "No"]
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-start justify-between gap-3 border-b border-sand pb-2 last:border-0">
-                      <span className="font-bold text-muted">{label}</span>
-                      <span className="text-right font-semibold text-ink">{value}</span>
-                    </div>
-                  ))}
+                  <input className="input" value={luggageAllowance} onChange={(event) => setLuggageAllowance(event.target.value)} placeholder="Luggage allowance, e.g. one cabin bag per passenger" />
                 </div>
               )}
             </StepShell>
@@ -639,7 +660,7 @@ export default function CreateRide() {
 
             {/* Navigation: same controls every viewport. */}
             <div className="flex items-center justify-between gap-3">
-              <button type="button" className="btn-outline" onClick={goBack} disabled={step === 0}>
+              <button type="button" className="btn-outline" onClick={goBack}>
                 <ArrowLeft size={16} />
                 Back
               </button>

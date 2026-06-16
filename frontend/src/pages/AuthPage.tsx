@@ -131,41 +131,26 @@ export default function AuthPage() {
 
           {mode === "register" && (
             <>
-              <label>
-                <span className="field-label">Register as</span>
-                <select
-                  className="input"
-                  value={selectedRole}
-                  onChange={(event) => setSelectedRole(event.target.value as UserRole)}
-                >
-                  <option value="passenger">Passenger</option>
-                  <option value="driver">Driver</option>
-                </select>
-              </label>
-              <label>
-                <span className="field-label">Full name</span>
-                <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />
-              </label>
-              <label>
-                <span className="field-label">WhatsApp contact</span>
-                <input
-                  className="input"
-                  value={whatsappNumber}
-                  onChange={(event) => setWhatsappNumber(event.target.value)}
-                  placeholder="9876509876"
-                />
-              </label>
+              <select
+                className="input"
+                value={selectedRole}
+                onChange={(event) => setSelectedRole(event.target.value as UserRole)}
+              >
+                <option value="passenger">Register as Passenger</option>
+                <option value="driver">Register as Driver</option>
+              </select>
+              <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Full name" />
+              <input
+                className="input"
+                value={whatsappNumber}
+                onChange={(event) => setWhatsappNumber(event.target.value)}
+                placeholder="WhatsApp contact, e.g. 9876509876"
+              />
             </>
           )}
 
-          <label>
-            <span className="field-label">Email</span>
-            <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} />
-          </label>
-          <label>
-            <span className="field-label">Password</span>
-            <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-          </label>
+          <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
+          <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
 
           <button className="btn-primary py-3 text-base" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Please wait..." : "Continue"}

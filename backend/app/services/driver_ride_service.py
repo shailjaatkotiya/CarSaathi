@@ -25,6 +25,7 @@ from app.repositories.ride_repository import RideRepository
 from app.repositories.vehicle_repository import VehicleRepository
 from app.schemas import RideCreate
 from app.services.ride_seats import cap_available_seats, default_available_seats
+from app.services.ride_time import auto_complete_if_passed
 from app.services.whatsapp import (
     notify_booking_created,
     notify_booking_rejected_by_driver,
@@ -152,6 +153,8 @@ class DriverRideService:
     def _validate_stop_counts(payload: RideCreate) -> None:
         if len(payload.pickup_points) < 1:
             raise ValidationError("Please add at least 1 pickup point")
+        if len(payload.pickup_points) > 5:
+            raise ValidationError("Please add at most 5 pickup points")
         if len(payload.drop_points) < 1:
             raise ValidationError("Please add at least 1 drop point")
 
@@ -213,7 +216,12 @@ class DriverRideService:
 
     # ----- listing & lifecycle ---------------------------------------------
     def list_for_driver(self, driver: User) -> list[Ride]:
-        return self.rides.list_for_driver(driver.id)
+        rides = self.rides.list_for_driver(driver.id)
+        changed = [auto_complete_if_passed(ride) for ride in rides]
+        if any(changed):
+            self.db.commit()
+            cache.bump_rides_version()
+        return rides
 
     def _require_ride(self, ride_id: int, driver: User) -> Ride:
         ride = self.rides.get_for_driver(ride_id, driver.id)

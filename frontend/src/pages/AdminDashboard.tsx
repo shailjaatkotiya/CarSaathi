@@ -30,14 +30,8 @@ function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
   return (
     <form onSubmit={submit} className="card mx-auto mt-6 flex w-full max-w-md flex-col gap-4 p-6">
       <h2 className="text-xl font-bold">Admin login</h2>
-      <label>
-        <span className="field-label">Email</span>
-        <input className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-      </label>
-      <label>
-        <span className="field-label">Password</span>
-        <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
-      </label>
+      <input className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" required />
+      <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" required />
       {error && <p className="alert-error">{error}</p>}
       {/* <button className="btn-primary" type="submit">
         Login as admin

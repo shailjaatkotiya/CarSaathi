@@ -298,60 +298,36 @@ export default function SearchRides() {
           </button>
           {showMoreFilters && (
             <div className="mt-3 flex flex-col gap-3">
-              <label>
-                <span className="field-label">Pickup area</span>
-                <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Bopal, Gota, Iscon" />
-              </label>
-              <label>
-                <span className="field-label">Stop or drop area</span>
-                <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Chotila, Limbdi" />
-              </label>
+              <input className="input" value={sourceArea} onChange={(event) => setSourceArea(event.target.value)} placeholder="Pickup area, e.g. Bopal, Gota, Iscon" />
+              <input className="input" value={destinationArea} onChange={(event) => setDestinationArea(event.target.value)} placeholder="Stop or drop area, e.g. Chotila, Limbdi" />
               <div className="grid grid-cols-2 gap-2">
-                <label>
-                  <span className="field-label">Min price</span>
-                  <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="150" />
-                </label>
-                <label>
-                  <span className="field-label">Max price</span>
-                  <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="650" />
-                </label>
+                <input className="input" type="number" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} placeholder="Min price" />
+                <input className="input" type="number" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} placeholder="Max price" />
               </div>
-              <label>
-                <span className="field-label">Min driver rating</span>
-                <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
-                  <option value="">Any rating</option>
-                  <option value="4">4.0+ stars</option>
-                  <option value="4.5">4.5+ stars</option>
-                  <option value="4.8">4.8+ stars</option>
-                </select>
-              </label>
-              <label>
-                <span className="field-label">Car category</span>
-                <select className="input" value={carType} onChange={(event) => setCarType(event.target.value)}>
-                  <option value="">All car categories</option>
-                  <option value="SUV">SUV</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="7 Seater">7 Seater</option>
-                </select>
-              </label>
-              <label>
-                <span className="field-label">Fuel type</span>
-                <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
-                  <option value="">All fuel types</option>
-                  <option value="Petrol">Petrol</option>
-                  <option value="CNG">CNG</option>
-                  <option value="EV">EV</option>
-                  <option value="Diesel">Diesel</option>
-                </select>
-              </label>
-              <label>
-                <span className="field-label">AC preference</span>
-                <select className="input" value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
-                  <option value="">AC and non-AC</option>
-                  <option value="true">AC only</option>
-                  <option value="false">Non-AC only</option>
-                </select>
-              </label>
+              <select className="input" value={driverRating} onChange={(event) => setDriverRating(event.target.value)}>
+                <option value="">Any rating</option>
+                <option value="4">4.0+ stars</option>
+                <option value="4.5">4.5+ stars</option>
+                <option value="4.8">4.8+ stars</option>
+              </select>
+              <select className="input" value={carType} onChange={(event) => setCarType(event.target.value)}>
+                <option value="">All car categories</option>
+                <option value="SUV">SUV</option>
+                <option value="Sedan">Sedan</option>
+                <option value="7 Seater">7 Seater</option>
+              </select>
+              <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
+                <option value="">All fuel types</option>
+                <option value="Petrol">Petrol</option>
+                <option value="CNG">CNG</option>
+                <option value="EV">EV</option>
+                <option value="Diesel">Diesel</option>
+              </select>
+              <select className="input" value={acAvailable} onChange={(event) => setAcAvailable(event.target.value)}>
+                <option value="">AC and non-AC</option>
+                <option value="true">AC only</option>
+                <option value="false">Non-AC only</option>
+              </select>
               <p className="text-xs text-muted">
                 Close-to-point sorting uses these pickup and drop areas when you provide them.
               </p>

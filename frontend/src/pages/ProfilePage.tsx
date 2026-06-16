@@ -249,19 +249,13 @@ export default function ProfilePage() {
                     <X size={18} />
                   </button>
                 </div>
-                <label>
-                  <span className="field-label">Name</span>
-                  <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} />
-                </label>
-                <label>
-                  <span className="field-label">WhatsApp number</span>
-                  <input
-                    className="input"
-                    value={form.whatsapp_number}
-                    onChange={(event) => setField("whatsapp_number", event.target.value)}
-                    placeholder="+91 98765 43210"
-                  />
-                </label>
+                <input className="input" required value={form.full_name} onChange={(event) => setField("full_name", event.target.value)} placeholder="Name" />
+                <input
+                  className="input"
+                  value={form.whatsapp_number}
+                  onChange={(event) => setField("whatsapp_number", event.target.value)}
+                  placeholder="WhatsApp number, e.g. +91 98765 43210"
+                />
                 <div className="flex gap-2 pt-1">
                   <button type="button" className="btn-outline flex-1" onClick={cancelEdit}>
                     Cancel

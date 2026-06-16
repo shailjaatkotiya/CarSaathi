@@ -38,13 +38,15 @@ class BookingRepository(BaseRepository[Booking]):
         return payment.booking if payment else None
 
     def list_active_for_passenger(self, passenger_id: int) -> list[Booking]:
+        # Latest ride date/time first.
         return (
             self.db.query(Booking)
+            .join(Ride)
             .filter(
                 Booking.passenger_id == passenger_id,
                 Booking.status != BookingStatus.completed,
             )
-            .order_by(Booking.created_at.desc())
+            .order_by(Ride.journey_date.desc(), Ride.departure_time.desc())
             .all()
         )
 

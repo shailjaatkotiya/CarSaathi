@@ -17,11 +17,7 @@ export default function RideListItem({ ride }: { ride: Ride }) {
           <div className="flex items-center gap-3">
             <span className="shrink-0 text-lg font-bold leading-none tabular-nums">{formatTimeAmPm(ride.departure_time)}</span>
             <span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-primary" />
-            <span className="relative h-px flex-1 bg-sand">
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-white px-1.5 text-[11px] font-bold text-muted">
-                {ride.distance_km} km
-              </span>
-            </span>
+            <span className="relative h-px flex-1 bg-sand" />
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
           </div>
 

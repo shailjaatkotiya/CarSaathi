@@ -22,10 +22,7 @@ export default function VerificationPage() {
             Aadhaar is masked after submission. The backend stores encrypted and tokenized values only, then verification
             can be reviewed manually in the MVP.
           </p>
-          <label>
-            <span className="field-label">Aadhaar number</span>
-            <input className="input" maxLength={16} value={aadhaar} onChange={(event) => setAadhaar(event.target.value)} />
-          </label>
+          <input className="input" maxLength={16} value={aadhaar} onChange={(event) => setAadhaar(event.target.value)} placeholder="Aadhaar number" />
           <button className="btn-primary py-3 text-base" type="submit">
             Submit securely
           </button>

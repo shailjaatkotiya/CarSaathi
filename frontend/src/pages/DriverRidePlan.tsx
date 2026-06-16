@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { driverApi } from "../api/driver";
 import { ridesApi } from "../api/rides";
+import { formatTimeAmPm } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
 
 function TimelineStop({
@@ -61,7 +62,7 @@ export default function DriverRidePlan() {
     );
   }
 
-  const departureTime = ride.departure_time.slice(0, 5);
+  const departureTime = formatTimeAmPm(ride.departure_time);
   const pickupAddr = ride.pickup_points[0] ?? "";
   const dropAddr = ride.drop_points[0] ?? "";
 

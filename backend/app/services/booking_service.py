@@ -34,7 +34,7 @@ from app.schemas import (
 )
 from app.services import razorpay_client
 from app.services.ride_seats import cap_available_seats
-from app.services.ride_time import ride_departure_has_passed
+from app.services.ride_time import auto_complete_if_passed, ride_departure_has_passed
 from app.services.whatsapp import notify_booking_cancelled, notify_booking_created
 from app.utils.serializers import ride_to_out
 
@@ -203,7 +203,17 @@ class BookingService:
 
     # ----- read models ------------------------------------------------------
     def history(self, passenger: User) -> list[Booking]:
-        return self.bookings.list_active_for_passenger(passenger.id)
+        bookings = self.bookings.list_active_for_passenger(passenger.id)
+        changed = [auto_complete_if_passed(booking.ride) for booking in bookings]
+        if any(changed):
+            self.db.commit()
+            cache.bump_rides_version()
+        # Bookings that just completed drop out of the "not completed yet" list.
+        return [
+            booking
+            for booking in bookings
+            if booking.status != BookingStatus.completed
+        ]
 
     def report(self, reporter: User, payload: ReportCreate) -> None:
         self.db.add(

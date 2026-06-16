@@ -6,7 +6,7 @@ import { bookingsApi } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
-import { formatTimeAmPm } from "../lib/format";
+import { formatShortDate, formatTimeAmPm } from "../lib/format";
 import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
 import type { BookingActionResponse } from "../types";
@@ -164,13 +164,13 @@ export default function RideDetail() {
                 )}
               </div>
               <p className="mt-0.5 text-sm text-muted">
-                {ride.distance_km} km · {ride.journey_date} · {formatTimeAmPm(ride.departure_time)}
+                {formatShortDate(ride.journey_date)} · {formatTimeAmPm(ride.departure_time)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Date</p>
-                <p className="text-sm font-bold text-primary-dark">{ride.journey_date}</p>
+                <p className="text-sm font-bold text-primary-dark">{formatShortDate(ride.journey_date)}</p>
               </div>
               <div className="rounded-lg bg-primary-soft px-3 py-2">
                 <p className="text-[11px] font-bold text-primary">Time</p>
@@ -289,32 +289,25 @@ export default function RideDetail() {
                   <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
                 ) : (
                   <>
-                <label>
-                  <span className="field-label">Seats</span>
-                  <input
-                    className="input"
-                    type="number"
-                    min={1}
-                    max={ride.available_seats}
-                    value={seats}
-                    onChange={(event) => setSeats(Number(event.target.value))}
-                  />
-                </label>
-                <label>
-                  <span className="field-label">Pickup</span>
-                  <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
-                    <option value="">Select pickup</option>
-                    {ride.pickup_points.map((point) => (
-                      <option key={point} value={point}>
-                        {point}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span className="field-label">Drop-off or stop</span>
-                  <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
-                    <option value="">Select drop</option>
+                <input
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={ride.available_seats}
+                  value={seats}
+                  onChange={(event) => setSeats(Number(event.target.value))}
+                  placeholder="Seats"
+                />
+                <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
+                  <option value="">Select pickup</option>
+                  {ride.pickup_points.map((point) => (
+                    <option key={point} value={point}>
+                      {point}
+                    </option>
+                  ))}
+                </select>
+                <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
+                    <option value="">Select drop-off or stop</option>
                     {ride.route_stops.length > 0 && (
                       <optgroup label="In-between stops">
                         {ride.route_stops.map((point) => (
@@ -332,7 +325,6 @@ export default function RideDetail() {
                       ))}
                     </optgroup>
                   </select>
-                </label>
                 <div>
                   <span className="field-label">Payment method</span>
                   <div className="mt-1 grid grid-cols-2 gap-2">

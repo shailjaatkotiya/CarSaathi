@@ -83,8 +83,7 @@ export default function AddVehicle() {
             <p className="mt-1 text-sm text-muted">Add car details passengers can compare before requesting seats.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label>
-              <span className="field-label">Brand</span>
+            <div>
               <select className="input" value={brand} onChange={(event) => setBrand(event.target.value)} required>
                 {carBrands.map((item) => (
                   <option key={item} value={item}>
@@ -102,31 +101,20 @@ export default function AddVehicle() {
                   required
                 />
               )}
-            </label>
-            <label>
-              <span className="field-label">Model</span>
-              <input className="input" name="model" defaultValue="Swift Dzire" required />
-            </label>
-            <label>
-              <span className="field-label">Vehicle number</span>
-              <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" required />
-            </label>
-            <label>
-              <span className="field-label">Fuel type</span>
-              <select className="input" name="fuel_type" defaultValue="Petrol" required>
-                <option value="Petrol">Petrol</option>
-                <option value="Diesel">Diesel</option>
-                <option value="CNG">CNG</option>
-                <option value="EV">EV</option>
-              </select>
-            </label>
-            <label>
-              <span className="field-label">Car color</span>
-              <input className="input" name="color" defaultValue="White" placeholder="White" required />
+            </div>
+            <input className="input" name="model" defaultValue="Swift Dzire" placeholder="Model" required />
+            <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" placeholder="Vehicle number" required />
+            <select className="input" name="fuel_type" defaultValue="Petrol" required>
+              <option value="Petrol">Petrol</option>
+              <option value="Diesel">Diesel</option>
+              <option value="CNG">CNG</option>
+              <option value="EV">EV</option>
+            </select>
+            <div>
+              <input className="input" name="color" defaultValue="White" placeholder="Car color" required />
               <span className="field-hint">Helps passengers spot your car. Defaults to White.</span>
-            </label>
-            <label>
-              <span className="field-label">Passenger seats</span>
+            </div>
+            <div>
               <input
                 className="input"
                 name="seats"
@@ -135,9 +123,10 @@ export default function AddVehicle() {
                 max={defaultPassengerSeats(category)}
                 value={passengerSeats}
                 onChange={(event) => setPassengerSeats(Number(event.target.value))}
+                placeholder="Passenger seats"
               />
               <span className="field-hint">{category === "7 Seater" ? "7 Seater default is 6" : "Sedan and SUV default is 3"}</span>
-            </label>
+            </div>
           </div>
 
           <div>

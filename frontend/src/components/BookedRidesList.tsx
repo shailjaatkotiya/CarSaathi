@@ -12,13 +12,24 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
-import { whatsappLink, formatShortDate } from "../lib/format";
+import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed, ridePhase } from "../lib/format";
+import AutoGrowTextarea from "./AutoGrowTextarea";
 import { queryKeys } from "../lib/queryKeys";
-import {
-  bookingStatusLabel,
-  CANCELLABLE_BOOKING_STATUSES,
-} from "../constants/booking";
+import { CANCELLABLE_BOOKING_STATUSES } from "../constants/booking";
 import type { Booking, BookingStatus } from "../types";
+
+// Passenger-facing booking status: Pending / Accepted / Rejected / Cancelled /
+// On Going / Completed. Open bookings (pending, confirmed) shift to On Going
+// once the ride departs and Completed once it ends (6h after departure).
+function passengerBookingStatus(booking: Booking): string {
+  if (booking.status === "cancelled") return "Cancelled";
+  if (booking.status === "rejected") return "Rejected";
+  if (booking.status === "completed") return "Completed";
+  const phase = ridePhase(booking.journey_date, booking.departure_time);
+  if (phase === "ended") return "Completed";
+  if (phase === "ongoing") return "On Going";
+  return booking.status === "confirmed" ? "Accepted" : "Pending";
+}
 
 function ReportForm({
   booking,
@@ -53,9 +64,8 @@ function ReportForm({
   return (
     <div className="mt-4 rounded-xl border border-sand bg-cream p-4">
       <p className="font-bold">Report driver {booking.driver_name}</p>
-      <textarea
+      <AutoGrowTextarea
         className="input mt-3"
-        rows={2}
         placeholder="Describe what went wrong"
         value={reason}
         onChange={(event) => setReason(event.target.value)}
@@ -113,7 +123,7 @@ export default function BookedRidesList() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock size={15} className="text-primary" />
-                  {booking.departure_time.slice(0, 5)}
+                  {formatTimeAmPm(booking.departure_time)}
                 </span>
                 {booking.car_number && (
                   <span className="flex items-center gap-1.5">
@@ -135,13 +145,13 @@ export default function BookedRidesList() {
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="chip">
-                  {bookingStatusLabel(booking.status)}
+                  {passengerBookingStatus(booking)}
                 </span>
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
                 {whatsappLink(booking.driver_whatsapp) && (
                   <a
-                    href={whatsappLink(booking.driver_whatsapp)!}
+                    href={whatsappLink(booking.driver_whatsapp, rideChatPretext(booking))!}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="chip-solid hover:opacity-90"
@@ -153,10 +163,12 @@ export default function BookedRidesList() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
-              {/* Cancel while waiting for approval (pending) or after it is confirmed. */}
+              {/* Cancel while waiting for approval (pending) or after it is
+                  confirmed - but never once the ride's departure has passed. */}
               {CANCELLABLE_BOOKING_STATUSES.includes(
                 booking.status as BookingStatus,
-              ) && (
+              ) &&
+                !rideTimePassed(booking.journey_date, booking.departure_time) && (
                 <button
                   type="button"
                   className="btn-danger"
