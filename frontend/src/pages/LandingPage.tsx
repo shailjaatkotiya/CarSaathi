@@ -106,6 +106,18 @@ function Field({
 
 function HomeForUser({ user }: { user?: User }) {
   const isSignedIn = Boolean(user);
+  const isDriver = user?.role === "driver";
+  const isPassenger = user?.role === "passenger";
+  const primary = isDriver
+    ? { to: "/driver/create-ride", label: "Publish a ride", icon: Car }
+    : { to: "/search", label: "Book a Ride", icon: Search };
+  const secondary = isDriver
+    ? { to: "/my-rides", label: "Published Rides", icon: ListChecks }
+    : isPassenger
+      ? { to: "/profile/passenger", label: "Booked Rides", icon: ListChecks }
+      : { to: "/auth?role=driver", label: "Publish a ride", icon: Car };
+  const PrimaryIcon = primary.icon;
+  const SecondaryIcon = secondary.icon;
 
   return (
     <>
@@ -122,26 +134,22 @@ function HomeForUser({ user }: { user?: User }) {
               </h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
                 {isSignedIn
-                  ? "Book friendly rides, publish your own journey, and manage both from one Carthi account."
+                  ? isDriver
+                    ? "Publish intercity rides and manage passenger requests from Published Rides."
+                    : "Book friendly rides and manage your unfinished bookings from Booked Rides."
                   : "Book a friendly car ride, flexible halts, and a homely intercity travel experience."}
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/search" className="btn-primary px-6 py-3 text-base">
-                <Search size={18} />
-                Book a Ride
+              <Link to={primary.to} className="btn-primary px-6 py-3 text-base">
+                <PrimaryIcon size={18} />
+                {primary.label}
                 <ArrowRight size={18} />
               </Link>
-              <Link to={isSignedIn ? "/driver/create-ride" : "/auth?next=/driver/create-ride"} className="btn-outline px-6 py-3 text-base">
-                <Car size={18} />
-                Publish a ride
+              <Link to={secondary.to} className="btn-outline px-6 py-3 text-base">
+                <SecondaryIcon size={18} />
+                {secondary.label}
               </Link>
-              {isSignedIn && (
-                <Link to="/my-rides" className="btn-outline px-6 py-3 text-base">
-                  <ListChecks size={18} />
-                  Published Rides
-                </Link>
-              )}
             </div>
           </div>
 
@@ -151,10 +159,12 @@ function HomeForUser({ user }: { user?: User }) {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl px-4 pb-4">
-        <h2 className="mb-3 text-xl font-bold">Search published rides</h2>
-        <RideSearchBar />
-      </div>
+      {!isDriver && (
+        <div className="mx-auto w-full max-w-6xl px-4 pb-4">
+          <h2 className="mb-3 text-xl font-bold">Search published rides</h2>
+          <RideSearchBar />
+        </div>
+      )}
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-4 pt-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -171,7 +181,7 @@ function HomeForUser({ user }: { user?: User }) {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6">
-        <RideFlow />
+        <RideFlow role={user?.role} />
       </div>
     </>
   );

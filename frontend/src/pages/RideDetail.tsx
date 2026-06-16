@@ -45,6 +45,7 @@ export default function RideDetail() {
     enabled: Boolean(rideId)
   });
   const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
+  const isDriver = me?.role === "driver";
 
   const paymentAmount = useMemo(() => (ride ? seats * ride.price_per_seat : 0), [ride, seats]);
   const instructionLines = useMemo(() => {
@@ -60,7 +61,11 @@ export default function RideDetail() {
   async function book() {
     if (!ride) return;
     if (!token) {
-      navigate("/auth", { state: { from: `/rides/${ride.id}` } });
+      navigate("/auth?role=passenger", { state: { from: `/rides/${ride.id}` } });
+      return;
+    }
+    if (isDriver) {
+      setError("Driver accounts cannot book rides. Please login as a passenger to book.");
       return;
     }
     setMessage("");
@@ -280,6 +285,10 @@ export default function RideDetail() {
               <h2 className="text-base font-bold">Book this ride</h2>
               <p className="mt-0.5 text-xs text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
               <div className="mt-3 flex flex-col gap-2.5">
+                {isDriver ? (
+                  <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
+                ) : (
+                  <>
                 <label>
                   <span className="field-label">Seats</span>
                   <input
@@ -378,6 +387,8 @@ export default function RideDetail() {
                 <p className="text-xs text-muted">
                   {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
                 </p>
+                  </>
+                )}
                 {message && <p className="alert-success">{message}</p>}
                 {error && <p className="alert-error">{error}</p>}
               </div>

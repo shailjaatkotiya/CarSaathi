@@ -1,12 +1,13 @@
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import VerificationStatus
+from app.models import UserRole, VerificationStatus
 
 
 class UserOut(BaseModel):
     id: int
     full_name: str
     email: EmailStr
+    role: UserRole
     whatsapp_number: str | None
     personal_car_brand: str | None
     personal_car_model: str | None

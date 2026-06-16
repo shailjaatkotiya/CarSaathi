@@ -191,7 +191,10 @@ function SectionHeader({
   );
 }
 
-export default function RideFlow() {
+export default function RideFlow({ role }: { role?: string }) {
+  const showPublish = role !== "passenger";
+  const showBook = role !== "driver";
+
   return (
     <div className="flex flex-col gap-5">
       <section className="card-soft p-4 md:p-5">
@@ -204,15 +207,19 @@ export default function RideFlow() {
         <FlowRow steps={appSteps} compact />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="card p-4 md:p-5">
-          <SectionHeader eyebrow="Publish" title="Create a journey" body="Car > ride details > publish > accept or reject passengers." icon={Car} />
-          <FlowRow steps={driverSteps} compact />
-        </div>
-        <div className="card p-4 md:p-5">
-          <SectionHeader eyebrow="Book" title="Find a seat" body="Search > ride details > book > cancel from booked rides." icon={Search} />
-          <FlowRow steps={passengerSteps} compact />
-        </div>
+      <section className={`grid gap-4 ${showPublish && showBook ? "md:grid-cols-2" : ""}`}>
+        {showPublish && (
+          <div className="card p-4 md:p-5">
+            <SectionHeader eyebrow="Publish" title="Create a journey" body="Car > ride details > publish > accept or reject passengers." icon={Car} />
+            <FlowRow steps={driverSteps} compact />
+          </div>
+        )}
+        {showBook && (
+          <div className="card p-4 md:p-5">
+            <SectionHeader eyebrow="Book" title="Find a seat" body="Search > ride details > book > cancel from booked rides." icon={Search} />
+            <FlowRow steps={passengerSteps} compact />
+          </div>
+        )}
       </section>
 
       <section className="grid gap-3 md:grid-cols-3">

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_token
 from app.database import get_db
-from app.models import AdminUser, User
+from app.models import AdminUser, User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -32,5 +32,23 @@ def require_admin(
     if not admin_user:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
+    return user
+
+
+def require_driver(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.driver:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Login as driver to publish or manage rides",
+        )
+    return user
+
+
+def require_passenger(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.passenger:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Log in as passenger to book a ride",
         )
     return user

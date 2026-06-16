@@ -5,16 +5,34 @@ import { authApi } from "../api/auth";
 import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 import { useSessionStore } from "../store/session";
+import type { UserRole } from "../types";
 
-const AUTH_HOME = "/search";
+function homeForRole(role: UserRole) {
+  if (role === "driver") return "/driver/create-ride";
+  if (role === "admin") return "/admin";
+  return "/search";
+}
+
+function roleFromQuery(value: string | null): UserRole {
+  return value === "driver" || value === "admin" || value === "passenger" ? value : "passenger";
+}
+
+function defaultsForRole(role: UserRole) {
+  if (role === "driver") {
+    return { email: "shubham@gmail.com", password: "driver@123", fullName: "Shubham" };
+  }
+  return { email: "shailja@gmail.com", password: "passenger@123", fullName: "Shailja" };
+}
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
-  const next = searchParams.get("next");
+  const requiredRole = roleFromQuery(searchParams.get("role"));
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("shailja@gmail.com");
-  const [password, setPassword] = useState("passenger@123");
-  const [fullName, setFullName] = useState("Shailja");
+  const [selectedRole, setSelectedRole] = useState<UserRole>(requiredRole);
+  const defaults = defaultsForRole(selectedRole);
+  const [email, setEmail] = useState(defaults.email);
+  const [password, setPassword] = useState(defaults.password);
+  const [fullName, setFullName] = useState(defaults.fullName);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -24,17 +42,28 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const from = (location.state as { from?: string } | null)?.from || next || null;
+  const from = (location.state as { from?: string } | null)?.from || null;
+
+  useEffect(() => {
+    const nextDefaults = defaultsForRole(selectedRole);
+    setEmail(nextDefaults.email);
+    setPassword(nextDefaults.password);
+    setFullName(nextDefaults.fullName);
+  }, [selectedRole]);
 
   useEffect(() => {
     if (!token) return;
     authApi
       .me()
-      .then(() => navigate(from || AUTH_HOME, { replace: true }))
+      .then((user) => {
+        if (user.role === requiredRole || !searchParams.get("role")) {
+          navigate(from || homeForRole(user.role), { replace: true });
+        }
+      })
       .catch(() => {
         /* invalid token handled by interceptor */
       });
-  }, [from, navigate, token]);
+  }, [from, navigate, requiredRole, searchParams, token]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -46,18 +75,19 @@ export default function AuthPage() {
     try {
       const data =
         mode === "login"
-          ? await authApi.login({ email: normalizedEmail, password: password.trim() })
+          ? await authApi.login({ email: normalizedEmail, password: password.trim(), role: selectedRole })
           : await authApi.register({
               full_name: fullName.trim(),
               email: normalizedEmail,
               password: password.trim(),
               whatsapp_number: whatsappNumber.trim() || null,
+              role: selectedRole,
             });
       setToken(data.access_token);
       await queryClient.invalidateQueries({ queryKey: queryKeys.me });
-      await authApi.me();
+      const me = await authApi.me();
       setMessage("Logged in successfully.");
-      navigate(from || AUTH_HOME, { replace: true });
+      navigate(from || homeForRole(me.role), { replace: true });
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -70,11 +100,13 @@ export default function AuthPage() {
       <div className="card rounded-3xl p-6 md:p-10">
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div>
-            <h1 className="text-3xl font-bold">{mode === "login" ? "Login" : "Create your account"}</h1>
+            <h1 className="text-3xl font-bold">
+              {mode === "login" ? `Login as ${selectedRole}` : `Create ${selectedRole} account`}
+            </h1>
             <p className="mt-2 text-muted">
-              {mode === "login"
-                ? "Enter your email and password to book, publish, and manage rides from one account."
-                : "Create one account for your profile, bookings, vehicles, and published rides."}
+              {selectedRole === "driver"
+                ? "Driver accounts publish rides, manage passengers, and maintain car details."
+                : "Passenger accounts search, book, and manage booked rides."}
             </p>
           </div>
 
@@ -92,6 +124,14 @@ export default function AuthPage() {
               </button>
             ))}
           </div>
+
+          <label>
+            <span className="field-label">{mode === "login" ? "Login as" : "Register as"}</span>
+            <select className="input" value={selectedRole} onChange={(event) => setSelectedRole(event.target.value as UserRole)}>
+              <option value="passenger">Passenger</option>
+              <option value="driver">Driver</option>
+            </select>
+          </label>
 
           {mode === "register" && (
             <>

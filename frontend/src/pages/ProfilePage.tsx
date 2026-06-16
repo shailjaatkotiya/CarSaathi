@@ -191,6 +191,8 @@ export default function ProfilePage() {
     );
   }
 
+  const isDriver = data.role === "driver";
+  const isPassenger = data.role === "passenger";
   const phoneVerified = Boolean(data.whatsapp_number);
   const emailVerified = false;
   const govtIdVerified = verification?.status === "verified";
@@ -229,7 +231,7 @@ export default function ProfilePage() {
                     <VerifiedBadge verified={data.verification_status === "verified"} />
                   </div>
                   <p className="mt-0.5 text-xs text-muted">
-                    Carthi member
+                    {isDriver ? "Driver" : "Passenger"}
                     {data.rating_count > 0 && ` - ${data.rating_average} rating (${data.rating_count})`}
                   </p>
                 </div>
@@ -272,31 +274,33 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div>
-              <SectionTitle>Verify your profile</SectionTitle>
-              <SettingsGroup>
-                <SettingsRow
-                  icon={govtIdVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
-                  label="Verify your Govt. ID"
-                  sublabel={govtIdVerified ? `Aadhaar ****${verification?.masked_aadhaar?.slice(-4) || ""}` : "Quick to do and inspires trust"}
-                  to="/verify"
-                />
-                <SettingsRow
-                  icon={emailVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
-                  label={`Confirm email ${data.email}`}
-                  sublabel={emailVerified ? "Email verified" : "Verify your email address"}
-                  onClick={() => {}}
-                />
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                  <span className="shrink-0 text-muted">{phoneVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Phone size={16} />}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold">{data.whatsapp_number || "Add phone number"}</span>
-                    {phoneVerified && <span className="mt-0.5 block text-xs text-muted">Phone number added</span>}
-                  </span>
-                  {phoneVerified && <Shield size={16} className="shrink-0 text-green-600" />}
-                </div>
-              </SettingsGroup>
-            </div>
+            {!isPassenger && (
+              <div>
+                <SectionTitle>Verify your profile</SectionTitle>
+                <SettingsGroup>
+                  <SettingsRow
+                    icon={govtIdVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                    label="Verify your Govt. ID"
+                    sublabel={govtIdVerified ? `Aadhaar ****${verification?.masked_aadhaar?.slice(-4) || ""}` : "Quick to do and inspires trust"}
+                    to="/verify"
+                  />
+                  <SettingsRow
+                    icon={emailVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Plus size={16} />}
+                    label={`Confirm email ${data.email}`}
+                    sublabel={emailVerified ? "Email verified" : "Verify your email address"}
+                    onClick={() => {}}
+                  />
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <span className="shrink-0 text-muted">{phoneVerified ? <ShieldCheck size={16} className="text-green-600" /> : <Phone size={16} />}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">{data.whatsapp_number || "Add phone number"}</span>
+                      {phoneVerified && <span className="mt-0.5 block text-xs text-muted">Phone number added</span>}
+                    </span>
+                    {phoneVerified && <Shield size={16} className="shrink-0 text-green-600" />}
+                  </div>
+                </SettingsGroup>
+              </div>
+            )}
 
             <div>
               <SectionTitle>About you</SectionTitle>
@@ -306,12 +310,14 @@ export default function ProfilePage() {
               </SettingsGroup>
             </div>
 
-            <div>
-              <SectionTitle>Vehicles</SectionTitle>
-              <SettingsGroup>
-                <SettingsRow icon={<Plus size={16} />} label="Add a vehicle" to="/driver/vehicle" />
-              </SettingsGroup>
-            </div>
+            {!isPassenger && (
+              <div>
+                <SectionTitle>Vehicles</SectionTitle>
+                <SettingsGroup>
+                  <SettingsRow icon={<Plus size={16} />} label="Add a vehicle" to="/driver/vehicle" />
+                </SettingsGroup>
+              </div>
+            )}
 
             <div>
               <SectionTitle>Reviews</SectionTitle>
@@ -329,8 +335,8 @@ export default function ProfilePage() {
             </div>
 
             <SettingsGroup>
-              <SettingsRow icon={<Car size={16} />} label="My published rides" to="/my-rides" />
-              <SettingsRow icon={<Car size={16} />} label="My booked rides" to="/profile/passenger" />
+              {isDriver && <SettingsRow icon={<Car size={16} />} label="My published rides" to="/my-rides" />}
+              {isPassenger && <SettingsRow icon={<Car size={16} />} label="My booked rides" to="/profile/passenger" />}
             </SettingsGroup>
           </>
         )}

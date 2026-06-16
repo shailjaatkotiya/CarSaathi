@@ -11,6 +11,7 @@ from app.models import (
     RideDropPoint,
     RidePickupPoint,
     User,
+    UserRole,
     Vehicle,
     VerificationStatus,
 )
@@ -47,40 +48,48 @@ def ensure_default_admin(db: Session) -> None:
             full_name="Carthi Admin",
             email="admin@carthi.in",
             password_hash=hash_password("Admin@123"),
+            role=UserRole.admin,
             verification_status=VerificationStatus.verified,
         )
         db.add(admin)
         db.flush()
+    admin.role = UserRole.admin
     if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
         db.add(AdminUser(user_id=admin.id))
     db.commit()
 
 
-def ensure_demo_profiles(db: Session) -> None:
+def ensure_demo_roles_and_profiles(db: Session) -> None:
     for user in db.query(User).all():
-        if user.email in DRIVER_DEMO_EMAILS and not user.driver_profile:
-            db.add(DriverProfile(user_id=user.id))
-        if user.email in PASSENGER_DEMO_EMAILS and not user.passenger_profile:
-            db.add(PassengerProfile(user_id=user.id))
+        if user.email in DRIVER_DEMO_EMAILS:
+            user.role = UserRole.driver
+            if not user.driver_profile:
+                db.add(DriverProfile(user_id=user.id))
+        if user.email in PASSENGER_DEMO_EMAILS:
+            user.role = UserRole.passenger
+            if not user.passenger_profile:
+                db.add(PassengerProfile(user_id=user.id))
     db.commit()
 
 
 def seed_database(db: Session) -> None:
     if db.query(User).first():
         ensure_default_admin(db)
-        ensure_demo_profiles(db)
+        ensure_demo_roles_and_profiles(db)
         return
 
     shubham = User(
         full_name="Shubham",
         email="shubham@gmail.com",
         password_hash=hash_password("driver@123"),
+        role=UserRole.driver,
         verification_status=VerificationStatus.pending,
     )
     shailja = User(
         full_name="Shailja",
         email="shailja@gmail.com",
         password_hash=hash_password("passenger@123"),
+        role=UserRole.passenger,
         verification_status=VerificationStatus.pending,
     )
     dummy_drivers = [
@@ -88,6 +97,7 @@ def seed_database(db: Session) -> None:
             full_name="Aarav Patel",
             email="aarav.driver@carthi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.8,
             rating_count=26,
@@ -96,6 +106,7 @@ def seed_database(db: Session) -> None:
             full_name="Mehul Shah",
             email="mehul.driver@carthi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.6,
             rating_count=19,
@@ -104,6 +115,7 @@ def seed_database(db: Session) -> None:
             full_name="Rohan Trivedi",
             email="rohan.driver@carthi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.9,
             rating_count=34,
@@ -112,6 +124,7 @@ def seed_database(db: Session) -> None:
             full_name="Nikhil Desai",
             email="nikhil.driver@carthi.in",
             password_hash=hash_password("driver@123"),
+            role=UserRole.driver,
             verification_status=VerificationStatus.verified,
             rating_average=4.7,
             rating_count=22,

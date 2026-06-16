@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import require_driver
 from app.models import User
 from app.schemas import (
     BookingOut,
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/driver", tags=["driver"])
 @router.post("/vehicles", response_model=VehicleOut)
 def add_vehicle(
     payload: VehicleCreate,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ):
     return VehicleService(db).add(driver, payload)
@@ -32,7 +32,7 @@ def add_vehicle(
 
 @router.get("/vehicles", response_model=list[VehicleOut])
 def list_vehicles(
-    driver: User = Depends(get_current_user), db: Session = Depends(get_db)
+    driver: User = Depends(require_driver), db: Session = Depends(get_db)
 ):
     return VehicleService(db).list_for_driver(driver)
 
@@ -41,7 +41,7 @@ def list_vehicles(
 def update_vehicle(
     vehicle_id: int,
     payload: VehicleCreate,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ):
     return VehicleService(db).update(driver, vehicle_id, payload)
@@ -51,7 +51,7 @@ def update_vehicle(
 @router.post("/rides", response_model=RideOut)
 def create_ride(
     payload: RideCreate,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ) -> RideOut:
     ride = DriverRideService(db).publish(driver, payload)
@@ -60,7 +60,7 @@ def create_ride(
 
 @router.get("/rides", response_model=list[RideOut])
 def my_rides(
-    driver: User = Depends(get_current_user), db: Session = Depends(get_db)
+    driver: User = Depends(require_driver), db: Session = Depends(get_db)
 ) -> list[RideOut]:
     return [ride_to_out(ride) for ride in DriverRideService(db).list_for_driver(driver)]
 
@@ -69,7 +69,7 @@ def my_rides(
 def cancel_ride(
     ride_id: int,
     payload: CancellationRequest,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ) -> dict:
     DriverRideService(db).cancel(ride_id, driver, payload.reason)
@@ -79,7 +79,7 @@ def cancel_ride(
 @router.post("/rides/{ride_id}/complete")
 def complete_ride(
     ride_id: int,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ) -> dict:
     DriverRideService(db).complete(ride_id, driver)
@@ -89,7 +89,7 @@ def complete_ride(
 @router.get("/rides/{ride_id}/bookings", response_model=list[DriverBookingOut])
 def ride_bookings(
     ride_id: int,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ) -> list[DriverBookingOut]:
     return [
@@ -102,7 +102,7 @@ def ride_bookings(
 @router.post("/bookings/{booking_id}/accept", response_model=BookingOut)
 def accept_booking(
     booking_id: int,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ):
     return DriverRideService(db).accept_booking_for_driver(booking_id, driver)
@@ -111,7 +111,7 @@ def accept_booking(
 @router.post("/bookings/{booking_id}/reject", response_model=BookingOut)
 def reject_booking(
     booking_id: int,
-    driver: User = Depends(get_current_user),
+    driver: User = Depends(require_driver),
     db: Session = Depends(get_db),
 ):
     return DriverRideService(db).reject_booking_for_driver(
@@ -136,7 +136,7 @@ def reject_booking_from_whatsapp(booking_code: str, db: Session = Depends(get_db
 
 @router.get("/bookings/active")
 def active_driver_bookings(
-    driver: User = Depends(get_current_user), db: Session = Depends(get_db)
+    driver: User = Depends(require_driver), db: Session = Depends(get_db)
 ) -> list[dict]:
     rows = DriverRideService(db).active_bookings(driver)
     return [
