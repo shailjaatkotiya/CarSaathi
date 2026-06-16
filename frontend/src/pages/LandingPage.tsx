@@ -1,11 +1,23 @@
-import { ArrowRight, BadgeCheck, Car, ListChecks, Map, MapPin, Search, Shield, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Car,
+  ListChecks,
+  Map,
+  MapPin,
+  Search,
+  Shield,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { User } from "../types";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
 import RideFlow from "../components/RideFlow";
-import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
+import TravelDatePicker, {
+  getTodayInputDate,
+} from "../components/TravelDatePicker";
 import PixelSlideshow from "../components/PixelSlideshow";
 
 // Monochrome car-dashboard illustrations (different intercity routes) that the
@@ -15,14 +27,30 @@ const DASHBOARD_IMAGES = [
   "/car-dashboard-2.svg",
   "/car-dashboard-3.svg",
   "/car-dashboard-4.svg",
-  "/car-dashboard-5.svg"
+  "/car-dashboard-5.svg",
 ];
 
 const features = [
-  [Shield, "Verified profiles", "Aadhaar mock verification keeps trust visible before rides start."],
-  [Car, "Homely car comfort", "Choose drivers, cars, AC, pickup points, and flexible halt notes."],
-  [Users, "Friendly travel", "Skip the lonely bus and share intercity routes with verified people."],
-  [Map, "Gujarat-first routes", "Ahmedabad, Rajkot, Jamnagar, Surat, and nearby city corridors."]
+  [
+    Shield,
+    "Verified profiles",
+    "Aadhaar mock verification keeps trust visible before rides start.",
+  ],
+  [
+    Car,
+    "Homely car comfort",
+    "Choose drivers, cars, AC, pickup points, and flexible halt notes.",
+  ],
+  [
+    Users,
+    "Friendly travel",
+    "Skip the lonely bus and share intercity routes with verified people.",
+  ],
+  [
+    Map,
+    "Gujarat-first routes",
+    "Ahmedabad, Rajkot, Jamnagar, Surat, and nearby city corridors.",
+  ],
 ] as const;
 
 export default function LandingPage() {
@@ -54,8 +82,18 @@ function RideSearchBar() {
       onSubmit={findVehicle}
       className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto] md:gap-2 md:rounded-3xl md:p-3"
     >
-      <Field icon={MapPin} label="Pickup" value={pickup} onChange={setPickup} placeholder="Enter pickup city" />
-      <Field icon={MapPin} label="Drop off" value={dropoff} onChange={setDropoff} placeholder="Enter drop off city" />
+      <Field
+        icon={MapPin}
+        value={""}
+        onChange={setPickup}
+        placeholder="Enter pickup city"
+      />
+      <Field
+        icon={MapPin}
+        value={""}
+        onChange={setDropoff}
+        placeholder="Enter drop off city"
+      />
       <TravelDatePicker value={pickupDate} onChange={setPickupDate} />
       <button
         type="submit"
@@ -74,10 +112,10 @@ function Field({
   value,
   onChange,
   type = "text",
-  placeholder
+  placeholder,
 }: {
   icon: typeof MapPin;
-  label: string;
+  label?: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
@@ -85,11 +123,13 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wide text-muted">
+        {label}
+      </span>
       <span className="flex items-center gap-2">
         <Icon size={16} className="shrink-0 text-neutral-400" />
         <input
-          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
+          className="w-full bg-transparent text-sm text-ink field-label outline-none placeholder:text-neutral-400"
           type={type}
           value={value}
           placeholder={placeholder}
@@ -130,7 +170,9 @@ function HomeForUser({ user }: { user?: User }) {
             </span>
             <div>
               <h1 className="text-5xl font-bold leading-none md:text-7xl">
-                {user?.full_name ? `Welcome, ${user.full_name.split(" ")[0]}` : "Carthi"}
+                {user?.full_name
+                  ? `Welcome, ${user.full_name.split(" ")[0]}`
+                  : "Carthi"}
               </h1>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
                 {isSignedIn
@@ -146,7 +188,10 @@ function HomeForUser({ user }: { user?: User }) {
                 {primary.label}
                 <ArrowRight size={18} />
               </Link>
-              <Link to={secondary.to} className="btn-outline px-6 py-3 text-base">
+              <Link
+                to={secondary.to}
+                className="btn-outline px-6 py-3 text-base"
+              >
                 <SecondaryIcon size={18} />
                 {secondary.label}
               </Link>
@@ -154,7 +199,10 @@ function HomeForUser({ user }: { user?: User }) {
           </div>
 
           <div className="overflow-hidden rounded-3xl border border-sand">
-            <PixelSlideshow images={DASHBOARD_IMAGES} className="block h-[260px] w-full md:h-[390px]" />
+            <PixelSlideshow
+              images={DASHBOARD_IMAGES}
+              className="block h-[260px] w-full md:h-[390px]"
+            />
           </div>
         </div>
       </div>

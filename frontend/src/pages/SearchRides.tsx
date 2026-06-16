@@ -155,21 +155,19 @@ export default function SearchRides() {
       {/* Top search bar: pickup, drop off, date, passengers */}
       <div className="card flex flex-col gap-2 rounded-2xl p-2 md:flex-row md:items-stretch md:gap-0 md:divide-x md:divide-sand">
         <label className="flex flex-1 flex-col justify-center px-3 py-2">
-          <span className="field-label mb-0">From</span>
           <input
-            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            className="w-full bg-transparent field-label font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
             value={source}
             onChange={(event) => setSource(event.target.value)}
-            placeholder="Pickup city"
+            placeholder="Enter pickup city"
           />
         </label>
         <label className="flex flex-1 flex-col justify-center px-3 py-2">
-          <span className="field-label mb-0">To</span>
           <input
-            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            className="w-full bg-transparent field-label font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
-            placeholder="Drop off city"
+            placeholder="Enter drop off city"
           />
         </label>
         <div className="flex items-center px-2 md:w-[160px]">

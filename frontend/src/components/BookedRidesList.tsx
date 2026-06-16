@@ -1,14 +1,32 @@
-import { Calendar, Car, Clock, Flag, MapPin, MessageCircle, Palette, XCircle } from "lucide-react";
+import {
+  Calendar,
+  Car,
+  Clock,
+  Flag,
+  MapPin,
+  MessageCircle,
+  Palette,
+  XCircle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
 import { whatsappLink, formatShortDate } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
-import { bookingStatusLabel, CANCELLABLE_BOOKING_STATUSES } from "../constants/booking";
+import {
+  bookingStatusLabel,
+  CANCELLABLE_BOOKING_STATUSES,
+} from "../constants/booking";
 import type { Booking, BookingStatus } from "../types";
 
-function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: string) => void }) {
+function ReportForm({
+  booking,
+  onDone,
+}: {
+  booking: Booking;
+  onDone: (message: string) => void;
+}) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 
@@ -22,11 +40,13 @@ function ReportForm({ booking, onDone }: { booking: Booking; onDone: (message: s
       await bookingsApi.report({
         reported_user_id: booking.driver_id,
         ride_id: booking.ride_id,
-        reason: reason.trim()
+        reason: reason.trim(),
       });
       onDone("Report submitted. Our admin team will review it.");
     } catch (err) {
-      setError(apiErrorMessage(err, "Could not submit the report. Please try again."));
+      setError(
+        apiErrorMessage(err, "Could not submit the report. Please try again."),
+      );
     }
   }
 
@@ -55,12 +75,14 @@ export default function BookedRidesList() {
   const [reportBookingId, setReportBookingId] = useState<number | null>(null);
   const { data: passengerBookings, refetch } = useQuery({
     queryKey: queryKeys.passenger.bookings,
-    queryFn: bookingsApi.list
+    queryFn: bookingsApi.list,
   });
 
   async function cancelBooking(bookingId: number) {
     await bookingsApi.cancel(bookingId, "Passenger cancelled from profile");
-    setMessage("Booking cancelled. WhatsApp cancellation message has been logged.");
+    setMessage(
+      "Booking cancelled. WhatsApp cancellation message has been logged.",
+    );
     refetch();
   }
 
@@ -80,9 +102,10 @@ export default function BookedRidesList() {
             <div>
               <div className="flex items-center gap-2">
                 <MapPin size={18} className="text-primary" />
-                <h3 className="font-bold">{booking.route.replace(/\s+to\s+/i, " -> ")}</h3>
+                <h3 className="font-bold">
+                  {booking.route.replace(/\s+to\s+/i, " -> ")}
+                </h3>
               </div>
-              <p className="text-sm text-muted">driver {booking.driver_name}</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 <span className="flex items-center gap-1.5">
                   <Calendar size={15} className="text-primary" />
@@ -92,8 +115,6 @@ export default function BookedRidesList() {
                   <Clock size={15} className="text-primary" />
                   {booking.departure_time.slice(0, 5)}
                 </span>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
                 {booking.car_number && (
                   <span className="flex items-center gap-1.5">
                     <Car size={15} className="text-primary" />
@@ -107,11 +128,15 @@ export default function BookedRidesList() {
                   </span>
                 )}
               </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted"></div>
               <p className="mt-2 text-sm text-muted">
-                {booking.seats_booked} seats - {booking.pickup_point} to {booking.drop_point}
+                {booking.seats_booked} seats - {booking.pickup_point} to{" "}
+                {booking.drop_point}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="chip">{bookingStatusLabel(booking.status)}</span>
+                <span className="chip">
+                  {bookingStatusLabel(booking.status)}
+                </span>
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
                 {whatsappLink(booking.driver_whatsapp) && (
@@ -122,15 +147,21 @@ export default function BookedRidesList() {
                     className="chip-solid hover:opacity-90"
                   >
                     <MessageCircle size={14} />
-                    Chat {booking.driver_whatsapp}
+                    Chat with {booking.driver_name} {booking.driver_whatsapp}
                   </a>
                 )}
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
               {/* Cancel while waiting for approval (pending) or after it is confirmed. */}
-              {CANCELLABLE_BOOKING_STATUSES.includes(booking.status as BookingStatus) && (
-                <button type="button" className="btn-danger" onClick={() => cancelBooking(booking.id)}>
+              {CANCELLABLE_BOOKING_STATUSES.includes(
+                booking.status as BookingStatus,
+              ) && (
+                <button
+                  type="button"
+                  className="btn-danger"
+                  onClick={() => cancelBooking(booking.id)}
+                >
                   <XCircle size={16} />
                   Cancel
                 </button>
@@ -140,7 +171,11 @@ export default function BookedRidesList() {
                 <button
                   type="button"
                   className="btn-outline"
-                  onClick={() => setReportBookingId((current) => (current === booking.id ? null : booking.id))}
+                  onClick={() =>
+                    setReportBookingId((current) =>
+                      current === booking.id ? null : booking.id,
+                    )
+                  }
                 >
                   <Flag size={16} />
                   Report driver
@@ -148,11 +183,15 @@ export default function BookedRidesList() {
               )}
             </div>
           </div>
-          {reportBookingId === booking.id && <ReportForm booking={booking} onDone={handleFormDone} />}
+          {reportBookingId === booking.id && (
+            <ReportForm booking={booking} onDone={handleFormDone} />
+          )}
         </div>
       ))}
 
-      {passengerBookings?.length === 0 && <p className="alert-info">No unfinished booked rides yet.</p>}
+      {passengerBookings?.length === 0 && (
+        <p className="alert-info">No unfinished booked rides yet.</p>
+      )}
     </div>
   );
 }
