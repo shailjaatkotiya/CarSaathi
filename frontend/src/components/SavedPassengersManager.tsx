@@ -21,7 +21,9 @@ export default function SavedPassengersManager() {
   });
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.passenger.savedPassengers });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.passenger.savedPassengers,
+    });
 
   const addMutation = useMutation({
     mutationFn: () =>
@@ -37,7 +39,8 @@ export default function SavedPassengersManager() {
       setError("");
       invalidate();
     },
-    onError: (err) => setError(apiErrorMessage(err, "Could not save the passenger.")),
+    onError: (err) =>
+      setError(apiErrorMessage(err, "Could not save the passenger.")),
   });
 
   const deleteMutation = useMutation({
@@ -128,7 +131,11 @@ export default function SavedPassengersManager() {
             value={age}
             onChange={(event) => setAge(event.target.value)}
           />
-          <select className="input" value={gender} onChange={(event) => setGender(event.target.value)}>
+          <select
+            className="input"
+            value={gender}
+            onChange={(event) => setGender(event.target.value)}
+          >
             <option value="">Gender</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -136,7 +143,12 @@ export default function SavedPassengersManager() {
           </select>
         </div>
         {error && <p className="alert-error mt-2">{error}</p>}
-        <button type="button" className="btn-primary" onClick={add} disabled={addMutation.isPending}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={add}
+          disabled={addMutation.isPending}
+        >
           <UserPlus size={16} />
           Add passenger
         </button>
