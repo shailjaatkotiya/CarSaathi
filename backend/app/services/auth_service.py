@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import AuthError, ConflictError, PermissionError
+from app.core.exceptions import AuthError, ConflictError
 from app.core.security import hash_password, verify_password
 from app.models import DriverProfile, PassengerProfile, User, UserRole
 from app.repositories.user_repository import UserRepository
@@ -40,8 +40,6 @@ class AuthService:
         user = self.users.get_by_email(payload.email)
         if not user or not verify_password(payload.password, user.password_hash):
             raise AuthError("Invalid email or password")
-        if payload.role and user.role != payload.role:
-            raise PermissionError(f"Please login with a {payload.role.value} account")
         return user
 
     def authenticate_admin(self, payload: LoginRequest) -> User:
