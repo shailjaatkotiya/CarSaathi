@@ -1,7 +1,7 @@
 import { api } from "./client";
 import type { TokenResponse, User, UserRole } from "../types";
 
-export type LoginPayload = { email: string; password: string; role?: UserRole };
+export type LoginPayload = { email: string; password: string };
 export type RegisterPayload = {
   full_name: string;
   email: string;

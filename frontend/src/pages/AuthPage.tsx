@@ -43,6 +43,7 @@ export default function AuthPage() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const from = (location.state as { from?: string } | null)?.from || null;
+  const hasRequiredRole = Boolean(searchParams.get("role"));
 
   useEffect(() => {
     const nextDefaults = defaultsForRole(selectedRole);
@@ -56,14 +57,14 @@ export default function AuthPage() {
     authApi
       .me()
       .then((user) => {
-        if (user.role === requiredRole || !searchParams.get("role")) {
+        if (user.role === requiredRole || !hasRequiredRole) {
           navigate(from || homeForRole(user.role), { replace: true });
         }
       })
       .catch(() => {
         /* invalid token handled by interceptor */
       });
-  }, [from, navigate, requiredRole, searchParams, token]);
+  }, [from, hasRequiredRole, navigate, requiredRole, token]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -75,7 +76,7 @@ export default function AuthPage() {
     try {
       const data =
         mode === "login"
-          ? await authApi.login({ email: normalizedEmail, password: password.trim(), role: selectedRole })
+          ? await authApi.login({ email: normalizedEmail, password: password.trim() })
           : await authApi.register({
               full_name: fullName.trim(),
               email: normalizedEmail,
@@ -87,7 +88,8 @@ export default function AuthPage() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.me });
       const me = await authApi.me();
       setMessage("Logged in successfully.");
-      navigate(from || homeForRole(me.role), { replace: true });
+      const canReturnToRequestedPage = from && (!hasRequiredRole || me.role === requiredRole);
+      navigate(canReturnToRequestedPage ? from : homeForRole(me.role), { replace: true });
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -101,12 +103,14 @@ export default function AuthPage() {
         <form onSubmit={submit} className="flex flex-col gap-5">
           <div>
             <h1 className="text-3xl font-bold">
-              {mode === "login" ? `Login as ${selectedRole}` : `Create ${selectedRole} account`}
+              {mode === "login" ? "Login to your account" : `Create ${selectedRole} account`}
             </h1>
             <p className="mt-2 text-muted">
-              {selectedRole === "driver"
-                ? "Driver accounts publish rides, manage passengers, and maintain car details."
-                : "Passenger accounts search, book, and manage booked rides."}
+              {mode === "login"
+                ? "Use your email and password. We will open the right profile based on your account role."
+                : selectedRole === "driver"
+                  ? "Driver accounts publish rides, manage passengers, and maintain car details."
+                  : "Passenger accounts search, book, and manage booked rides."}
             </p>
           </div>
 
@@ -125,16 +129,19 @@ export default function AuthPage() {
             ))}
           </div>
 
-          <label>
-            <span className="field-label">{mode === "login" ? "Login as" : "Register as"}</span>
-            <select className="input" value={selectedRole} onChange={(event) => setSelectedRole(event.target.value as UserRole)}>
-              <option value="passenger">Passenger</option>
-              <option value="driver">Driver</option>
-            </select>
-          </label>
-
           {mode === "register" && (
             <>
+              <label>
+                <span className="field-label">Register as</span>
+                <select
+                  className="input"
+                  value={selectedRole}
+                  onChange={(event) => setSelectedRole(event.target.value as UserRole)}
+                >
+                  <option value="passenger">Passenger</option>
+                  <option value="driver">Driver</option>
+                </select>
+              </label>
               <label>
                 <span className="field-label">Full name</span>
                 <input className="input" value={fullName} onChange={(event) => setFullName(event.target.value)} />

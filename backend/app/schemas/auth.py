@@ -40,7 +40,6 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-    role: UserRole | None = None
 
     @field_validator("email")
     @classmethod
