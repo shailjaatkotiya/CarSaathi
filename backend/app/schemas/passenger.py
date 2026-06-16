@@ -16,6 +16,10 @@ class SavedPassengerCreate(BaseModel):
         return value
 
 
+class SavedPassengerUpdate(SavedPassengerCreate):
+    pass
+
+
 class SavedPassengerOut(SavedPassengerCreate):
     id: int
 

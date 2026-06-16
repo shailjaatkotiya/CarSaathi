@@ -16,7 +16,11 @@ from app.schemas.booking import (
     PassengerOut,
 )
 from app.schemas.moderation import AdminDecision, ReportCreate, ReviewCreate
-from app.schemas.passenger import SavedPassengerCreate, SavedPassengerOut
+from app.schemas.passenger import (
+    SavedPassengerCreate,
+    SavedPassengerOut,
+    SavedPassengerUpdate,
+)
 from app.schemas.payment import PaymentInitOut, PaymentVerifyRequest
 from app.schemas.ride import FellowPassengerOut, RideCreate, RideOut
 from app.schemas.user import (
@@ -49,6 +53,7 @@ __all__ = [
     "RideOut",
     "SavedPassengerCreate",
     "SavedPassengerOut",
+    "SavedPassengerUpdate",
     "TokenResponse",
     "UserOut",
     "VehicleCreate",

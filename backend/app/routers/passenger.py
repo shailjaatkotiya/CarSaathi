@@ -15,6 +15,7 @@ from app.schemas import (
     RideOut,
     SavedPassengerCreate,
     SavedPassengerOut,
+    SavedPassengerUpdate,
 )
 from app.services.booking_service import BookingService
 from app.services.ride_search_service import RideSearchFilters, RideSearchService
@@ -96,16 +97,30 @@ def ride_passengers(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Ride not found"
         )
-    return [
-        FellowPassengerOut(
-            name=booking.passenger.full_name,
-            pickup_point=booking.pickup_point,
-            drop_point=booking.drop_point,
-            seats_booked=booking.seats_booked,
+    passengers: list[FellowPassengerOut] = []
+    for booking in ride.bookings:
+        if booking.status not in (BookingStatus.confirmed, BookingStatus.pending):
+            continue
+        if booking.passengers:
+            passengers.extend(
+                FellowPassengerOut(
+                    name=passenger.full_name,
+                    pickup_point=booking.pickup_point,
+                    drop_point=booking.drop_point,
+                    seats_booked=1,
+                )
+                for passenger in booking.passengers
+            )
+            continue
+        passengers.append(
+            FellowPassengerOut(
+                name=booking.passenger.full_name,
+                pickup_point=booking.pickup_point,
+                drop_point=booking.drop_point,
+                seats_booked=booking.seats_booked,
+            )
         )
-        for booking in ride.bookings
-        if booking.status in (BookingStatus.confirmed, BookingStatus.pending)
-    ]
+    return passengers
 
 
 @router.post("/rides/{ride_id}/book", response_model=BookingActionOut)
@@ -160,6 +175,16 @@ def add_saved_passenger(
     db: Session = Depends(get_db),
 ):
     return SavedPassengerService(db).add(passenger, payload)
+
+
+@router.put("/saved-passengers/{passenger_id}", response_model=SavedPassengerOut)
+def update_saved_passenger(
+    passenger_id: int,
+    payload: SavedPassengerUpdate,
+    passenger: User = Depends(require_passenger),
+    db: Session = Depends(get_db),
+):
+    return SavedPassengerService(db).update(passenger, passenger_id, payload)
 
 
 @router.delete("/saved-passengers/{passenger_id}")

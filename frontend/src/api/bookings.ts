@@ -49,6 +49,8 @@ export const bookingsApi = {
   savedPassengers: () => api.get<SavedPassenger[]>("/passenger/saved-passengers").then((r) => r.data),
   addSavedPassenger: (payload: SavedPassengerPayload) =>
     api.post<SavedPassenger>("/passenger/saved-passengers", payload).then((r) => r.data),
+  updateSavedPassenger: (id: number, payload: SavedPassengerPayload) =>
+    api.put<SavedPassenger>(`/passenger/saved-passengers/${id}`, payload).then((r) => r.data),
   deleteSavedPassenger: (id: number) =>
     api.delete(`/passenger/saved-passengers/${id}`).then((r) => r.data)
 };

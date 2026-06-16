@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import NotFoundError
 from app.models import SavedPassenger, User
-from app.schemas import SavedPassengerCreate
+from app.schemas import SavedPassengerCreate, SavedPassengerUpdate
 
 
 class SavedPassengerService:
@@ -30,6 +30,27 @@ class SavedPassengerService:
             phone=payload.phone,
         )
         self.db.add(person)
+        self.db.commit()
+        self.db.refresh(person)
+        return person
+
+    def update(
+        self, user: User, passenger_id: int, payload: SavedPassengerUpdate
+    ) -> SavedPassenger:
+        person = (
+            self.db.query(SavedPassenger)
+            .filter(
+                SavedPassenger.id == passenger_id,
+                SavedPassenger.user_id == user.id,
+            )
+            .first()
+        )
+        if not person:
+            raise NotFoundError("Saved passenger not found")
+        person.full_name = payload.full_name
+        person.age = payload.age
+        person.gender = payload.gender
+        person.phone = payload.phone
         self.db.commit()
         self.db.refresh(person)
         return person

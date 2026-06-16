@@ -309,21 +309,28 @@ export default function RideDetail() {
                 {ride.route_notes && <p className="mt-2 text-xs text-muted">Route note: {ride.route_notes}</p>}
               </div>
 
-              {fellowPassengers && fellowPassengers.length > 0 && (
+              {(isViewOnly || Boolean(fellowPassengers?.length)) && (
                 <div className="card p-3.5 shadow-none">
                   <div className="flex items-center gap-2">
                     <Users size={14} className="text-primary" />
-                    <h3 className="text-sm font-bold">Ride Passengers ({fellowPassengers.length})</h3>
+                    <h3 className="text-sm font-bold">Booked passengers ({fellowPassengers?.length ?? 0})</h3>
                   </div>
-                  <div className="mt-2 flex flex-col gap-2">
+                  {fellowPassengers?.length ? (
+                    <div className="mt-2 flex flex-col gap-2">
                     {fellowPassengers.map((p, i) => (
-                      <div key={i} className="flex items-center justify-between rounded-lg bg-cream px-3 py-2 text-xs">
+                      <div
+                        key={`${p.name}-${p.pickup_point}-${p.drop_point}-${i}`}
+                        className="flex flex-col gap-1 rounded-lg bg-cream px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between"
+                      >
                         <span className="font-bold">{p.name}</span>
                         <span className="text-muted">{p.pickup_point} → {p.drop_point}</span>
-                        {p.seats_booked > 1 && <span className="chip">{p.seats_booked} seats</span>}
+                        {p.seats_booked > 1 && <span className="chip self-start sm:self-center">{p.seats_booked} seats</span>}
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <p className="alert-info mt-2">No passengers have booked this ride yet.</p>
+                  )}
                 </div>
               )}
 
