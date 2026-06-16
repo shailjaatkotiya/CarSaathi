@@ -70,6 +70,14 @@ function RideBookings({
               {booking.booking_code} - {booking.seats_booked} seats -{" "}
               {booking.pickup_point} to {booking.drop_point}
             </p>
+            {booking.passengers && booking.passengers.length > 0 && (
+              <p className="text-sm text-muted">
+                Passengers:{" "}
+                {booking.passengers
+                  .map((p) => (p.age != null ? `${p.full_name} (${p.age})` : p.full_name))
+                  .join(", ")}
+              </p>
+            )}
             {whatsappLink(booking.passenger_whatsapp) ? (
               <a
                 href={

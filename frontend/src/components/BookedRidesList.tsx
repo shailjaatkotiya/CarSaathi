@@ -143,6 +143,14 @@ export default function BookedRidesList() {
                 {booking.seats_booked} seats - {booking.pickup_point} to{" "}
                 {booking.drop_point}
               </p>
+              {booking.passengers && booking.passengers.length > 0 && (
+                <p className="mt-1 text-sm text-muted">
+                  Passengers:{" "}
+                  {booking.passengers
+                    .map((p) => (p.age != null ? `${p.full_name} (${p.age})` : p.full_name))
+                    .join(", ")}
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="chip">
                   {passengerBookingStatus(booking)}

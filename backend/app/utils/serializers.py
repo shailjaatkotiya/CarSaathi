@@ -1,7 +1,7 @@
 import re
 
 from app.models import Booking, Ride, RideStatus
-from app.schemas import DriverBookingOut, RideOut, VehicleOut
+from app.schemas import DriverBookingOut, PassengerOut, RideOut, VehicleOut
 from app.services.ride_time import ride_has_ended
 
 
@@ -25,6 +25,9 @@ def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
         total_amount=booking.total_amount,
         payment_method=booking.payment_method,
         payment_status=booking.payment_status,
+        passengers=[
+            PassengerOut.model_validate(person) for person in booking.passengers
+        ],
         passenger_name=booking.passenger.full_name,
         passenger_whatsapp=booking.passenger.whatsapp_number,
     )

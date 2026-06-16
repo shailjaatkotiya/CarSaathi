@@ -52,6 +52,21 @@ export type Ride = {
   vehicle: Vehicle;
 };
 
+export type BookingPassenger = {
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  phone?: string | null;
+};
+
+export type SavedPassenger = {
+  id: number;
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  phone?: string | null;
+};
+
 export type Booking = {
   id: number;
   booking_code: string;
@@ -72,6 +87,7 @@ export type Booking = {
   total_amount: number;
   payment_method: PaymentMethod;
   payment_status: string;
+  passengers?: BookingPassenger[];
 };
 
 // Booking row as the driver sees it (adds passenger contact fields).

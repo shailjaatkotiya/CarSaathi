@@ -238,6 +238,9 @@ class Booking(Base):
     ride: Mapped[Ride] = relationship(back_populates="bookings")
     passenger: Mapped[User] = relationship(back_populates="bookings")
     payment: Mapped["Payment"] = relationship(back_populates="booking", uselist=False)
+    passengers: Mapped[list["BookingPassenger"]] = relationship(
+        back_populates="booking", cascade="all, delete-orphan"
+    )
 
     @property
     def driver_id(self) -> int:
@@ -274,6 +277,36 @@ class Booking(Base):
     @property
     def payment_status(self) -> str:
         return self.payment.status if self.payment else "unpaid"
+
+
+class SavedPassenger(Base):
+    """Co-traveller saved in a passenger's account, reused across bookings -
+    the passenger-side analogue of a driver's saved Vehicle."""
+
+    __tablename__ = "saved_passengers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    full_name: Mapped[str] = mapped_column(String(120))
+    age: Mapped[int | None] = mapped_column(Integer)
+    gender: Mapped[str | None] = mapped_column(String(20))
+    phone: Mapped[str | None] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class BookingPassenger(Base):
+    """One traveller occupying one seat of a booking (snapshot at booking time)."""
+
+    __tablename__ = "booking_passengers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.id"), index=True)
+    full_name: Mapped[str] = mapped_column(String(120))
+    age: Mapped[int | None] = mapped_column(Integer)
+    gender: Mapped[str | None] = mapped_column(String(20))
+    phone: Mapped[str | None] = mapped_column(String(20))
+
+    booking: Mapped[Booking] = relationship(back_populates="passengers")
 
 
 class Payment(Base):

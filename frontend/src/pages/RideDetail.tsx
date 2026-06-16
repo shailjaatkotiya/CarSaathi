@@ -1,8 +1,8 @@
 import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { bookingsApi } from "../api/bookings";
+import { bookingsApi, type PassengerInput } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
@@ -11,6 +11,7 @@ import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
 import type { BookingActionResponse } from "../types";
 import VerifiedBadge from "../components/VerifiedBadge";
+import PassengerSeats, { emptySeatEntry, type SeatEntry } from "../components/PassengerSeats";
 import { useSessionStore } from "../store/session";
 
 const ruleLabels: Record<string, string> = {
@@ -24,7 +25,8 @@ const ruleLabels: Record<string, string> = {
 
 export default function RideDetail() {
   const { rideId } = useParams();
-  const [seats, setSeats] = useState(1);
+  const [seatEntries, setSeatEntries] = useState<SeatEntry[]>([emptySeatEntry()]);
+  const seats = seatEntries.length;
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "online">("cash");
@@ -46,6 +48,31 @@ export default function RideDetail() {
   });
   const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
   const isDriver = me?.role === "driver";
+
+  const { data: savedPassengers } = useQuery({
+    queryKey: queryKeys.passenger.savedPassengers,
+    queryFn: bookingsApi.savedPassengers,
+    enabled: Boolean(token) && !isDriver
+  });
+
+  // Prefill the first seat with the account holder's name once loaded.
+  useEffect(() => {
+    if (!me) return;
+    setSeatEntries((current) => {
+      if (current.length !== 1 || current[0].savedId || current[0].full_name) return current;
+      return [emptySeatEntry(me.full_name)];
+    });
+  }, [me]);
+
+  // Keep one passenger entry per booked seat.
+  function setSeats(count: number) {
+    const next = Math.max(1, Math.min(count, ride?.available_seats ?? count));
+    setSeatEntries((current) => {
+      if (next === current.length) return current;
+      if (next < current.length) return current.slice(0, next);
+      return [...current, ...Array.from({ length: next - current.length }, () => emptySeatEntry())];
+    });
+  }
 
   const paymentAmount = useMemo(() => (ride ? seats * ride.price_per_seat : 0), [ride, seats]);
   const instructionLines = useMemo(() => {
@@ -74,13 +101,38 @@ export default function RideDetail() {
       setError("Please select pickup and drop points before booking.");
       return;
     }
+    // Build one passenger per seat from the form, resolving saved selections.
+    const passengers: PassengerInput[] = [];
+    for (let i = 0; i < seatEntries.length; i += 1) {
+      const entry = seatEntries[i];
+      if (entry.savedId && entry.savedId !== "new") {
+        const sp = savedPassengers?.find((p) => String(p.id) === entry.savedId);
+        if (!sp) {
+          setError(`Select a passenger for seat ${i + 1}.`);
+          return;
+        }
+        passengers.push({ full_name: sp.full_name, age: sp.age, gender: sp.gender, phone: sp.phone });
+      } else {
+        if (!entry.full_name.trim()) {
+          setError(`Enter the name for passenger ${i + 1}.`);
+          return;
+        }
+        passengers.push({
+          full_name: entry.full_name.trim(),
+          age: entry.age ? Number(entry.age) : null,
+          gender: entry.gender || null,
+          save: entry.save
+        });
+      }
+    }
     setPaying(true);
     try {
       const data = await bookingsApi.book(ride.id, {
         seats_booked: seats,
         pickup_point: pickup,
         drop_point: drop,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        passengers
       });
       if (data.payment) {
         await payWithRazorpay(data);
@@ -297,6 +349,11 @@ export default function RideDetail() {
                   value={seats}
                   onChange={(event) => setSeats(Number(event.target.value))}
                   placeholder="Seats"
+                />
+                <PassengerSeats
+                  entries={seatEntries}
+                  onChange={setSeatEntries}
+                  savedPassengers={savedPassengers ?? []}
                 />
                 <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
                   <option value="">Select pickup</option>

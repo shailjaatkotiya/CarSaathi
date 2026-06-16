@@ -15,12 +15,14 @@ from app.core.config import get_settings
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models import (
     Booking,
+    BookingPassenger,
     BookingStatus,
     CancellationReason,
     Payment,
     ReportedUser,
     Ride,
     RideStatus,
+    SavedPassenger,
     User,
 )
 from app.repositories.booking_repository import BookingRepository
@@ -81,6 +83,8 @@ class BookingService:
         ):
             raise ValidationError("Invalid pickup or drop point")
 
+        passengers = self._resolve_passengers(passenger, payload)
+
         total_amount = payload.seats_booked * ride.price_per_seat
         ride.available_seats -= payload.seats_booked
 
@@ -109,6 +113,7 @@ class BookingService:
             payment_method=payload.payment_method,
         )
         booking.payment = payment
+        booking.passengers = passengers
         self.db.add(booking)
         self.db.flush()
 
@@ -142,6 +147,55 @@ class BookingService:
         return BookingActionOut(
             booking=BookingOut.model_validate(booking), payment=payment_init
         )
+
+    def _resolve_passengers(self, passenger: User, payload) -> list[BookingPassenger]:
+        """Build one BookingPassenger per seat and persist any flagged for reuse.
+
+        Empty list is allowed only for a single seat (the booker travels alone),
+        in which case the account holder's name is used.
+        """
+        entries = list(payload.passengers)
+        if not entries:
+            if payload.seats_booked != 1:
+                raise ValidationError(
+                    "Please add passenger details for each booked seat"
+                )
+            return [BookingPassenger(full_name=passenger.full_name)]
+
+        if len(entries) != payload.seats_booked:
+            raise ValidationError(
+                "Number of passengers must match the number of seats booked"
+            )
+
+        existing_names = {
+            row.full_name.strip().lower()
+            for row in self.db.query(SavedPassenger).filter(
+                SavedPassenger.user_id == passenger.id
+            )
+        }
+        result: list[BookingPassenger] = []
+        for entry in entries:
+            name = entry.full_name.strip()
+            if entry.save and name.lower() not in existing_names:
+                self.db.add(
+                    SavedPassenger(
+                        user_id=passenger.id,
+                        full_name=name,
+                        age=entry.age,
+                        gender=entry.gender,
+                        phone=entry.phone,
+                    )
+                )
+                existing_names.add(name.lower())
+            result.append(
+                BookingPassenger(
+                    full_name=name,
+                    age=entry.age,
+                    gender=entry.gender,
+                    phone=entry.phone,
+                )
+            )
+        return result
 
     # ----- payment verification --------------------------------------------
     def verify_payment(self, payload, passenger: User) -> Booking:

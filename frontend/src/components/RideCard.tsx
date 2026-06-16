@@ -68,7 +68,7 @@ export default function RideCard({
           </span>
           <span className="flex items-center gap-1.5 text-muted">
             <Armchair size={15} />
-            {ride.available_seats} seats
+            {ride.total_seats - ride.available_seats}/{ride.total_seats} seats booked
           </span>
           <span className="flex items-center gap-1.5 text-muted">
             <Star size={15} />

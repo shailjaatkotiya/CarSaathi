@@ -13,9 +13,12 @@ from app.schemas import (
     PaymentVerifyRequest,
     ReportCreate,
     RideOut,
+    SavedPassengerCreate,
+    SavedPassengerOut,
 )
 from app.services.booking_service import BookingService
 from app.services.ride_search_service import RideSearchFilters, RideSearchService
+from app.services.saved_passenger_service import SavedPassengerService
 from app.utils.serializers import ride_to_out
 
 router = APIRouter(prefix="/passenger", tags=["passenger"])
@@ -141,6 +144,32 @@ def booking_history(
     passenger: User = Depends(require_passenger), db: Session = Depends(get_db)
 ) -> list[Booking]:
     return BookingService(db).history(passenger)
+
+
+@router.get("/saved-passengers", response_model=list[SavedPassengerOut])
+def list_saved_passengers(
+    passenger: User = Depends(require_passenger), db: Session = Depends(get_db)
+):
+    return SavedPassengerService(db).list_for_user(passenger)
+
+
+@router.post("/saved-passengers", response_model=SavedPassengerOut)
+def add_saved_passenger(
+    payload: SavedPassengerCreate,
+    passenger: User = Depends(require_passenger),
+    db: Session = Depends(get_db),
+):
+    return SavedPassengerService(db).add(passenger, payload)
+
+
+@router.delete("/saved-passengers/{passenger_id}")
+def delete_saved_passenger(
+    passenger_id: int,
+    passenger: User = Depends(require_passenger),
+    db: Session = Depends(get_db),
+) -> dict:
+    SavedPassengerService(db).delete(passenger, passenger_id)
+    return {"message": "Saved passenger removed"}
 
 
 @router.post("/reports")

@@ -1,11 +1,27 @@
 import { api } from "./client";
-import type { Booking, BookingActionResponse, PaymentMethod } from "../types";
+import type { Booking, BookingActionResponse, PaymentMethod, SavedPassenger } from "../types";
+
+export type PassengerInput = {
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  phone?: string | null;
+  save?: boolean;
+};
 
 export type BookRidePayload = {
   seats_booked: number;
   pickup_point: string;
   drop_point: string;
   payment_method: PaymentMethod;
+  passengers: PassengerInput[];
+};
+
+export type SavedPassengerPayload = {
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  phone?: string | null;
 };
 
 export type PaymentVerifyPayload = {
@@ -29,5 +45,10 @@ export const bookingsApi = {
     api.post(`/passenger/bookings/${bookingId}/cancel`, { reason }).then((r) => r.data),
   verifyPayment: (payload: PaymentVerifyPayload) =>
     api.post<Booking>("/passenger/payments/verify", payload).then((r) => r.data),
-  report: (payload: ReportPayload) => api.post("/passenger/reports", payload).then((r) => r.data)
+  report: (payload: ReportPayload) => api.post("/passenger/reports", payload).then((r) => r.data),
+  savedPassengers: () => api.get<SavedPassenger[]>("/passenger/saved-passengers").then((r) => r.data),
+  addSavedPassenger: (payload: SavedPassengerPayload) =>
+    api.post<SavedPassenger>("/passenger/saved-passengers", payload).then((r) => r.data),
+  deleteSavedPassenger: (id: number) =>
+    api.delete(`/passenger/saved-passengers/${id}`).then((r) => r.data)
 };

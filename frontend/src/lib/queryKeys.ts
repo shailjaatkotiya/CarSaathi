@@ -19,7 +19,8 @@ export const queryKeys = {
   },
 
   passenger: {
-    bookings: ["passenger-profile-bookings"] as const
+    bookings: ["passenger-profile-bookings"] as const,
+    savedPassengers: ["passenger-saved-passengers"] as const
   },
 
   profile: {
