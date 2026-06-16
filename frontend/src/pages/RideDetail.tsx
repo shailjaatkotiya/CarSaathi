@@ -6,6 +6,7 @@ import { bookingsApi, type PassengerInput } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
+import { validatePassengerEntries } from "../lib/bookingValidation";
 import { formatShortDate, formatTimeAmPm } from "../lib/format";
 import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
@@ -66,7 +67,9 @@ export default function RideDetail() {
 
   // Keep one passenger entry per booked seat.
   function setSeats(count: number) {
-    const next = Math.max(1, Math.min(count, ride?.available_seats ?? count));
+    const requested = Number.isFinite(count) ? count : 1;
+    const safeMax = Math.max(0, ride?.available_seats ?? 0);
+    const next = Math.max(1, Math.min(requested, safeMax || 1));
     setSeatEntries((current) => {
       if (next === current.length) return current;
       if (next < current.length) return current.slice(0, next);
@@ -99,6 +102,11 @@ export default function RideDetail() {
     setError("");
     if (!pickup || !drop) {
       setError("Please select pickup and drop points before booking.");
+      return;
+    }
+    const passengerValidationError = validatePassengerEntries(seatEntries, savedPassengers ?? []);
+    if (passengerValidationError) {
+      setError(passengerValidationError);
       return;
     }
     // Build one passenger per seat from the form, resolving saved selections.
@@ -341,15 +349,17 @@ export default function RideDetail() {
                   <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
                 ) : (
                   <>
-                <input
+                <select
                   className="input"
-                  type="number"
-                  min={1}
-                  max={ride.available_seats}
                   value={seats}
                   onChange={(event) => setSeats(Number(event.target.value))}
-                  placeholder="Seats"
-                />
+                >
+                  {Array.from({ length: Math.max(1, ride.available_seats) }, (_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {index + 1} passenger{index + 1 > 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
                 <PassengerSeats
                   entries={seatEntries}
                   onChange={setSeatEntries}

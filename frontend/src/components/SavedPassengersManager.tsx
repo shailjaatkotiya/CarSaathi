@@ -12,6 +12,7 @@ export default function SavedPassengersManager() {
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [selectedPassengerId, setSelectedPassengerId] = useState("");
   const [error, setError] = useState("");
 
   const { data: passengers } = useQuery({
@@ -41,7 +42,10 @@ export default function SavedPassengersManager() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => bookingsApi.deleteSavedPassenger(id),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setSelectedPassengerId("");
+      invalidate();
+    },
   });
 
   function add() {
@@ -53,68 +57,90 @@ export default function SavedPassengersManager() {
   }
 
   return (
-    <div className="card rounded-2xl p-4 md:p-5">
-      <h2 className="text-lg font-bold">Saved passengers</h2>
-      <p className="mt-1 text-sm text-muted">
-        Add co-travellers once and reuse them when booking multiple seats.
-      </p>
+    <details className="card rounded-2xl p-4 md:p-5" open>
+      <summary className="cursor-pointer list-none text-lg font-bold text-ink">
+        Saved Passenger
+      </summary>
+      <div className="mt-3 space-y-3">
+        <p className="text-sm text-muted">
+          Add co-travellers once and reuse them when booking multiple seats.
+        </p>
 
-      <div className="mt-3 flex flex-col gap-2">
-        {passengers?.map((p) => (
-          <div
-            key={p.id}
-            className="flex items-center justify-between rounded-xl border border-sand bg-cream px-3 py-2"
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+          <select
+            className="input"
+            value={selectedPassengerId}
+            onChange={(event) => setSelectedPassengerId(event.target.value)}
           >
-            <div className="text-sm">
-              <span className="font-bold">{p.full_name}</span>
-              <span className="text-muted">
+            <option value="">Select a saved passenger</option>
+            {passengers?.map((p) => (
+              <option key={p.id} value={String(p.id)}>
+                {p.full_name}
                 {p.age != null ? ` · ${p.age}` : ""}
                 {p.gender ? ` · ${p.gender}` : ""}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="text-muted transition hover:text-red-600"
-              onClick={() => deleteMutation.mutate(p.id)}
-              aria-label={`Remove ${p.full_name}`}
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
-        {passengers?.length === 0 && (
-          <p className="alert-info">No saved passengers yet.</p>
-        )}
-      </div>
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="btn-outline"
+            disabled={!selectedPassengerId || deleteMutation.isPending}
+            onClick={() => deleteMutation.mutate(Number(selectedPassengerId))}
+          >
+            <Trash2 size={16} />
+            Delete
+          </button>
+        </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <input
-          className="input"
-          placeholder="Full name"
-          value={fullName}
-          onChange={(event) => setFullName(event.target.value)}
-        />
-        <input
-          className="input"
-          type="number"
-          min={0}
-          max={120}
-          placeholder="Age"
-          value={age}
-          onChange={(event) => setAge(event.target.value)}
-        />
-        <select className="input" value={gender} onChange={(event) => setGender(event.target.value)}>
-          <option value="">Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
+        <div className="flex flex-col gap-2">
+          {passengers?.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center justify-between rounded-xl border border-sand bg-cream px-3 py-2"
+            >
+              <div className="text-sm">
+                <span className="font-bold">{p.full_name}</span>
+                <span className="text-muted">
+                  {p.age != null ? ` · ${p.age}` : ""}
+                  {p.gender ? ` · ${p.gender}` : ""}
+                </span>
+              </div>
+            </div>
+          ))}
+          {passengers?.length === 0 && (
+            <p className="alert-info">No saved passengers yet.</p>
+          )}
+        </div>
+
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <input
+            className="input"
+            placeholder="Full name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+          />
+          <input
+            className="input"
+            type="number"
+            min={0}
+            max={120}
+            placeholder="Age"
+            value={age}
+            onChange={(event) => setAge(event.target.value)}
+          />
+          <select className="input" value={gender} onChange={(event) => setGender(event.target.value)}>
+            <option value="">Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        {error && <p className="alert-error mt-2">{error}</p>}
+        <button type="button" className="btn-primary" onClick={add} disabled={addMutation.isPending}>
+          <UserPlus size={16} />
+          Add passenger
+        </button>
       </div>
-      {error && <p className="alert-error mt-2">{error}</p>}
-      <button type="button" className="btn-primary mt-3" onClick={add} disabled={addMutation.isPending}>
-        <UserPlus size={16} />
-        Add passenger
-      </button>
-    </div>
+    </details>
   );
 }
