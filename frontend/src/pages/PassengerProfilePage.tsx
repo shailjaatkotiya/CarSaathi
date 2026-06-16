@@ -1,5 +1,4 @@
 import BookedRidesList from "../components/BookedRidesList";
-import SavedPassengersManager from "../components/SavedPassengersManager";
 
 export default function PassengerProfilePage() {
   return (
@@ -9,7 +8,6 @@ export default function PassengerProfilePage() {
           <h1 className="text-xl font-bold md:text-2xl">Booked Rides</h1>
           <p className="mt-1 text-sm text-muted">Your booked rides that are not completed yet.</p>
         </div>
-        <SavedPassengersManager />
         <BookedRidesList />
       </div>
     </div>

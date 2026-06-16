@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import AuthError, ConflictError
 from app.core.security import hash_password, verify_password
-from app.models import DriverProfile, PassengerProfile, User, UserRole
+from app.models import DriverProfile, PassengerProfile, SavedPassenger, User, UserRole
 from app.repositories.user_repository import UserRepository
 from app.schemas import LoginRequest, RegisterRequest
 
@@ -32,6 +32,15 @@ class AuthService:
             self.db.add(DriverProfile(user_id=user.id))
         if payload.role == UserRole.passenger:
             self.db.add(PassengerProfile(user_id=user.id))
+            self.db.add(
+                SavedPassenger(
+                    user_id=user.id,
+                    full_name=user.full_name,
+                    age=None,
+                    gender=None,
+                    phone=user.whatsapp_number,
+                )
+            )
         self.db.commit()
         self.db.refresh(user)
         return user

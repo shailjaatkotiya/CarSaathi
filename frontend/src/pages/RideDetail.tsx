@@ -1,7 +1,7 @@
 import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users, UserRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bookingsApi, type PassengerInput } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -26,6 +26,8 @@ const ruleLabels: Record<string, string> = {
 
 export default function RideDetail() {
   const { rideId } = useParams();
+  const [searchParams] = useSearchParams();
+  const isViewOnly = searchParams.get("view") === "1";
   const [seatEntries, setSeatEntries] = useState<SeatEntry[]>([emptySeatEntry()]);
   const seats = seatEntries.length;
   const [pickup, setPickup] = useState("");
@@ -311,7 +313,7 @@ export default function RideDetail() {
                 <div className="card p-3.5 shadow-none">
                   <div className="flex items-center gap-2">
                     <Users size={14} className="text-primary" />
-                    <h3 className="text-sm font-bold">Fellow passengers ({fellowPassengers.length})</h3>
+                    <h3 className="text-sm font-bold">Ride Passengers ({fellowPassengers.length})</h3>
                   </div>
                   <div className="mt-2 flex flex-col gap-2">
                     {fellowPassengers.map((p, i) => (
@@ -341,117 +343,119 @@ export default function RideDetail() {
               </div>
             </div>
 
-            <div className="card self-start p-3.5 shadow-none lg:sticky lg:top-24">
-              <h2 className="text-base font-bold">Book this ride</h2>
-              <p className="mt-0.5 text-xs text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
-              <div className="mt-3 flex flex-col gap-2.5">
-                {isDriver ? (
-                  <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
-                ) : (
-                  <>
-                <select
-                  className="input"
-                  value={seats}
-                  onChange={(event) => setSeats(Number(event.target.value))}
-                >
-                  {Array.from({ length: Math.max(1, ride.available_seats) }, (_, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {index + 1} passenger{index + 1 > 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
-                <PassengerSeats
-                  entries={seatEntries}
-                  onChange={setSeatEntries}
-                  savedPassengers={savedPassengers ?? []}
-                />
-                <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
-                  <option value="">Select pickup</option>
-                  {ride.pickup_points.map((point) => (
-                    <option key={point} value={point}>
-                      {point}
-                    </option>
-                  ))}
-                </select>
-                <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
-                    <option value="">Select drop-off or stop</option>
-                    {ride.route_stops.length > 0 && (
-                      <optgroup label="In-between stops">
-                        {ride.route_stops.map((point) => (
+            {!isViewOnly && (
+              <div className="card self-start p-3.5 shadow-none lg:sticky lg:top-24">
+                <h2 className="text-base font-bold">Book this ride</h2>
+                <p className="mt-0.5 text-xs text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
+                <div className="mt-3 flex flex-col gap-2.5">
+                  {isDriver ? (
+                    <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
+                  ) : (
+                    <>
+                    <select
+                      className="input"
+                      value={seats}
+                      onChange={(event) => setSeats(Number(event.target.value))}
+                    >
+                      {Array.from({ length: Math.max(1, ride.available_seats) }, (_, index) => (
+                        <option key={index + 1} value={index + 1}>
+                          {index + 1} passenger{index + 1 > 1 ? "s" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <PassengerSeats
+                      entries={seatEntries}
+                      onChange={setSeatEntries}
+                      savedPassengers={savedPassengers ?? []}
+                    />
+                    <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
+                      <option value="">Select pickup</option>
+                      {ride.pickup_points.map((point) => (
+                        <option key={point} value={point}>
+                          {point}
+                        </option>
+                      ))}
+                    </select>
+                    <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
+                      <option value="">Select drop-off or stop</option>
+                      {ride.route_stops.length > 0 && (
+                        <optgroup label="In-between stops">
+                          {ride.route_stops.map((point) => (
+                            <option key={point} value={point}>
+                              {point}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      <optgroup label="Final drop points">
+                        {ride.drop_points.map((point) => (
                           <option key={point} value={point}>
                             {point}
                           </option>
                         ))}
                       </optgroup>
+                    </select>
+                    <div>
+                      <span className="field-label">Payment method</span>
+                      <div className="mt-1 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("cash")}
+                          className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                            paymentMethod === "cash"
+                              ? "border-primary bg-primary-soft text-primary-dark"
+                              : "border-gray-200 text-muted"
+                          }`}
+                        >
+                          <Banknote size={14} />
+                          Pay by cash
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod("online")}
+                          className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                            paymentMethod === "online"
+                              ? "border-primary bg-primary-soft text-primary-dark"
+                              : "border-gray-200 text-muted"
+                          }`}
+                        >
+                          <CreditCard size={14} />
+                          Pay online
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted">
+                        {paymentMethod === "cash"
+                          ? "Pay the driver in cash at the end of the ride."
+                          : "Pay now via UPI, card, or netbanking. Seat is confirmed after payment."}
+                      </p>
+                    </div>
+                    {missingContactNumber && (
+                      <p className="alert-warning">
+                        A WhatsApp contact number is required to book.{" "}
+                        <Link to="/profile" className="font-bold underline">
+                          Add it in My Profile
+                        </Link>{" "}
+                        first.
+                      </p>
                     )}
-                    <optgroup label="Final drop points">
-                      {ride.drop_points.map((point) => (
-                        <option key={point} value={point}>
-                          {point}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                <div>
-                  <span className="field-label">Payment method</span>
-                  <div className="mt-1 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("cash")}
-                      className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
-                        paymentMethod === "cash"
-                          ? "border-primary bg-primary-soft text-primary-dark"
-                          : "border-gray-200 text-muted"
-                      }`}
-                    >
-                      <Banknote size={14} />
-                      Pay by cash
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("online")}
-                      className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
-                        paymentMethod === "online"
-                          ? "border-primary bg-primary-soft text-primary-dark"
-                          : "border-gray-200 text-muted"
-                      }`}
-                    >
-                      <CreditCard size={14} />
-                      Pay online
-                    </button>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted">
-                    {paymentMethod === "cash"
-                      ? "Pay the driver in cash at the end of the ride."
-                      : "Pay now via UPI, card, or netbanking. Seat is confirmed after payment."}
-                  </p>
+                    {ride.available_seats <= 0 ? (
+                      <p className="alert-warning">This ride is full. No seats remaining.</p>
+                    ) : (
+                      <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
+                        {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
+                        {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
+                      </button>
+                    )}
+                    <p className="text-xs text-muted">
+                      {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
+                    </p>
+                    </>
+                  )}
+                  {message && <p className="alert-success">{message}</p>}
+                  {error && <p className="alert-error">{error}</p>}
                 </div>
-                {missingContactNumber && (
-                  <p className="alert-warning">
-                    A WhatsApp contact number is required to book.{" "}
-                    <Link to="/profile" className="font-bold underline">
-                      Add it in My Profile
-                    </Link>{" "}
-                    first.
-                  </p>
-                )}
-                {ride.available_seats <= 0 ? (
-                  <p className="alert-warning">This ride is full. No seats remaining.</p>
-                ) : (
-                  <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
-                    {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
-                    {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
-                  </button>
-                )}
-                <p className="text-xs text-muted">
-                  {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
-                </p>
-                  </>
-                )}
-                {message && <p className="alert-success">{message}</p>}
-                {error && <p className="alert-error">{error}</p>}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

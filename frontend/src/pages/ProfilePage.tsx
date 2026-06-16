@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { profileApi } from "../api/profile";
+import SavedPassengersManager from "../components/SavedPassengersManager";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
@@ -344,6 +345,13 @@ export default function ProfilePage() {
                 <SettingsRow icon={<UserIcon size={16} />} label="Saved passengers" onClick={() => {}} />
               </SettingsGroup>
             </div>
+
+            {isPassenger && (
+              <div id="saved-passengers-section">
+                <SectionTitle>Saved passengers</SectionTitle>
+                <SavedPassengersManager />
+              </div>
+            )}
 
             <div>
               <SectionTitle>Preferences</SectionTitle>

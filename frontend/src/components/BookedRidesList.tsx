@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
 import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed, ridePhase } from "../lib/format";
@@ -171,6 +172,9 @@ export default function BookedRidesList() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
+              <Link to={`/rides/${booking.ride_id}?view=1`} className="btn-outline">
+                View ride
+              </Link>
               {/* Cancel while waiting for approval (pending) or after it is
                   confirmed - but never once the ride's departure has passed. */}
               {CANCELLABLE_BOOKING_STATUSES.includes(

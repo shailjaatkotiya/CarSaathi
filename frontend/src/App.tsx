@@ -65,14 +65,7 @@ export default function App() {
             </GuestOrRole>
           }
         />
-        <Route
-          path="/rides/:rideId"
-          element={
-            <GuestOrRole role="passenger">
-              <RideDetail />
-            </GuestOrRole>
-          }
-        />
+        <Route path="/rides/:rideId" element={<RideDetail />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/my-bookings" element={<Navigate to="/profile/passenger" />} />
         <Route

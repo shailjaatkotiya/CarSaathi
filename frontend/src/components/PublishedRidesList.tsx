@@ -196,7 +196,7 @@ export default function PublishedRidesList() {
                     </button>
                   )}
                   <Link
-                    to={`/rides/${ride.id}`}
+                    to={`/rides/${ride.id}?view=1`}
                     className="btn-primary shrink-0 min-h-[36px] px-4 py-1.5"
                   >
                     View ride
