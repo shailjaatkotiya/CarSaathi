@@ -170,9 +170,9 @@ export default function AuthPage() {
           <button className="btn-primary py-3 text-base" type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Please wait..." : "Continue"}
           </button>
-          <Link to="/admin" className="btn-outline justify-center py-3 text-base">
+          {/* <Link to="/admin" className="btn-outline justify-center py-3 text-base">
             Login as Admin
-          </Link>
+          </Link> */}
           {message && <p className="alert-success">{message}</p>}
           {error && <p className="alert-error">{error}</p>}
         </form>

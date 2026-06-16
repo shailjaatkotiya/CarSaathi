@@ -152,9 +152,9 @@ function HomeForUser({ user }: { user?: User }) {
     ? { to: "/driver/create-ride", label: "Publish a ride", icon: Car }
     : { to: "/search", label: "Book a Ride", icon: Search };
   const secondary = isDriver
-    ? { to: "/my-rides", label: "Published Rides", icon: ListChecks }
+    ? { to: "/my-rides", label: "My Published Rides", icon: ListChecks }
     : isPassenger
-      ? { to: "/profile/passenger", label: "Booked Rides", icon: ListChecks }
+      ? { to: "/profile/passenger", label: "My Booked Rides", icon: ListChecks }
       : { to: "/auth?role=driver", label: "Publish a ride", icon: Car };
   const PrimaryIcon = primary.icon;
   const SecondaryIcon = secondary.icon;

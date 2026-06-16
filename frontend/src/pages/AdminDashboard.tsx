@@ -39,9 +39,9 @@ function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
         <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
       </label>
       {error && <p className="alert-error">{error}</p>}
-      <button className="btn-primary" type="submit">
+      {/* <button className="btn-primary" type="submit">
         Login as admin
-      </button>
+      </button> */}
     </form>
   );
 }
