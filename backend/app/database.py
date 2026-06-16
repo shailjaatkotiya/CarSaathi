@@ -23,6 +23,7 @@ class Base(DeclarativeBase):
 # never ALTERs existing tables, so these are applied at startup on every engine.
 RUNTIME_COLUMNS: dict[str, dict[str, str]] = {
     "users": {
+        "role": "VARCHAR(20) DEFAULT 'passenger'",
         "personal_car_brand": "VARCHAR(80)",
         "personal_car_model": "VARCHAR(80)",
         "personal_car_number": "VARCHAR(30)",

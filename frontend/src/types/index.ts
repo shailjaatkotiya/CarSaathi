@@ -1,6 +1,8 @@
 // Domain types shared across the app. Single source of truth — components and
 // API service modules import from here instead of re-declaring local shapes.
 
+export type UserRole = "admin" | "driver" | "passenger";
+
 export type VerificationStatus = "pending" | "verified" | "rejected";
 
 export type BookingStatus = "pending" | "confirmed" | "rejected" | "cancelled" | "completed";
@@ -89,6 +91,7 @@ export type User = {
   id: number;
   full_name: string;
   email: string;
+  role: UserRole;
   whatsapp_number?: string;
   personal_car_brand?: string;
   personal_car_model?: string;

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import require_passenger
 from app.models import Booking, BookingStatus, Ride, User
 from app.schemas import (
     BookingActionOut,
@@ -109,7 +109,7 @@ def ride_passengers(
 def book_ride(
     ride_id: int,
     payload: BookingCreate,
-    passenger: User = Depends(get_current_user),
+    passenger: User = Depends(require_passenger),
     db: Session = Depends(get_db),
 ) -> BookingActionOut:
     return BookingService(db).book(ride_id, passenger, payload)
@@ -118,7 +118,7 @@ def book_ride(
 @router.post("/payments/verify", response_model=BookingOut)
 def verify_payment(
     payload: PaymentVerifyRequest,
-    passenger: User = Depends(get_current_user),
+    passenger: User = Depends(require_passenger),
     db: Session = Depends(get_db),
 ) -> Booking:
     return BookingService(db).verify_payment(payload, passenger)
@@ -128,7 +128,7 @@ def verify_payment(
 def cancel_booking(
     booking_id: int,
     payload: CancellationRequest,
-    passenger: User = Depends(get_current_user),
+    passenger: User = Depends(require_passenger),
     db: Session = Depends(get_db),
 ) -> Booking:
     return BookingService(db).cancel_for_passenger(
@@ -138,7 +138,7 @@ def cancel_booking(
 
 @router.get("/bookings", response_model=list[BookingOut])
 def booking_history(
-    passenger: User = Depends(get_current_user), db: Session = Depends(get_db)
+    passenger: User = Depends(require_passenger), db: Session = Depends(get_db)
 ) -> list[Booking]:
     return BookingService(db).history(passenger)
 
@@ -146,7 +146,7 @@ def booking_history(
 @router.post("/reports")
 def report_user(
     payload: ReportCreate,
-    reporter: User = Depends(get_current_user),
+    reporter: User = Depends(require_passenger),
     db: Session = Depends(get_db),
 ) -> dict:
     BookingService(db).report(reporter, payload)

@@ -1,12 +1,13 @@
 import { api } from "./client";
-import type { TokenResponse, User } from "../types";
+import type { TokenResponse, User, UserRole } from "../types";
 
-export type LoginPayload = { email: string; password: string };
+export type LoginPayload = { email: string; password: string; role?: UserRole };
 export type RegisterPayload = {
   full_name: string;
   email: string;
   password: string;
   whatsapp_number?: string | null;
+  role: UserRole;
 };
 
 export const authApi = {

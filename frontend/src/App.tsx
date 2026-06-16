@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import GuestOrRole from "./components/GuestOrRole";
 import Layout from "./components/Layout";
 import RequireAuth from "./components/RequireAuth";
+import RequireRole from "./components/RequireRole";
 import AddVehicle from "./pages/AddVehicle";
 import AdminDashboard from "./pages/AdminDashboard";
 import AuthPage from "./pages/AuthPage";
@@ -26,61 +28,75 @@ export default function App() {
         <Route
           path="/verify"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <VerificationPage />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/driver/onboarding"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <DriverOnboarding />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/driver/vehicle"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <AddVehicle />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/driver/create-ride"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <CreateRide />
-            </RequireAuth>
+            </RequireRole>
           }
         />
-        <Route path="/search" element={<SearchRides />} />
-        <Route path="/rides/:rideId" element={<RideDetail />} />
+        <Route
+          path="/search"
+          element={
+            <GuestOrRole role="passenger">
+              <SearchRides />
+            </GuestOrRole>
+          }
+        />
+        <Route
+          path="/rides/:rideId"
+          element={
+            <GuestOrRole role="passenger">
+              <RideDetail />
+            </GuestOrRole>
+          }
+        />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/my-bookings" element={<Navigate to="/profile/passenger" />} />
         <Route
           path="/my-rides"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <MyRides />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/my-rides/:rideId"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <DriverRidePlan />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/my-rides/:rideId/edit"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <YourPublication />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
@@ -94,17 +110,17 @@ export default function App() {
         <Route
           path="/profile/driver"
           element={
-            <RequireAuth>
+            <RequireRole role="driver">
               <Navigate to="/my-rides" replace />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route
           path="/profile/passenger"
           element={
-            <RequireAuth>
+            <RequireRole role="passenger">
               <PassengerProfilePage />
-            </RequireAuth>
+            </RequireRole>
           }
         />
         <Route path="/admin" element={<AdminDashboard />} />

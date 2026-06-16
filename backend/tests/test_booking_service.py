@@ -14,6 +14,7 @@ from app.models import (
     Ride,
     RideStatus,
     User,
+    UserRole,
     Vehicle,
 )
 from app.repositories.booking_repository import BookingRepository
@@ -21,8 +22,18 @@ from app.services.booking_service import BookingService
 
 
 def _seed_ride_with_booking(db, *, status: BookingStatus, seats: int = 1):
-    driver = User(full_name="Driver", email="d@example.com", password_hash="x")
-    passenger = User(full_name="Rider", email="p@example.com", password_hash="x")
+    driver = User(
+        full_name="Driver",
+        email="d@example.com",
+        password_hash="x",
+        role=UserRole.driver,
+    )
+    passenger = User(
+        full_name="Rider",
+        email="p@example.com",
+        password_hash="x",
+        role=UserRole.passenger,
+    )
     db.add_all([driver, passenger])
     db.flush()
 
