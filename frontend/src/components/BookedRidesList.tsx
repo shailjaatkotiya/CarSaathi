@@ -13,24 +13,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
-import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed, ridePhase } from "../lib/format";
+import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed } from "../lib/format";
+import { passengerStateLabel } from "../lib/rideStatus";
 import AutoGrowTextarea from "./AutoGrowTextarea";
+import StatusChip from "./StatusChip";
 import { queryKeys } from "../lib/queryKeys";
 import { CANCELLABLE_BOOKING_STATUSES } from "../constants/booking";
 import type { Booking, BookingStatus } from "../types";
-
-// Passenger-facing booking status: Pending / Accepted / Rejected / Cancelled /
-// On Going / Completed. Open bookings (pending, confirmed) shift to On Going
-// once the ride departs and Completed once it ends (6h after departure).
-function passengerBookingStatus(booking: Booking): string {
-  if (booking.status === "cancelled") return "Cancelled";
-  if (booking.status === "rejected") return "Rejected";
-  if (booking.status === "completed") return "Completed";
-  const phase = ridePhase(booking.journey_date, booking.departure_time);
-  if (phase === "ended") return "Completed";
-  if (phase === "ongoing") return "On Going";
-  return booking.status === "confirmed" ? "Accepted" : "Pending";
-}
 
 function ReportForm({
   booking,
@@ -153,9 +142,7 @@ export default function BookedRidesList() {
                 </p>
               )}
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="chip">
-                  {passengerBookingStatus(booking)}
-                </span>
+                <StatusChip label={passengerStateLabel(booking)} />
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
                 {whatsappLink(booking.driver_whatsapp) && (

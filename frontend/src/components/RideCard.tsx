@@ -9,19 +9,10 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { formatShortDate, formatTimeAmPm, ridePhase } from "../lib/format";
+import { formatShortDate, formatTimeAmPm } from "../lib/format";
+import { rideStateLabel } from "../lib/rideStatus";
+import StatusChip from "./StatusChip";
 import type { Ride } from "../types";
-
-// Driver-facing ride status: Pending (upcoming) -> On Going (departed, < 6h) ->
-// Completed (>= 6h after departure, or marked/auto completed). Cancelled stays.
-function driverRideStatus(ride: Ride): string {
-  if (ride.status === "cancelled") return "Cancelled";
-  if (ride.status === "completed") return "Completed";
-  const phase = ridePhase(ride.journey_date, ride.departure_time);
-  if (phase === "ended") return "Completed";
-  if (phase === "ongoing") return "On Going";
-  return "Pending";
-}
 
 export default function RideCard({
   ride,
@@ -32,7 +23,6 @@ export default function RideCard({
   actions?: ReactNode;
   details?: ReactNode;
 }) {
-  const status = driverRideStatus(ride);
   return (
     <div className="card overflow-hidden p-4">
       <div className="flex flex-col gap-3">
@@ -42,11 +32,7 @@ export default function RideCard({
               <h3 className="text-base font-bold">
                 {ride.source_city} to {ride.destination_city}
               </h3>
-              <span
-                className={status === "Cancelled" ? "chip-outline" : "chip"}
-              >
-                {status}
-              </span>
+              <StatusChip label={rideStateLabel(ride)} />
             </div>
           </div>
           <div className="shrink-0 text-right">

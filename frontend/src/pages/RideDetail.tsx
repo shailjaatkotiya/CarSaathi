@@ -11,7 +11,8 @@ import { formatShortDate, formatTimeAmPm } from "../lib/format";
 import { loadRazorpayCheckout } from "../lib/razorpay";
 import { queryKeys } from "../lib/queryKeys";
 import type { BookingActionResponse } from "../types";
-import VerifiedBadge from "../components/VerifiedBadge";
+import StatusChip from "../components/StatusChip";
+import { rideStateLabel } from "../lib/rideStatus";
 import PassengerSeats, { emptySeatEntry, type SeatEntry } from "../components/PassengerSeats";
 import { useSessionStore } from "../store/session";
 
@@ -217,7 +218,7 @@ export default function RideDetail() {
                 <h1 className="text-xl font-bold md:text-2xl">
                   {ride.source_city} to {ride.destination_city}
                 </h1>
-                <VerifiedBadge verified={ride.driver_verified} />
+                <StatusChip label={rideStateLabel(ride)} />
                 {ride.women_only_preference && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2 py-0.5 text-xs font-bold text-pink-600">
                     <UserRound size={12} />

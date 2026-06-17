@@ -2,10 +2,13 @@ import { Armchair, Car, Fuel, Route as RouteIcon, Snowflake, Star, UserRound, Za
 import { Link } from "react-router-dom";
 import type { Ride } from "../types";
 import { formatTimeAmPm } from "../lib/format";
+import { rideStateLabel } from "../lib/rideStatus";
+import StatusChip from "./StatusChip";
 import VerifiedBadge from "./VerifiedBadge";
 
 export default function RideListItem({ ride }: { ride: Ride }) {
   const full = ride.available_seats <= 0;
+  const rideState = rideStateLabel(ride);
 
   return (
     <Link
@@ -43,6 +46,7 @@ export default function RideListItem({ ride }: { ride: Ride }) {
               {ride.driver_rating || 4.5}
             </span>
             {ride.driver_verified && <VerifiedBadge verified />}
+            {rideState !== "Pending" && <StatusChip label={rideState} />}
             {ride.auto_confirm_bookings && (
               <span className="inline-flex items-center gap-1 font-bold text-primary">
                 <Zap size={13} />
