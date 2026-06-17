@@ -1,10 +1,6 @@
 from __future__ import annotations
-
-from sqlalchemy.orm import Session
-
 from app.models import Ride, RideStatus
 from app.repositories.base import BaseRepository
-
 
 class RideRepository(BaseRepository[Ride]):
     model = Ride
