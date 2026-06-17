@@ -133,23 +133,23 @@ export default function CreateRide() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [sourceCity, setSourceCity] = useState("Rajkot");
-  const [destinationCity, setDestinationCity] = useState("Jamnagar");
+  const [sourceCity, setSourceCity] = useState("");
+  const [destinationCity, setDestinationCity] = useState("");
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
   const [departureTime, setDepartureTime] = useState("07:30");
   const [pricePerSeat, setPricePerSeat] = useState("180");
 
-  const [pickupPoints, setPickupPoints] = useState("Rajkot Bus Stand, Kalawad Road, Gondal Road");
-  const [routeStops, setRouteStops] = useState("Dhrol, Reliance Circle");
-  const [dropPoints, setDropPoints] = useState("Jamnagar Bus Stand, Patel Colony, Reliance Circle, Digjam Circle, Railway Station");
+  const [pickupPoints, setPickupPoints] = useState("");
+  const [routeStops, setRouteStops] = useState("");
+  const [dropPoints, setDropPoints] = useState("");
 
   const [carMode, setCarMode] = useState<CarMode>("new");
   const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
   const [newCarBrandOther, setNewCarBrandOther] = useState("");
-  const [carModel, setCarModel] = useState("Swift Dzire");
-  const [vehicleNumber, setVehicleNumber] = useState("GJ01AB1234");
+  const [carModel, setCarModel] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
   const [fuelType, setFuelType] = useState("Petrol");
-  const [carColor, setCarColor] = useState("White");
+  const [carColor, setCarColor] = useState("");
   const [newCarType, setNewCarType] = useState("Sedan");
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [availableSeats, setAvailableSeats] = useState(3);
