@@ -21,7 +21,7 @@ class RideRepository(BaseRepository[Ride]):
         return (
             self.db.query(Ride)
             .filter(Ride.driver_id == driver_id)
-            .order_by(Ride.journey_date.desc(), Ride.departure_time.desc())
+            .order_by(Ride.created_at.desc())
             .all()
         )
 

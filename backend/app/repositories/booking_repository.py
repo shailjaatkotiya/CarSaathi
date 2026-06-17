@@ -46,7 +46,7 @@ class BookingRepository(BaseRepository[Booking]):
                 Booking.passenger_id == passenger_id,
                 Booking.status != BookingStatus.completed,
             )
-            .order_by(Ride.journey_date.desc(), Ride.departure_time.desc())
+            .order_by(Ride.created_at.desc())
             .all()
         )
 
