@@ -1,8 +1,9 @@
 import { MapPinned, Navigation } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { navigationApi } from "../api/navigation";
 import { apiErrorMessage } from "../lib/apiError";
 import type { NavigationRoute } from "../types";
+import RouteMap from "./RouteMap";
 
 function formatDistance(meters: number) {
   if (!Number.isFinite(meters) || meters <= 0) return "Distance unavailable";
@@ -23,21 +24,27 @@ export default function NavigationPanel({
   rideId,
   pickupPoint,
   dropPoint,
-  disabledReason
+  disabledReason,
+  variant = "full"
 }: {
   rideId: string | number;
   pickupPoint: string;
   dropPoint: string;
   disabledReason?: string;
+  // "full" = driver view with turn-by-turn directions + distance/time.
+  // "line" = passenger view: just the selected route drawn on the map,
+  // auto-loaded when both points are picked. No directions list.
+  variant?: "full" | "line";
 }) {
   const [route, setRoute] = useState<NavigationRoute | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const disabled = Boolean(disabledReason || !pickupPoint || !dropPoint || loading);
+  const ready = Boolean(!disabledReason && pickupPoint && dropPoint);
+  const disabled = !ready || loading;
 
   async function calculate() {
-    if (disabled) return;
+    if (!ready) return;
     setLoading(true);
     setError("");
     try {
@@ -49,6 +56,54 @@ export default function NavigationPanel({
     } finally {
       setLoading(false);
     }
+  }
+
+  // Passenger line view auto-loads the route whenever the picked points change.
+  useEffect(() => {
+    if (variant !== "line") return;
+    if (!ready) {
+      setRoute(null);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    setError("");
+    navigationApi
+      .ride(rideId, pickupPoint, dropPoint)
+      .then((data) => active && setRoute(data))
+      .catch((err) => {
+        if (!active) return;
+        setRoute(null);
+        setError(apiErrorMessage(err, "Could not load the route right now."));
+      })
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant, rideId, pickupPoint, dropPoint, ready]);
+
+  // Passenger view: only the route line on the map, no directions.
+  if (variant === "line") {
+    return (
+      <div className="rounded-xl border border-sand bg-cream p-3">
+        <div className="flex items-center gap-2">
+          <MapPinned size={16} className="text-primary" />
+          <h3 className="text-sm font-bold">Your route</h3>
+        </div>
+        {disabledReason && <p className="mt-2 text-xs font-semibold text-muted">{disabledReason}</p>}
+        {!disabledReason && (!pickupPoint || !dropPoint) && (
+          <p className="mt-2 text-xs font-semibold text-muted">Select pickup and drop points to see your route.</p>
+        )}
+        {error && <p className="alert-error mt-2">{error}</p>}
+        {loading && !route && <p className="mt-2 text-xs text-muted">Loading route…</p>}
+        {route && (
+          <div className="mt-3">
+            <RouteMap route={route} />
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -77,6 +132,7 @@ export default function NavigationPanel({
 
       {route && (
         <div className="mt-3 space-y-3">
+          <RouteMap route={route} />
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg bg-white p-2">
               <p className="text-[11px] font-bold text-muted">Drive distance</p>

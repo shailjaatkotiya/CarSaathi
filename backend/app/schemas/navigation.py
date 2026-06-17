@@ -26,3 +26,49 @@ class NavigationRoute(BaseModel):
     duration_seconds: float
     steps: list[NavigationStep] = []
     geometry: list[list[float]] = []
+
+
+class NavigationRouteRequest(BaseModel):
+    origin_query: str = Field(min_length=1, max_length=200)
+    destination_query: str = Field(min_length=1, max_length=200)
+    max_alternatives: int = Field(default=2, ge=0, le=5)
+    # Optional [lng, lat] of each end. When present they are used directly and
+    # the text query is skipped — avoids re-geocoding a vague POI label.
+    origin_position: list[float] | None = None
+    destination_position: list[float] | None = None
+
+
+class NavigationRouteOption(BaseModel):
+    distance_meters: float = 0
+    duration_seconds: float = 0
+    steps: list[NavigationStep] = []
+    geometry: list[list[float]] = []
+    has_tolls: bool = False
+    road_label: str = ""
+
+
+class NavigationRouteOptions(BaseModel):
+    provider: str = "amazon-location"
+    origin: NavigationPlace
+    destination: NavigationPlace
+    options: list[NavigationRouteOption] = []
+
+
+class NavigationReverse(BaseModel):
+    label: str
+    position: list[float]
+
+
+class NavigationSuggestion(BaseModel):
+    label: str
+
+
+class NavigationMapConfig(BaseModel):
+    provider: str = "amazon-location"
+    region: str
+    style: str
+    # Maps API key + style descriptor URL. MapLibre appends the key to every
+    # maps.geo request via transformRequest, so the key reaches the browser at
+    # runtime. Use a Maps-scoped, referrer-restricted key for this endpoint.
+    api_key: str
+    style_url: str

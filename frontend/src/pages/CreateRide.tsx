@@ -6,7 +6,6 @@ import {
   Car,
   CheckCircle2,
   ListChecks,
-  MapPin,
   Route as RouteIcon,
   Zap
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { apiErrorMessage } from "../lib/apiError";
 import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
+import TripRoutePlanner from "../components/TripRoutePlanner";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
 
@@ -151,13 +151,15 @@ export default function CreateRide() {
   // iteration. Validate returns an error string (or null) before advancing.
   const steps = [
     {
-      key: "route",
-      title: "Where are you going?",
-      subtitle: "Set the cities your ride connects.",
+      key: "trip",
+      title: "Route, pickup & drop points",
+      subtitle: "Search cities on the map, select your route, and add pickup & drop points.",
       icon: <RouteIcon size={20} />,
       validate: () => {
         if (!sourceCity.trim() || !destinationCity.trim()) return "Enter both source and destination city.";
-        if (!Number(distanceKm) || Number(distanceKm) <= 0) return "Enter a valid route distance in km.";
+        if (countPoints(pickupPoints) < 1) return "Add at least 1 pickup point.";
+        if (countPoints(dropPoints) < 1) return "Add at least 1 drop point.";
+        if (!Number(distanceKm) || Number(distanceKm) <= 0) return "Select the route on the map to set the distance.";
         return null;
       }
     },
@@ -169,17 +171,6 @@ export default function CreateRide() {
       validate: () => {
         if (!journeyDate) return "Choose a journey date.";
         if (!departureTime) return "Choose a departure time.";
-        return null;
-      }
-    },
-    {
-      key: "points",
-      title: "Pickup, stops & drop points",
-      subtitle: "Add at least 1 pickup and 1 drop point, comma separated.",
-      icon: <MapPin size={20} />,
-      validate: () => {
-        if (countPoints(pickupPoints) < 1) return "Add at least 1 pickup point.";
-        if (countPoints(dropPoints) < 1) return "Add at least 1 drop point.";
         return null;
       }
     },
@@ -351,22 +342,20 @@ export default function CreateRide() {
         ) : (
           <>
             <StepShell title={current.title} subtitle={current.subtitle} icon={current.icon}>
-              {current.key === "route" && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label>
-                    <span className="field-label">Source city</span>
-                    <input className="input" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} placeholder="Rajkot" />
-                  </label>
-                  <label>
-                    <span className="field-label">Destination city</span>
-                    <input className="input" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} placeholder="Jamnagar" />
-                  </label>
-                  <label className="sm:col-span-2">
-                    <span className="field-label">Distance in km</span>
-                    <input className="input" type="number" value={distanceKm} onChange={(event) => setDistanceKm(event.target.value)} placeholder="96" />
-                    <span className="field-hint">Approx route distance.</span>
-                  </label>
-                </div>
+              {current.key === "trip" && (
+                <TripRoutePlanner
+                  sourceCity={sourceCity}
+                  setSourceCity={setSourceCity}
+                  destinationCity={destinationCity}
+                  setDestinationCity={setDestinationCity}
+                  pickupPoints={pickupPoints}
+                  setPickupPoints={setPickupPoints}
+                  routeStops={routeStops}
+                  setRouteStops={setRouteStops}
+                  dropPoints={dropPoints}
+                  setDropPoints={setDropPoints}
+                  setDistanceKm={setDistanceKm}
+                />
               )}
 
               {current.key === "datetime" && (
@@ -378,26 +367,6 @@ export default function CreateRide() {
                   <label>
                     <TimePicker value={departureTime} onChange={setDepartureTime} label="Departure time" />
                     {/* <span className="field-hint">At least 3 hours from now.</span> */}
-                  </label>
-                </div>
-              )}
-
-              {current.key === "points" && (
-                <div className="flex flex-col gap-4">
-                  <label>
-                    <span className="field-label">Pickup points - minimum 1 ({countPoints(pickupPoints)})</span>
-                    <textarea className="input" rows={2} value={pickupPoints} onChange={(event) => setPickupPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated. Example: Bopal, Gota, Iscon.</span>
-                  </label>
-                  <label>
-                    <span className="field-label">In-between stops ({countPoints(routeStops)})</span>
-                    <textarea className="input" rows={2} value={routeStops} onChange={(event) => setRouteStops(event.target.value)} />
-                    <span className="field-hint">Optional stops passengers can choose before the final drop.</span>
-                  </label>
-                  <label>
-                    <span className="field-label">Drop points - minimum 1 ({countPoints(dropPoints)})</span>
-                    <textarea className="input" rows={2} value={dropPoints} onChange={(event) => setDropPoints(event.target.value)} />
-                    <span className="field-hint">Comma separated final-city drop points.</span>
                   </label>
                 </div>
               )}

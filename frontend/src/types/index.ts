@@ -109,6 +109,39 @@ export type NavigationRoute = {
   geometry: number[][];
 };
 
+export type NavigationSuggestion = {
+  label: string;
+};
+
+export type NavigationRouteOption = {
+  distance_meters: number;
+  duration_seconds: number;
+  steps: NavigationStep[];
+  geometry: number[][];
+  has_tolls: boolean;
+  road_label: string;
+};
+
+export type NavigationRouteOptions = {
+  provider: "amazon-location";
+  origin: NavigationPlace;
+  destination: NavigationPlace;
+  options: NavigationRouteOption[];
+};
+
+export type NavigationReverse = {
+  label: string;
+  position: number[];
+};
+
+export type NavigationMapConfig = {
+  provider: "amazon-location";
+  region: string;
+  style: string;
+  api_key: string;
+  style_url: string;
+};
+
 export type User = {
   id: number;
   full_name: string;

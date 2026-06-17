@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     amazon_location_api_key: str = ""
     amazon_location_region: str = "ap-south-1"
     amazon_location_language: str = "en"
+    # Maps API style for the rendered route map (Standard, Monochrome,
+    # Hybrid, Satellite). The API key above must include Maps permissions.
+    amazon_location_map_style: str = "Standard"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore"

@@ -338,7 +338,8 @@ export default function RideDetail() {
                   rideId={ride.id}
                   pickupPoint={pickup}
                   dropPoint={drop}
-                  disabledReason={!token ? "Login as a passenger to view route navigation." : undefined}
+                  variant="line"
+                  disabledReason={!token ? "Login as a passenger to view your route." : undefined}
                 />
                 <div>
                   <span className="field-label">Payment method</span>
