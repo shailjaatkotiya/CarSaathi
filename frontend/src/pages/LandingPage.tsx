@@ -84,13 +84,13 @@ function RideSearchBar() {
     >
       <Field
         icon={MapPin}
-        value={""}
+        value={pickup}
         onChange={setPickup}
         placeholder="Enter pickup city"
       />
       <Field
         icon={MapPin}
-        value={""}
+        value={dropoff}
         onChange={setDropoff}
         placeholder="Enter drop off city"
       />

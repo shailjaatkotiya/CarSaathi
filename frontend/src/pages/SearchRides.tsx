@@ -174,15 +174,18 @@ export default function SearchRides() {
           <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Date" />
         </div>
         <label className="flex flex-col justify-center px-3 py-2 md:w-[150px]">
-          <span className="field-label mb-0">Passengers</span>
+          <span className="field-label mb-0">Passengers (max 3)</span>
           <span className="flex items-center gap-2">
             <Users size={15} className="text-muted" />
             <input
               className="w-full bg-transparent text-sm font-bold text-ink outline-none"
               type="number"
               min={1}
+              max={3}
               value={seats}
-              onChange={(event) => setSeats(Math.max(1, Number(event.target.value)))}
+              onChange={(event) =>
+                setSeats(Math.min(3, Math.max(1, Number(event.target.value))))
+              }
             />
           </span>
         </label>
