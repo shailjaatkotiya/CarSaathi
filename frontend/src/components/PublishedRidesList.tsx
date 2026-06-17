@@ -157,13 +157,6 @@ export default function PublishedRidesList() {
               ride={ride}
               actions={
                 <>
-                  <Link
-                    to={`/my-rides/${ride.id}`}
-                    className="btn-outline self-start"
-                  >
-                    <ClipboardList size={16} />
-                    Ride plan
-                  </Link>
                   <button
                     type="button"
                     className="btn-outline self-start"

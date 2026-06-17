@@ -334,21 +334,6 @@ export default function RideDetail() {
                   )}
                 </div>
               )}
-
-              <div className="flex flex-wrap gap-1.5">
-                <span className="chip-solid">
-                  <ShieldCheck size={12} />
-                  Verified badge
-                </span>
-                <span className="chip-outline">
-                  <AlertTriangle size={12} />
-                  Report user option
-                </span>
-                <span className="chip-outline">
-                  <Share2 size={12} />
-                  Ride sharing link
-                </span>
-              </div>
             </div>
 
             {!isViewOnly && (

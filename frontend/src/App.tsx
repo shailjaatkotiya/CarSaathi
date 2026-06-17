@@ -10,7 +10,6 @@ import BookingConfirmation from "./pages/BookingConfirmation";
 import CreateRide from "./pages/CreateRide";
 import DriverOnboarding from "./pages/DriverOnboarding";
 import DriverRidePlan from "./pages/DriverRidePlan";
-import YourPublication from "./pages/YourPublication";
 import LandingPage from "./pages/LandingPage";
 import MyRides from "./pages/MyRides";
 import PassengerProfilePage from "./pages/PassengerProfilePage";
@@ -73,22 +72,6 @@ export default function App() {
           element={
             <RequireRole role="driver">
               <MyRides />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/my-rides/:rideId"
-          element={
-            <RequireRole role="driver">
-              <DriverRidePlan />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/my-rides/:rideId/edit"
-          element={
-            <RequireRole role="driver">
-              <YourPublication />
             </RequireRole>
           }
         />
