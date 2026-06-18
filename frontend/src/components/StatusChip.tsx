@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 const TONE: Record<string, string> = {
   Pending: "bg-amber-50 text-amber-700 border border-amber-200",
   Accepted: "bg-primary-soft text-primary-dark",
-  Ongoing: "bg-blue-50 text-blue-700 border border-blue-200",
   Completed: "bg-green-50 text-green-700 border border-green-200",
   Rejected: "bg-red-50 text-red-700 border border-red-200",
   Cancelled: "bg-red-50 text-red-700 border border-red-200",

@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
 import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed } from "../lib/format";
-import { passengerStateLabel } from "../lib/rideStatus";
+import { passengerStateLabel, type PassengerStateLabel } from "../lib/rideStatus";
 import AutoGrowTextarea from "./AutoGrowTextarea";
 import StatusChip from "./StatusChip";
 import { queryKeys } from "../lib/queryKeys";
@@ -70,13 +70,27 @@ function ReportForm({
 
 // Renders the passenger's not-yet-completed booked rides. Used both on the
 // standalone /profile/passenger page and inside the profile dropdown menu.
+const PASSENGER_FILTERS: { value: "all" | PassengerStateLabel; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "Pending", label: "Pending" },
+  { value: "Accepted", label: "Accepted" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Cancelled", label: "Cancelled" },
+  { value: "Completed", label: "Completed" },
+];
+
 export default function BookedRidesList() {
   const [message, setMessage] = useState("");
   const [reportBookingId, setReportBookingId] = useState<number | null>(null);
+  const [filter, setFilter] = useState<"all" | PassengerStateLabel>("all");
   const { data: passengerBookings, refetch } = useQuery({
     queryKey: queryKeys.passenger.bookings,
     queryFn: bookingsApi.list,
   });
+
+  const filteredBookings = passengerBookings?.filter(
+    (booking) => filter === "all" || passengerStateLabel(booking) === filter,
+  );
 
   async function cancelBooking(bookingId: number) {
     await bookingsApi.cancel(bookingId, "Passenger cancelled from profile");
@@ -96,7 +110,26 @@ export default function BookedRidesList() {
     <div className="flex flex-col gap-3">
       {message && <p className="alert-success">{message}</p>}
 
-      {passengerBookings?.map((booking) => (
+      {passengerBookings && passengerBookings.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {PASSENGER_FILTERS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={
+                filter === option.value
+                  ? "chip-solid"
+                  : "chip-outline hover:bg-sand-light"
+              }
+              onClick={() => setFilter(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filteredBookings?.map((booking) => (
         <div key={booking.id} className="card p-4">
           <div className="flex flex-col justify-between gap-4 sm:flex-row">
             <div>
@@ -203,6 +236,11 @@ export default function BookedRidesList() {
       {passengerBookings?.length === 0 && (
         <p className="alert-info">No unfinished booked rides yet.</p>
       )}
+      {passengerBookings &&
+        passengerBookings.length > 0 &&
+        filteredBookings?.length === 0 && (
+          <p className="alert-info">No booked rides match this filter.</p>
+        )}
     </div>
   );
 }

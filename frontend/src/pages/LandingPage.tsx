@@ -129,7 +129,7 @@ function Field({
       <span className="flex items-center gap-2">
         <Icon size={16} className="shrink-0 text-neutral-400" />
         <input
-          className="w-full bg-transparent text-sm text-ink field-label outline-none placeholder:text-neutral-400"
+          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
           type={type}
           value={value}
           placeholder={placeholder}

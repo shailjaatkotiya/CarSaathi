@@ -156,7 +156,7 @@ export default function SearchRides() {
       <div className="card flex flex-col gap-2 rounded-2xl p-2 md:flex-row md:items-stretch md:gap-0 md:divide-x md:divide-sand">
         <label className="flex flex-1 flex-col justify-center px-3 py-2">
           <input
-            className="w-full bg-transparent field-label font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
             value={source}
             onChange={(event) => setSource(event.target.value)}
             placeholder="Enter pickup city"
@@ -164,7 +164,7 @@ export default function SearchRides() {
         </label>
         <label className="flex flex-1 flex-col justify-center px-3 py-2">
           <input
-            className="w-full bg-transparent field-label font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
+            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
             placeholder="Enter drop off city"
@@ -174,19 +174,20 @@ export default function SearchRides() {
           <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Date" />
         </div>
         <label className="flex flex-col justify-center px-3 py-2 md:w-[150px]">
-          <span className="field-label mb-0">Passengers (max 3)</span>
+          <span className="field-label mb-0">Passengers</span>
           <span className="flex items-center gap-2">
             <Users size={15} className="text-muted" />
-            <input
+            <select
               className="w-full bg-transparent text-sm font-bold text-ink outline-none"
-              type="number"
-              min={1}
-              max={3}
               value={seats}
-              onChange={(event) =>
-                setSeats(Math.min(3, Math.max(1, Number(event.target.value))))
-              }
-            />
+              onChange={(event) => setSeats(Number(event.target.value))}
+            >
+              {[1, 2, 3, 4, 5, 6].map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
           </span>
         </label>
         <button type="button" className="btn-primary justify-center gap-2 md:rounded-xl md:px-6" onClick={() => refetch()}>

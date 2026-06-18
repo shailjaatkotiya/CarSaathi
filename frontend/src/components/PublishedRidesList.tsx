@@ -13,6 +13,7 @@ import { driverApi } from "../api/driver";
 import { bookingStatusLabel } from "../constants/booking";
 import { whatsappLink, rideChatPretext, rideTimePassed } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
+import { rideStateLabel, type RideStateLabel } from "../lib/rideStatus";
 import type { DriverBooking, Ride } from "../types";
 import RideCard from "./RideCard";
 
@@ -130,13 +131,25 @@ function RideBookings({
 
 // Renders the driver's published rides with expandable booked-passenger lists.
 // Used both on the standalone /my-rides page and inside the profile dropdown.
+const DRIVER_FILTERS: { value: "all" | RideStateLabel; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "Pending", label: "Pending" },
+  { value: "Completed", label: "Completed" },
+  { value: "Cancelled", label: "Cancelled" },
+];
+
 export default function PublishedRidesList() {
   const [message, setMessage] = useState("");
   const [expandedRideId, setExpandedRideId] = useState<number | null>(null);
+  const [filter, setFilter] = useState<"all" | RideStateLabel>("all");
   const { data, refetch } = useQuery({
     queryKey: queryKeys.driver.rides,
     queryFn: driverApi.rides,
   });
+
+  const filteredRides = data?.filter(
+    (ride) => filter === "all" || rideStateLabel(ride) === filter,
+  );
 
   async function cancelRide(rideId: number) {
     await driverApi.cancelRide(rideId);
@@ -149,7 +162,25 @@ export default function PublishedRidesList() {
   return (
     <div className="flex flex-col gap-3">
       {message && <p className="alert-success">{message}</p>}
-      {data?.map((ride) => {
+      {data && data.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {DRIVER_FILTERS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={
+                filter === option.value
+                  ? "chip-solid"
+                  : "chip-outline hover:bg-sand-light"
+              }
+              onClick={() => setFilter(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {filteredRides?.map((ride) => {
         const passed = rideTimePassed(ride.journey_date, ride.departure_time);
         return (
           <div key={ride.id} className="flex flex-col gap-3">
@@ -211,6 +242,9 @@ export default function PublishedRidesList() {
       })}
       {data?.length === 0 && (
         <p className="alert-info">No published rides yet.</p>
+      )}
+      {data && data.length > 0 && filteredRides?.length === 0 && (
+        <p className="alert-info">No published rides match this filter.</p>
       )}
     </div>
   );
