@@ -88,7 +88,10 @@ export default function SearchRides() {
   const [smokingAllowed, setSmokingAllowed] = useState(false);
   const [petsAllowed, setPetsAllowed] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("earliest_departure");
-  const [seats, setSeats] = useState(1);
+  const [seats, setSeats] = useState(() => {
+    const raw = Number(searchParams.get("seats"));
+    return Number.isFinite(raw) && raw >= 1 && raw <= 6 ? raw : 1;
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
 

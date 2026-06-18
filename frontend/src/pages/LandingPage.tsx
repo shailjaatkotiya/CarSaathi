@@ -67,6 +67,7 @@ function RideSearchBar() {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupDate, setPickupDate] = useState(getTodayInputDate);
+  const [seats, setSeats] = useState(1);
 
   function findVehicle(event: React.FormEvent) {
     event.preventDefault();
@@ -74,13 +75,14 @@ function RideSearchBar() {
     if (pickup.trim()) params.set("source", pickup.trim());
     if (dropoff.trim()) params.set("destination", dropoff.trim());
     if (pickupDate) params.set("date", pickupDate);
+    params.set("seats", String(seats));
     navigate(`/search?${params.toString()}`);
   }
 
   return (
     <form
       onSubmit={findVehicle}
-      className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto] md:gap-2 md:rounded-3xl md:p-3"
+      className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:gap-2 md:rounded-3xl md:p-3"
     >
       <Field
         icon={MapPin}
@@ -95,6 +97,25 @@ function RideSearchBar() {
         placeholder="Enter drop off city"
       />
       <TravelDatePicker value={pickupDate} onChange={setPickupDate} />
+      <label className="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted">
+          Passengers
+        </span>
+        <span className="flex items-center gap-2">
+          <Users size={16} className="shrink-0 text-neutral-400" />
+          <select
+            className="w-full bg-transparent text-sm font-bold text-ink outline-none"
+            value={seats}
+            onChange={(event) => setSeats(Number(event.target.value))}
+          >
+            {[1, 2, 3, 4, 5, 6].map((count) => (
+              <option key={count} value={count}>
+                {count}
+              </option>
+            ))}
+          </select>
+        </span>
+      </label>
       <button
         type="submit"
         className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-neutral-950 px-6 text-sm font-bold text-white transition hover:bg-neutral-800 md:rounded-2xl"
