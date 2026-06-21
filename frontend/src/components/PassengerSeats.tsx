@@ -66,7 +66,6 @@ export default function PassengerSeats({
                     {p.gender ? ` · ${p.gender}` : ""}
                   </option>
                 ))}
-                <option value="new">+ Add a new passenger</option>
               </select>
             )}
             {manual && (

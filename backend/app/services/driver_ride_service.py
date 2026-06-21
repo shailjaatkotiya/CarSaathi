@@ -144,9 +144,9 @@ class DriverRideService:
             raise ValidationError(
                 "Ride must be published at least 3 hours before departure"
             )
-        if journey_at > now + timedelta(days=10):
+        if journey_at > now + timedelta(days=30):
             raise ValidationError(
-                "Ride can be published maximum 10 days before departure"
+                "Ride can be published maximum 30 days before departure"
             )
 
     @staticmethod

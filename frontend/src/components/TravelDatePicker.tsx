@@ -9,7 +9,7 @@ export function getTodayInputDate() {
 
 export function getMaxTravelDate() {
   const now = new Date();
-  now.setDate(now.getDate() + 10);
+  now.setDate(now.getDate() + 30);
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
   return localDate.toISOString().slice(0, 10);
 }

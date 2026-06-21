@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { driverApi } from "../api/driver";
 import { bookingStatusLabel } from "../constants/booking";
-import { whatsappLink, rideChatPretext, rideTimePassed } from "../lib/format";
+import { whatsappLink, rideChatPretext, rideStartMs, rideTimePassed } from "../lib/format";
 import { queryKeys } from "../lib/queryKeys";
 import { rideStateLabel, type RideStateLabel } from "../lib/rideStatus";
 import type { DriverBooking, Ride } from "../types";
@@ -141,15 +141,21 @@ const DRIVER_FILTERS: { value: "all" | RideStateLabel; label: string }[] = [
 export default function PublishedRidesList() {
   const [message, setMessage] = useState("");
   const [expandedRideId, setExpandedRideId] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"all" | RideStateLabel>("all");
+  // Default to Pending; completed/cancelled show only when explicitly filtered.
+  const [filter, setFilter] = useState<"all" | RideStateLabel>("Pending");
   const { data, refetch } = useQuery({
     queryKey: queryKeys.driver.rides,
     queryFn: driverApi.rides,
   });
 
-  const filteredRides = data?.filter(
-    (ride) => filter === "all" || rideStateLabel(ride) === filter,
-  );
+  const filteredRides = data
+    ?.filter((ride) => filter === "all" || rideStateLabel(ride) === filter)
+    // Most upcoming ride first.
+    .sort(
+      (a, b) =>
+        rideStartMs(a.journey_date, a.departure_time) -
+        rideStartMs(b.journey_date, b.departure_time),
+    );
 
   async function cancelRide(rideId: number) {
     await driverApi.cancelRide(rideId);

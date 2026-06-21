@@ -13,7 +13,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
 import { apiErrorMessage } from "../lib/apiError";
-import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideTimePassed } from "../lib/format";
+import { whatsappLink, formatShortDate, formatTimeAmPm, rideChatPretext, rideStartMs, rideTimePassed } from "../lib/format";
 import { passengerStateLabel, type PassengerStateLabel } from "../lib/rideStatus";
 import AutoGrowTextarea from "./AutoGrowTextarea";
 import StatusChip from "./StatusChip";
@@ -82,15 +82,21 @@ const PASSENGER_FILTERS: { value: "all" | PassengerStateLabel; label: string }[]
 export default function BookedRidesList() {
   const [message, setMessage] = useState("");
   const [reportBookingId, setReportBookingId] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"all" | PassengerStateLabel>("all");
+  // Default to Pending; completed/cancelled/etc. show only when explicitly filtered.
+  const [filter, setFilter] = useState<"all" | PassengerStateLabel>("Pending");
   const { data: passengerBookings, refetch } = useQuery({
     queryKey: queryKeys.passenger.bookings,
     queryFn: bookingsApi.list,
   });
 
-  const filteredBookings = passengerBookings?.filter(
-    (booking) => filter === "all" || passengerStateLabel(booking) === filter,
-  );
+  const filteredBookings = passengerBookings
+    ?.filter((booking) => filter === "all" || passengerStateLabel(booking) === filter)
+    // Most upcoming ride first.
+    .sort(
+      (a, b) =>
+        rideStartMs(a.journey_date, a.departure_time) -
+        rideStartMs(b.journey_date, b.departure_time),
+    );
 
   async function cancelBooking(bookingId: number) {
     await bookingsApi.cancel(bookingId, "Passenger cancelled from profile");

@@ -47,6 +47,13 @@ function departureDate(journeyDate: string, departureTime: string): Date | null 
   return Number.isNaN(departure.getTime()) ? null : departure;
 }
 
+// Departure as epoch ms for sorting (most-upcoming first). Missing/invalid
+// dates sort last via Number.POSITIVE_INFINITY.
+export function rideStartMs(journeyDate: string, departureTime: string): number {
+  const departure = departureDate(journeyDate, departureTime);
+  return departure ? departure.getTime() : Number.POSITIVE_INFINITY;
+}
+
 // True when a ride's departure date+time is at or before the current moment.
 // journeyDate: "YYYY-MM-DD", departureTime: "HH:MM" or "HH:MM:SS".
 export function rideTimePassed(journeyDate: string, departureTime: string): boolean {

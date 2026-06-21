@@ -127,11 +127,24 @@ export default function SearchRides() {
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
-  const data = rawData?.filter((ride) => {
-    if (ride.journey_date !== todayStr) return true;
-    const [h, m] = ride.departure_time.slice(0, 5).split(":").map(Number);
-    return h * 60 + m > nowMinutes;
+  const dropPastToday = (rides: typeof rawData) =>
+    rides?.filter((ride) => {
+      if (ride.journey_date !== todayStr) return true;
+      const [h, m] = ride.departure_time.slice(0, 5).split(":").map(Number);
+      return h * 60 + m > nowMinutes;
+    });
+  const data = dropPastToday(rawData);
+
+  // When the route has rides but none with enough seats, re-run the same search
+  // with seats=1 so we can tell the user it's purely a seat-count problem and
+  // suggest fewer passengers (rather than a generic "no rides" message).
+  const relaxedSeatsParams = { ...rideSearchParams, seats: 1 };
+  const { data: relaxedRawData } = useQuery({
+    queryKey: queryKeys.rides.search(relaxedSeatsParams),
+    queryFn: () => ridesApi.search(relaxedSeatsParams),
+    enabled: hasRoute && data?.length === 0 && seats > 1
   });
+  const fewerSeatsAvailable = (dropPastToday(relaxedRawData)?.length ?? 0) > 0;
 
   function toggleDepartureWindow(value: string) {
     setDepartureWindows((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
@@ -367,7 +380,11 @@ export default function SearchRides() {
                 {isLoading && <p className="alert-info">Loading rides...</p>}
                 {data?.map((ride) => <RideListItem key={ride.id} ride={ride} />)}
                 {data?.length === 0 && !isLoading &&
-                  (journeyDate ? (
+                  (seats > 1 && fewerSeatsAvailable ? (
+                    <p className="alert-warning">
+                      No rides available for {seats} seats. Try with fewer passengers.
+                    </p>
+                  ) : journeyDate ? (
                     <p className="alert-warning">
                       No rides available for {new Date(journeyDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. Try another date or clear the date filter.
                     </p>
