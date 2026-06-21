@@ -1,9 +1,8 @@
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { navigationApi } from "../api/navigation";
 import { apiErrorMessage } from "../lib/apiError";
+import { loadGoogleMaps } from "../lib/googleMaps";
 import type { NavigationRouteOption, NavigationRouteOptions } from "../types";
 
 function formatDuration(seconds: number) {
@@ -23,7 +22,7 @@ function optionDetail(option: NavigationRouteOption) {
 }
 
 // BlaBlaCar-style "What is your route?" screen. Shows the alternatives from
-// Amazon Location on the map; the driver picks one and saves.
+// Google Maps on the map; the driver picks one and saves.
 export default function RouteChooser({
   originQuery,
   destinationQuery,
@@ -44,7 +43,10 @@ export default function RouteChooser({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const linesRef = useRef<any[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -70,34 +72,30 @@ export default function RouteChooser({
   useEffect(() => {
     if (!data || !mapContainer.current) return;
     let cancelled = false;
-    let map: maplibregl.Map | null = null;
     (async () => {
       try {
-        const cfg = await navigationApi.mapConfig();
+        const google = await loadGoogleMaps();
         if (cancelled || !mapContainer.current) return;
-        map = new maplibregl.Map({
-          container: mapContainer.current,
-          style: cfg.style_url,
-          center: data.origin.position as [number, number],
+        const map = new google.maps.Map(mapContainer.current, {
+          center: {
+            lat: data.origin.position[1],
+            lng: data.origin.position[0]
+          },
           zoom: 7,
-          attributionControl: { compact: true },
-          transformRequest: (url) => {
-            if (url.includes("maps.geo.") && !url.includes("key=")) {
-              const sep = url.includes("?") ? "&" : "?";
-              return { url: `${url}${sep}key=${encodeURIComponent(cfg.api_key)}` };
-            }
-            return { url };
-          }
+          disableDefaultUI: true,
+          zoomControl: true,
+          gestureHandling: "greedy"
         });
         mapRef.current = map;
-        map.on("load", () => drawAll(map!, data));
+        drawAll(google, map, linesRef, data, setSelected);
       } catch (err) {
         if (!cancelled) setError(apiErrorMessage(err, "Map unavailable right now."));
       }
     })();
     return () => {
       cancelled = true;
-      map?.remove();
+      linesRef.current.forEach((l) => l.setMap?.(null));
+      linesRef.current = [];
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,14 +103,14 @@ export default function RouteChooser({
 
   // Restyle when the selection changes (selected route on top, dark).
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !data || !map.isStyleLoaded()) return;
-    data.options.forEach((_, index) => {
-      if (!map.getLayer(`route-${index}`)) return;
+    if (!data) return;
+    linesRef.current.forEach((line, index) => {
       const isSel = index === selected;
-      map.setPaintProperty(`route-${index}`, "line-color", isSel ? "#1b3a8b" : "#9cb3e0");
-      map.setPaintProperty(`route-${index}`, "line-width", isSel ? 6 : 4);
-      if (isSel) map.moveLayer(`route-${index}`);
+      line.setOptions?.({
+        strokeColor: isSel ? "#1b3a8b" : "#9cb3e0",
+        strokeWeight: isSel ? 6 : 4,
+        zIndex: isSel ? 10 : 1
+      });
     });
   }, [selected, data]);
 
@@ -158,34 +156,48 @@ export default function RouteChooser({
   );
 }
 
-function drawAll(map: maplibregl.Map, data: NavigationRouteOptions) {
+function drawAll(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  google: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  map: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  linesRef: { current: any[] },
+  data: NavigationRouteOptions,
+  onSelect: (index: number) => void
+) {
+  const bounds = new google.maps.LatLngBounds();
+  linesRef.current = [];
+
   data.options.forEach((option, index) => {
-    const coords = option.geometry.filter((p) => Array.isArray(p) && p.length >= 2);
-    if (coords.length < 2) return;
-    map.addSource(`route-${index}`, {
-      type: "geojson",
-      data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } }
+    const path = option.geometry
+      .filter((p) => Array.isArray(p) && p.length >= 2)
+      .map((p) => ({ lat: p[1], lng: p[0] }));
+    if (path.length < 2) return;
+    const isSel = index === 0;
+    const line = new google.maps.Polyline({
+      path,
+      geodesic: true,
+      strokeColor: isSel ? "#1b3a8b" : "#9cb3e0",
+      strokeWeight: isSel ? 6 : 4,
+      zIndex: isSel ? 10 : 1,
+      map
     });
-    map.addLayer({
-      id: `route-${index}`,
-      type: "line",
-      source: `route-${index}`,
-      layout: { "line-join": "round", "line-cap": "round" },
-      paint: { "line-color": index === 0 ? "#1b3a8b" : "#9cb3e0", "line-width": index === 0 ? 6 : 4 }
-    });
+    line.addListener("click", () => onSelect(index));
+    linesRef.current[index] = line;
+    path.forEach((p: { lat: number; lng: number }) => bounds.extend(p));
   });
-  // Selected (index 0) on top.
-  if (map.getLayer("route-0")) map.moveLayer("route-0");
 
-  new maplibregl.Marker({ color: "#0f766e" }).setLngLat(data.origin.position as [number, number]).addTo(map);
-  new maplibregl.Marker({ color: "#b91c1c" }).setLngLat(data.destination.position as [number, number]).addTo(map);
+  new google.maps.Marker({
+    position: { lat: data.origin.position[1], lng: data.origin.position[0] },
+    map,
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#0f766e", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 }
+  });
+  new google.maps.Marker({
+    position: { lat: data.destination.position[1], lng: data.destination.position[0] },
+    map,
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#b91c1c", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 }
+  });
 
-  const all = data.options.flatMap((o) => o.geometry).filter((p) => p.length >= 2) as [number, number][];
-  if (all.length >= 1) {
-    const bounds = all.reduce(
-      (b, p) => b.extend(p),
-      new maplibregl.LngLatBounds(all[0], all[0])
-    );
-    map.fitBounds(bounds, { padding: 50, duration: 0 });
-  }
+  if (!bounds.isEmpty()) map.fitBounds(bounds, 50);
 }

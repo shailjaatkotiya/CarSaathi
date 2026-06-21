@@ -81,6 +81,9 @@ export default function CreateRide() {
 
   const [sourceCity, setSourceCity] = useState("Rajkot");
   const [destinationCity, setDestinationCity] = useState("Jamnagar");
+  // [lng, lat] behind the city labels, set when the driver picks on the map.
+  const [sourceCoords, setSourceCoords] = useState<[number, number] | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
   const [distanceKm, setDistanceKm] = useState("96");
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
   const [departureTime, setDepartureTime] = useState("07:30");
@@ -272,6 +275,10 @@ export default function CreateRide() {
         ...carDetails,
         source_city: sourceCity,
         destination_city: destinationCity,
+        source_lat: sourceCoords ? sourceCoords[1] : null,
+        source_lng: sourceCoords ? sourceCoords[0] : null,
+        destination_lat: destinationCoords ? destinationCoords[1] : null,
+        destination_lng: destinationCoords ? destinationCoords[0] : null,
         distance_km: Number(distanceKm),
         journey_date: journeyDate,
         departure_time: departureTime,
@@ -355,6 +362,8 @@ export default function CreateRide() {
                   dropPoints={dropPoints}
                   setDropPoints={setDropPoints}
                   setDistanceKm={setDistanceKm}
+                  setSourceCoords={setSourceCoords}
+                  setDestinationCoords={setDestinationCoords}
                 />
               )}
 

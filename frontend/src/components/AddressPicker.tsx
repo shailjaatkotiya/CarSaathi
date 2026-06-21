@@ -1,9 +1,8 @@
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowRight, Clock, Crosshair, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { navigationApi } from "../api/navigation";
 import { apiErrorMessage } from "../lib/apiError";
+import { loadGoogleMaps } from "../lib/googleMaps";
 
 const RECENTS_KEY = "carthi_addr_recents";
 
@@ -35,7 +34,7 @@ export default function AddressPicker({
 }: {
   title: string;
   onClose: () => void;
-  onConfirm: (label: string, position?: [number, number]) => void;
+  onConfirm: (label: string, position?: [number, number], city?: string) => void;
   enableMap?: boolean;
 }) {
   const [view, setView] = useState<"search" | "map">("search");
@@ -46,9 +45,11 @@ export default function AddressPicker({
   const [error, setError] = useState("");
   const [pinLabel, setPinLabel] = useState("");
   const [pinPos, setPinPos] = useState<[number, number] | null>(null);
+  const [pinCity, setPinCity] = useState("");
 
   const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
 
   // Debounced autocomplete.
   useEffect(() => {
@@ -75,9 +76,9 @@ export default function AddressPicker({
     };
   }, [query]);
 
-  function finish(label: string, position?: [number, number]) {
+  function finish(label: string, position?: [number, number], city?: string) {
     saveRecent(label);
-    onConfirm(label, position);
+    onConfirm(label, position, city);
     onClose();
   }
 
@@ -92,6 +93,7 @@ export default function AddressPicker({
       const place = await navigationApi.geocode(label);
       setPinLabel(place.label);
       setPinPos([place.position[0], place.position[1]]);
+      setPinCity(place.city || "");
       setView("map");
     } catch (err) {
       setError(apiErrorMessage(err, "Could not locate that address."));
@@ -113,11 +115,12 @@ export default function AddressPicker({
           const { latitude, longitude } = pos.coords;
           const place = await navigationApi.reverse(latitude, longitude);
           if (!enableMap) {
-            finish(place.label, [place.position[0], place.position[1]]);
+            finish(place.label, [place.position[0], place.position[1]], place.city);
             return;
           }
           setPinLabel(place.label);
           setPinPos([place.position[0], place.position[1]]);
+          setPinCity(place.city || "");
           setView("map");
         } catch (err) {
           setError(apiErrorMessage(err, "Could not read your current location."));
@@ -137,33 +140,29 @@ export default function AddressPicker({
   useEffect(() => {
     if (view !== "map" || !pinPos || !mapContainer.current) return;
     let cancelled = false;
-    let map: maplibregl.Map | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let listener: any = null;
     (async () => {
       try {
-        const cfg = await navigationApi.mapConfig();
+        const google = await loadGoogleMaps();
         if (cancelled || !mapContainer.current) return;
-        map = new maplibregl.Map({
-          container: mapContainer.current,
-          style: cfg.style_url,
-          center: pinPos,
-          zoom: 14,
-          attributionControl: { compact: true },
-          transformRequest: (url) => {
-            if (url.includes("maps.geo.") && !url.includes("key=")) {
-              const sep = url.includes("?") ? "&" : "?";
-              return { url: `${url}${sep}key=${encodeURIComponent(cfg.api_key)}` };
-            }
-            return { url };
-          }
+        const map = new google.maps.Map(mapContainer.current, {
+          center: { lat: pinPos[1], lng: pinPos[0] },
+          zoom: 15,
+          disableDefaultUI: true,
+          gestureHandling: "greedy",
+          clickableIcons: false
         });
         mapRef.current = map;
         // Live reverse-geocode the map centre when the user stops moving.
-        map.on("moveend", async () => {
-          const c = map!.getCenter();
+        listener = map.addListener("idle", async () => {
+          const c = map.getCenter();
+          if (!c) return;
           try {
-            const place = await navigationApi.reverse(c.lat, c.lng);
+            const place = await navigationApi.reverse(c.lat(), c.lng());
             setPinLabel(place.label);
-            setPinPos([c.lng, c.lat]);
+            setPinPos([c.lng(), c.lat()]);
+            setPinCity(place.city || "");
           } catch {
             /* keep previous label */
           }
@@ -174,7 +173,7 @@ export default function AddressPicker({
     })();
     return () => {
       cancelled = true;
-      map?.remove();
+      listener?.remove?.();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -250,7 +249,7 @@ export default function AddressPicker({
           </div>
           <button
             type="button"
-            onClick={() => pinLabel && finish(pinLabel, pinPos ?? undefined)}
+            onClick={() => pinLabel && finish(pinLabel, pinPos ?? undefined, pinCity)}
             disabled={!pinLabel}
             className="btn-primary absolute bottom-6 right-6 h-12 w-12 rounded-full p-0"
             aria-label="Confirm location"

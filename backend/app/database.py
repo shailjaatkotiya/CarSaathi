@@ -38,6 +38,12 @@ RUNTIME_COLUMNS: dict[str, dict[str, str]] = {
         "razorpay_order_id": "VARCHAR(120)",
     },
     "vehicles": {"color": "VARCHAR(40) DEFAULT 'White'"},
+    "rides": {
+        "source_lat": "DOUBLE PRECISION",
+        "source_lng": "DOUBLE PRECISION",
+        "destination_lat": "DOUBLE PRECISION",
+        "destination_lng": "DOUBLE PRECISION",
+    },
 }
 
 

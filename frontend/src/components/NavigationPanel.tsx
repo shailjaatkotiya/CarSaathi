@@ -115,7 +115,7 @@ export default function NavigationPanel({
             <h3 className="text-sm font-bold">Map navigation</h3>
           </div>
           <p className="mt-1 text-xs text-muted">
-            Amazon Location calculates the drive from pickup to selected drop.
+            Google Maps calculates the drive from pickup to selected drop.
           </p>
         </div>
         <button type="button" className="btn-outline min-h-0 px-3 py-1.5 text-xs" onClick={calculate} disabled={disabled}>

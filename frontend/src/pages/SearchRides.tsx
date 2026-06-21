@@ -19,6 +19,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ridesApi } from "../api/rides";
 import { queryKeys } from "../lib/queryKeys";
+import CitySearch from "../components/CitySearch";
 import RideListItem from "../components/RideListItem";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 
@@ -154,24 +155,22 @@ export default function SearchRides() {
     <div className="mx-auto w-full max-w-6xl px-4 py-5 md:py-6">
       {/* Top search bar: pickup, drop off, date, passengers */}
       <div className="card flex flex-col gap-2 rounded-2xl p-2 md:flex-row md:items-stretch md:gap-0 md:divide-x md:divide-sand">
-        <label className="flex flex-1 flex-col justify-center px-3 py-2">
-          <span className="field-label mb-0">From</span>
-          <input
-            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
-            value={source}
-            onChange={(event) => setSource(event.target.value)}
-            placeholder="Pickup city"
-          />
-        </label>
-        <label className="flex flex-1 flex-col justify-center px-3 py-2">
-          <span className="field-label mb-0">To</span>
-          <input
-            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
-            value={destination}
-            onChange={(event) => setDestination(event.target.value)}
-            placeholder="Drop off city"
-          />
-        </label>
+        <CitySearch
+          label="From"
+          value={source}
+          onChange={setSource}
+          placeholder="Pickup city"
+          wrapperClassName="flex flex-1 flex-col justify-center px-3 py-2"
+          labelClassName="field-label mb-0"
+        />
+        <CitySearch
+          label="To"
+          value={destination}
+          onChange={setDestination}
+          placeholder="Drop off city"
+          wrapperClassName="flex flex-1 flex-col justify-center px-3 py-2"
+          labelClassName="field-label mb-0"
+        />
         <div className="flex items-center px-2 md:w-[160px]">
           <TravelDatePicker value={journeyDate} onChange={setJourneyDate} label="Date" />
         </div>

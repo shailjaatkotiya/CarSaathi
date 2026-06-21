@@ -167,6 +167,11 @@ class Ride(Base):
     vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"))
     source_city: Mapped[str] = mapped_column(String(80), index=True)
     destination_city: Mapped[str] = mapped_column(String(80), index=True)
+    # Geo behind the city labels (filled when the driver picks on the map).
+    source_lat: Mapped[float | None] = mapped_column(Float)
+    source_lng: Mapped[float | None] = mapped_column(Float)
+    destination_lat: Mapped[float | None] = mapped_column(Float)
+    destination_lng: Mapped[float | None] = mapped_column(Float)
     route_key: Mapped[str] = mapped_column(String(180), index=True)
     distance_km: Mapped[int] = mapped_column(Integer)
     journey_date: Mapped[date] = mapped_column(Date, index=True)

@@ -1,9 +1,10 @@
-import { ArrowRight, BadgeCheck, Car, ListChecks, Map, MapPin, Search, Shield, Users } from "lucide-react";
+import { ArrowRight, BadgeCheck, Car, ListChecks, Map, Search, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { User } from "../types";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
+import CitySearch from "../components/CitySearch";
 import RideFlow from "../components/RideFlow";
 import TravelDatePicker, { getTodayInputDate } from "../components/TravelDatePicker";
 import PixelSlideshow from "../components/PixelSlideshow";
@@ -54,8 +55,24 @@ function RideSearchBar() {
       onSubmit={findVehicle}
       className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto] md:gap-2 md:rounded-3xl md:p-3"
     >
-      <Field icon={MapPin} label="Pickup" value={pickup} onChange={setPickup} placeholder="Enter pickup city" />
-      <Field icon={MapPin} label="Drop off" value={dropoff} onChange={setDropoff} placeholder="Enter drop off city" />
+      <CitySearch
+        label="Pickup"
+        value={pickup}
+        onChange={setPickup}
+        placeholder="Enter pickup city"
+        wrapperClassName="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl"
+        labelClassName="text-[11px] font-bold uppercase tracking-wide text-muted"
+        inputClassName="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
+      />
+      <CitySearch
+        label="Drop off"
+        value={dropoff}
+        onChange={setDropoff}
+        placeholder="Enter drop off city"
+        wrapperClassName="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl"
+        labelClassName="text-[11px] font-bold uppercase tracking-wide text-muted"
+        inputClassName="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
+      />
       <TravelDatePicker value={pickupDate} onChange={setPickupDate} />
       <button
         type="submit"
@@ -65,38 +82,6 @@ function RideSearchBar() {
         <ArrowRight size={18} />
       </button>
     </form>
-  );
-}
-
-function Field({
-  icon: Icon,
-  label,
-  value,
-  onChange,
-  type = "text",
-  placeholder
-}: {
-  icon: typeof MapPin;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <label className="flex flex-col gap-1 rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</span>
-      <span className="flex items-center gap-2">
-        <Icon size={16} className="shrink-0 text-neutral-400" />
-        <input
-          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
-          type={type}
-          value={value}
-          placeholder={placeholder}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </span>
-    </label>
   );
 }
 

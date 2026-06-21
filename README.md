@@ -29,11 +29,11 @@ uvicorn app.main:app --reload --port 8000
 
 The backend defaults to local SQLite for quick MVP runs. For PostgreSQL, set `DATABASE_URL` in `backend/.env`.
 
-Amazon Location navigation:
+Google Maps navigation:
 
-- Add `AMAZON_LOCATION_API_KEY` in `backend/.env`
-- Optional: set `AMAZON_LOCATION_REGION` if your API key is not in `ap-south-1`
-- The key must allow Amazon Location Places and Routes requests
+- Add `GOOGLE_MAPS_API_KEY` in `backend/.env`
+- Optional: set `GOOGLE_MAPS_REGION` / `GOOGLE_MAPS_LANGUAGE` (default `in` / `en`)
+- Enable Geocoding API, Places API, Directions API, and Maps JavaScript API for the key
 
 API docs:
 

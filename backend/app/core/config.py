@@ -35,14 +35,13 @@ class Settings(BaseSettings):
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
     payment_currency: str = "INR"
-    # Amazon Location Service. Keep API keys server-side only; the frontend
-    # calls backend navigation endpoints and never receives this value.
-    amazon_location_api_key: str = ""
-    amazon_location_region: str = "ap-south-1"
-    amazon_location_language: str = "en"
-    # Maps API style for the rendered route map (Standard, Monochrome,
-    # Hybrid, Satellite). The API key above must include Maps permissions.
-    amazon_location_map_style: str = "Standard"
+    # Google Maps Platform. Backend uses this key for Geocoding, Places, and
+    # Directions web-service calls; it is also handed to the frontend (via
+    # /navigation/map-config) to load the Maps JavaScript API for rendering.
+    # Restrict the key to those APIs + your HTTP referrers in Cloud Console.
+    google_maps_api_key: str = ""
+    google_maps_language: str = "en"
+    google_maps_region: str = "in"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore"

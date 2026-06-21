@@ -6,14 +6,14 @@ from app.core.config import get_settings
 from app.core.exceptions import NotFoundError, ValidationError
 from app.models import Ride, RideStatus
 from app.schemas.navigation import NavigationRequest
-from app.services.amazon_location_service import AmazonLocationService
+from app.services.google_maps_service import GoogleMapsService
 from app.utils.serializers import _extract_list
 
 
 class NavigationService:
     def __init__(self, db: Session) -> None:
         self.db = db
-        self.amazon_location = AmazonLocationService(get_settings())
+        self.maps = GoogleMapsService(get_settings())
 
     def ride_navigation(self, ride_id: int, payload: NavigationRequest) -> dict:
         ride = (
@@ -39,20 +39,20 @@ class NavigationService:
             ride.destination_city if drop in {p.name for p in ride.drop_points} else ""
         )
         destination_query = self._place_query(drop, destination_city)
-        return self.amazon_location.calculate_route(origin_query, destination_query)
+        return self.maps.calculate_route(origin_query, destination_query)
 
     def map_config(self) -> dict:
-        return self.amazon_location.map_config()
+        return self.maps.map_config()
 
     def search(self, query: str, limit: int = 5) -> list[dict]:
-        return self.amazon_location.search(query, limit)
+        return self.maps.search(query, limit)
 
     def route(self, origin_query: str, destination_query: str) -> dict:
         origin = origin_query.strip()
         destination = destination_query.strip()
         if not origin or not destination:
             raise ValidationError("Enter both an origin and a destination.")
-        return self.amazon_location.route(origin, destination)
+        return self.maps.route(origin, destination)
 
     def route_alternatives(
         self,
@@ -66,7 +66,7 @@ class NavigationService:
         destination = destination_query.strip()
         if not origin or not destination:
             raise ValidationError("Enter both an origin and a destination.")
-        return self.amazon_location.route_alternatives(
+        return self.maps.route_alternatives(
             origin,
             destination,
             max_alternatives,
@@ -75,12 +75,12 @@ class NavigationService:
         )
 
     def reverse_geocode(self, longitude: float, latitude: float) -> dict:
-        return self.amazon_location.reverse_geocode(longitude, latitude)
+        return self.maps.reverse_geocode(longitude, latitude)
 
     def geocode(self, query: str) -> dict:
         if not query.strip():
             raise ValidationError("Enter a place to look up.")
-        return self.amazon_location.geocode(query)
+        return self.maps.geocode(query)
 
     @staticmethod
     def _place_query(point: str, city: str) -> str:

@@ -52,11 +52,13 @@ def route_alternatives(
     )
 
 
+# Read-only Google-proxy lookups. Public so the guest-accessible ride search
+# (and landing page) can offer city autocomplete without a login. No user data
+# is involved; the Google key stays server-side.
 @router.get("/reverse", response_model=NavigationReverse)
 def reverse_geocode(
     lat: float = Query(ge=-90, le=90),
     lng: float = Query(ge=-180, le=180),
-    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
     return NavigationService(db).reverse_geocode(lng, lat)
@@ -65,7 +67,6 @@ def reverse_geocode(
 @router.get("/geocode", response_model=NavigationReverse)
 def geocode(
     q: str = Query(min_length=1, max_length=200),
-    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
     return NavigationService(db).geocode(q)
@@ -75,7 +76,6 @@ def geocode(
 def search(
     q: str = Query(min_length=1, max_length=200),
     limit: int = Query(default=5, ge=1, le=10),
-    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[dict]:
     return NavigationService(db).search(q, limit)

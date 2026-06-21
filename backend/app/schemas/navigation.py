@@ -19,7 +19,7 @@ class NavigationStep(BaseModel):
 
 
 class NavigationRoute(BaseModel):
-    provider: str = "amazon-location"
+    provider: str = "google-maps"
     origin: NavigationPlace
     destination: NavigationPlace
     distance_meters: float
@@ -48,7 +48,7 @@ class NavigationRouteOption(BaseModel):
 
 
 class NavigationRouteOptions(BaseModel):
-    provider: str = "amazon-location"
+    provider: str = "google-maps"
     origin: NavigationPlace
     destination: NavigationPlace
     options: list[NavigationRouteOption] = []
@@ -57,6 +57,8 @@ class NavigationRouteOptions(BaseModel):
 class NavigationReverse(BaseModel):
     label: str
     position: list[float]
+    # City extracted from the address (locality). Empty if Google had none.
+    city: str = ""
 
 
 class NavigationSuggestion(BaseModel):
@@ -64,11 +66,9 @@ class NavigationSuggestion(BaseModel):
 
 
 class NavigationMapConfig(BaseModel):
-    provider: str = "amazon-location"
-    region: str
-    style: str
-    # Maps API key + style descriptor URL. MapLibre appends the key to every
-    # maps.geo request via transformRequest, so the key reaches the browser at
-    # runtime. Use a Maps-scoped, referrer-restricted key for this endpoint.
+    provider: str = "google-maps"
+    # Maps JavaScript API key handed to the browser to render the map. Use a
+    # referrer-restricted, Maps-JS-scoped key in Cloud Console.
     api_key: str
-    style_url: str
+    language: str = "en"
+    region: str = "in"

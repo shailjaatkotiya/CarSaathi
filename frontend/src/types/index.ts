@@ -28,6 +28,10 @@ export type Ride = {
   id: number;
   source_city: string;
   destination_city: string;
+  source_lat?: number | null;
+  source_lng?: number | null;
+  destination_lat?: number | null;
+  destination_lng?: number | null;
   distance_km: number;
   journey_date: string;
   departure_time: string;
@@ -100,7 +104,7 @@ export type NavigationStep = {
 };
 
 export type NavigationRoute = {
-  provider: "amazon-location";
+  provider: "google-maps";
   origin: NavigationPlace;
   destination: NavigationPlace;
   distance_meters: number;
@@ -123,7 +127,7 @@ export type NavigationRouteOption = {
 };
 
 export type NavigationRouteOptions = {
-  provider: "amazon-location";
+  provider: "google-maps";
   origin: NavigationPlace;
   destination: NavigationPlace;
   options: NavigationRouteOption[];
@@ -132,14 +136,14 @@ export type NavigationRouteOptions = {
 export type NavigationReverse = {
   label: string;
   position: number[];
+  city?: string;
 };
 
 export type NavigationMapConfig = {
-  provider: "amazon-location";
-  region: string;
-  style: string;
+  provider: "google-maps";
   api_key: string;
-  style_url: string;
+  language: string;
+  region: string;
 };
 
 export type User = {

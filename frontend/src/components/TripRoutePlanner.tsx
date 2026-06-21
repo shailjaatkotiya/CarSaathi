@@ -99,7 +99,9 @@ export default function TripRoutePlanner({
   setRouteStops,
   dropPoints,
   setDropPoints,
-  setDistanceKm
+  setDistanceKm,
+  setSourceCoords,
+  setDestinationCoords
 }: {
   sourceCity: string;
   setSourceCity: (value: string) => void;
@@ -112,6 +114,8 @@ export default function TripRoutePlanner({
   dropPoints: string;
   setDropPoints: (value: string) => void;
   setDistanceKm: (value: string) => void;
+  setSourceCoords?: (pos: [number, number] | null) => void;
+  setDestinationCoords?: (pos: [number, number] | null) => void;
 }) {
   const [picker, setPicker] = useState<Picker>(null);
   const [showRoute, setShowRoute] = useState(false);
@@ -127,17 +131,20 @@ export default function TripRoutePlanner({
     setValue(serializeList([...items, label]));
   }
 
-  function handleConfirm(label: string, position?: [number, number]) {
+  function handleConfirm(label: string, position?: [number, number], city?: string) {
     if (!picker) return;
     switch (picker.kind) {
       case "pickup":
-        setSourceCity(label);
+        // Show only the city; keep the precise geo behind it.
+        setSourceCity(city?.trim() || label);
         setSourcePos(position ?? null);
+        setSourceCoords?.(position ?? null);
         setChosen(null);
         break;
       case "drop":
-        setDestinationCity(label);
+        setDestinationCity(city?.trim() || label);
         setDestPos(position ?? null);
+        setDestinationCoords?.(position ?? null);
         setChosen(null);
         break;
       case "addPickup":

@@ -17,6 +17,12 @@ class RideCreate(BaseModel):
     car_seats: int | None = Field(default=None, ge=1, le=8)
     source_city: str
     destination_city: str
+    # Geo-coordinates behind the city labels (stored, not shown). Optional so a
+    # plain typed city still publishes; set when the driver picks on the map.
+    source_lat: float | None = None
+    source_lng: float | None = None
+    destination_lat: float | None = None
+    destination_lng: float | None = None
     distance_km: int
     journey_date: date
     departure_time: time
@@ -39,6 +45,10 @@ class RideOut(BaseModel):
     id: int
     source_city: str
     destination_city: str
+    source_lat: float | None = None
+    source_lng: float | None = None
+    destination_lat: float | None = None
+    destination_lng: float | None = None
     distance_km: int
     journey_date: date
     departure_time: time
