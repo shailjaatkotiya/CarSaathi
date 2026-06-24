@@ -19,7 +19,7 @@ export default function StatusChip({
   const tone = TONE[label] ?? "bg-primary-soft text-primary-dark";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${tone}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold md:gap-1.5 md:px-3 md:py-1 md:text-xs ${tone}`}
     >
       {icon}
       {label}

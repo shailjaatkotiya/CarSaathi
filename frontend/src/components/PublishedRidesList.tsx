@@ -54,7 +54,7 @@ function RideBookings({
   }
 
   if (isLoading)
-    return <p className="text-sm text-muted">Loading bookings...</p>;
+    return <p className="text-xs text-muted md:text-sm">Loading bookings...</p>;
   if (!bookings?.length)
     return <p className="alert-info">No bookings on this ride yet.</p>;
 
@@ -63,16 +63,16 @@ function RideBookings({
       {bookings.map((booking) => (
         <div
           key={booking.id}
-          className="flex flex-col gap-3 border-b border-sand-light px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-2 border-b border-sand-light px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-center sm:justify-between md:gap-3 md:px-4 md:py-3"
         >
           <div>
-            <p className="font-semibold">{booking.passenger_name}</p>
-            <p className="text-sm text-muted">
+            <p className="text-sm font-semibold md:text-base">{booking.passenger_name}</p>
+            <p className="text-xs text-muted md:text-sm">
               {booking.booking_code} - {booking.seats_booked} seats -{" "}
               {booking.pickup_point} to {booking.drop_point}
             </p>
             {booking.passengers && booking.passengers.length > 0 && (
-              <p className="text-sm text-muted">
+              <p className="line-clamp-1 text-xs text-muted md:text-sm">
                 Passengers:{" "}
                 {booking.passengers
                   .map((p) => (p.age != null ? `${p.full_name} (${p.age})` : p.full_name))
@@ -89,35 +89,35 @@ function RideBookings({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline md:text-sm"
               >
                 <MessageCircle size={14} />
                 Chat on WhatsApp {booking.passenger_whatsapp}
               </a>
             ) : (
-              <p className="text-sm text-muted">WhatsApp: Not added</p>
+              <p className="text-xs text-muted md:text-sm">WhatsApp: Not added</p>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-col gap-1.5 sm:items-end md:gap-2">
             <span className="chip self-start sm:self-end">
               {bookingStatusLabel(booking.status)} - Rs. {booking.total_amount}
             </span>
             {booking.status === "pending" && (
-              <div className="flex w-full gap-2 sm:w-auto">
+              <div className="flex w-full gap-1.5 sm:w-auto md:gap-2">
                 <button
                   type="button"
-                  className="btn-primary flex-1 sm:flex-none"
+                  className="btn-primary min-h-[32px] flex-1 px-3 py-1 text-xs sm:flex-none md:min-h-[36px] md:text-sm"
                   onClick={() => acceptBooking(booking.id)}
                 >
-                  <CheckCircle2 size={16} />
+                  <CheckCircle2 size={14} />
                   Accept
                 </button>
                 <button
                   type="button"
-                  className="btn-danger flex-1 sm:flex-none"
+                  className="btn-danger min-h-[32px] flex-1 px-3 py-1 text-xs sm:flex-none md:min-h-[36px] md:text-sm"
                   onClick={() => rejectBooking(booking.id)}
                 >
-                  <XCircle size={16} />
+                  <XCircle size={14} />
                   Reject
                 </button>
               </div>
@@ -166,10 +166,10 @@ export default function PublishedRidesList() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5 md:gap-3">
       {message && <p className="alert-success">{message}</p>}
       {data && data.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 md:gap-2">
           {DRIVER_FILTERS.map((option) => (
             <button
               key={option.value}
@@ -189,14 +189,14 @@ export default function PublishedRidesList() {
       {filteredRides?.map((ride) => {
         const passed = rideTimePassed(ride.journey_date, ride.departure_time);
         return (
-          <div key={ride.id} className="flex flex-col gap-3">
+          <div key={ride.id} className="flex flex-col gap-2.5 md:gap-3">
             <RideCard
               ride={ride}
               actions={
                 <>
                   <button
                     type="button"
-                    className="btn-outline self-start"
+                    className="btn-outline min-h-[32px] self-start px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
                     onClick={() =>
                       setExpandedRideId((current) =>
                         current === ride.id ? null : ride.id,
@@ -204,9 +204,9 @@ export default function PublishedRidesList() {
                     }
                   >
                     {expandedRideId === ride.id ? (
-                      <ChevronUp size={16} />
+                      <ChevronUp size={14} />
                     ) : (
-                      <ChevronDown size={16} />
+                      <ChevronDown size={14} />
                     )}
                     {expandedRideId === ride.id
                       ? "Hide passengers"
@@ -217,17 +217,17 @@ export default function PublishedRidesList() {
                   {ride.status !== "cancelled" && !passed && (
                     <button
                       type="button"
-                      className="btn-danger self-start"
+                      className="btn-danger min-h-[32px] self-start px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
                       onClick={() => cancelRide(ride.id)}
                       disabled={ride.status === "completed"}
                     >
-                      <XCircle size={16} />
+                      <XCircle size={14} />
                       Cancel
                     </button>
                   )}
                   <Link
                     to={`/rides/${ride.id}?view=1`}
-                    className="btn-primary shrink-0 min-h-[36px] px-4 py-1.5"
+                    className="btn-primary min-h-[32px] shrink-0 px-3 py-1 text-xs md:min-h-[36px] md:px-4 md:py-1.5 md:text-sm"
                   >
                     View ride
                   </Link>

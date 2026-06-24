@@ -52,7 +52,7 @@ function ReportForm({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-sand bg-cream p-4">
+    <div className="mt-3 rounded-xl border border-sand bg-cream p-3 md:mt-4 md:p-4">
       <p className="font-bold">Report driver {booking.driver_name}</p>
       <AutoGrowTextarea
         className="input mt-3"
@@ -61,7 +61,7 @@ function ReportForm({
         onChange={(event) => setReason(event.target.value)}
       />
       {error && <p className="alert-error mt-2">{error}</p>}
-      <button type="button" className="btn-danger mt-3" onClick={submitReport}>
+      <button type="button" className="btn-danger mt-3 md:min-h-[36px]" onClick={submitReport}>
         Submit report
       </button>
     </div>
@@ -113,11 +113,11 @@ export default function BookedRidesList() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5 md:gap-3">
       {message && <p className="alert-success">{message}</p>}
 
       {passengerBookings && passengerBookings.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 md:gap-2">
           {PASSENGER_FILTERS.map((option) => (
             <button
               key={option.value}
@@ -136,45 +136,44 @@ export default function BookedRidesList() {
       )}
 
       {filteredBookings?.map((booking) => (
-        <div key={booking.id} className="card p-4">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row">
+        <div key={booking.id} className="card p-3 md:p-4">
+          <div className="flex flex-col justify-between gap-2.5 sm:flex-row md:gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <MapPin size={18} className="text-primary" />
-                <h3 className="font-bold">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <MapPin size={16} className="text-primary" />
+                <h3 className="text-sm font-bold leading-snug md:text-base">
                   {booking.route.replace(/\s+to\s+/i, " -> ")}
                 </h3>
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted md:mt-2 md:gap-x-4 md:text-sm">
                 <span className="flex items-center gap-1.5">
-                  <Calendar size={15} className="text-primary" />
+                  <Calendar size={14} className="text-primary" />
                   {formatShortDate(booking.journey_date)}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Clock size={15} className="text-primary" />
+                  <Clock size={14} className="text-primary" />
                   {formatTimeAmPm(booking.departure_time)}
                 </span>
                 {booking.car_number && (
                   <span className="flex items-center gap-1.5">
-                    <Car size={15} className="text-primary" />
+                    <Car size={14} className="text-primary" />
                     {booking.car_number}
                   </span>
                 )}
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted"></div>
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-1.5 text-xs text-muted md:mt-2 md:text-sm">
                 {booking.seats_booked} seats - {booking.pickup_point} to{" "}
                 {booking.drop_point}
               </p>
               {booking.passengers && booking.passengers.length > 0 && (
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 line-clamp-1 text-xs text-muted md:text-sm">
                   Passengers:{" "}
                   {booking.passengers
                     .map((p) => (p.age != null ? `${p.full_name} (${p.age})` : p.full_name))
                     .join(", ")}
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:mt-2 md:gap-2">
                 <StatusChip label={passengerStateLabel(booking)} />
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
@@ -191,8 +190,8 @@ export default function BookedRidesList() {
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:items-end">
-              <Link to={`/rides/${booking.ride_id}?view=1`} className="btn-outline">
+            <div className="flex flex-wrap gap-1.5 sm:flex-col sm:items-end md:gap-2">
+              <Link to={`/rides/${booking.ride_id}?view=1`} className="btn-outline min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm">
                 View ride
               </Link>
               {/* Cancel while waiting for approval (pending) or after it is
@@ -203,10 +202,10 @@ export default function BookedRidesList() {
                 !rideTimePassed(booking.journey_date, booking.departure_time) && (
                 <button
                   type="button"
-                  className="btn-danger"
+                  className="btn-danger min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
                   onClick={() => cancelBooking(booking.id)}
                 >
-                  <XCircle size={16} />
+                  <XCircle size={14} />
                   Cancel
                 </button>
               )}
@@ -214,14 +213,14 @@ export default function BookedRidesList() {
               {booking.status === "completed" && (
                 <button
                   type="button"
-                  className="btn-outline"
+                  className="btn-outline min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
                   onClick={() =>
                     setReportBookingId((current) =>
                       current === booking.id ? null : booking.id,
                     )
                   }
                 >
-                  <Flag size={16} />
+                  <Flag size={14} />
                   Report driver
                 </button>
               )}
