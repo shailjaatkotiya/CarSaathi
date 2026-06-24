@@ -160,12 +160,6 @@ export default function BookedRidesList() {
                     {booking.car_number}
                   </span>
                 )}
-                {booking.car_color && (
-                  <span className="flex items-center gap-1.5">
-                    <Palette size={15} className="text-primary" />
-                    {booking.car_color}
-                  </span>
-                )}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted"></div>
               <p className="mt-2 text-sm text-muted">

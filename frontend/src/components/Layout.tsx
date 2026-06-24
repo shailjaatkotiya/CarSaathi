@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
+import ScrollToTopButton from "./ScrollToTopButton";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const token = useSessionStore((state) => state.token);
@@ -51,6 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </header>
 
       <main>{children}</main>
+      <ScrollToTopButton />
     </div>
   );
 }
