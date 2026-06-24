@@ -98,13 +98,13 @@ function ReviewForm({
 
   return (
     <div className="mt-3 rounded-xl border border-sand bg-cream p-3 md:p-4">
-      <p className="font-bold">Rate {booking.driver_name}</p>
+      <p className="text-sm font-bold md:text-base">Rate {booking.driver_name}</p>
       <div className="mt-2 flex gap-1">
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
             type="button"
-            className={`grid h-8 w-8 place-items-center rounded-full border ${
+            className={`grid h-7 w-7 place-items-center rounded-full border transition ${
               value <= rating
                 ? "border-primary bg-primary text-white"
                 : "border-sand bg-white text-muted"
@@ -112,7 +112,11 @@ function ReviewForm({
             onClick={() => setRating(value)}
             aria-label={`${value} star rating`}
           >
-            <Star size={15} fill={value <= rating ? "currentColor" : "none"} />
+            <Star
+              size={13}
+              strokeWidth={2.5}
+              fill={value <= rating ? "currentColor" : "none"}
+            />
           </button>
         ))}
       </div>
@@ -129,7 +133,7 @@ function ReviewForm({
         onClick={submitReview}
         disabled={submitting}
       >
-        <Star size={14} />
+        <Star size={12} strokeWidth={2.5} />
         {submitting ? "Submitting..." : "Submit review"}
       </button>
     </div>
@@ -255,7 +259,7 @@ export default function BookedRidesList() {
                 <StatusChip label={passengerStateLabel(booking)} />
                 {booking.review_rating && (
                   <span className="chip-outline">
-                    <Star size={12} fill="currentColor" />
+                    <Star size={10} strokeWidth={2.5} fill="currentColor" />
                     Reviewed {booking.review_rating}
                   </span>
                 )}
@@ -306,7 +310,7 @@ export default function BookedRidesList() {
                         )
                       }
                     >
-                      <Star size={14} />
+                      <Star size={12} strokeWidth={2.5} />
                       Rate driver
                     </button>
                   )}

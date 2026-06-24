@@ -25,22 +25,27 @@ export default function DriverReviewSummary({
 
   return (
     <div className={compact ? "mt-2" : ""}>
-      <div className="flex items-center gap-1.5 text-sm font-bold">
-        <Star size={15} fill="currentColor" className="text-primary" />
+      <div className="flex items-center gap-1.5 text-xs font-bold md:text-sm">
+        <Star
+          size={13}
+          strokeWidth={2.5}
+          fill="currentColor"
+          className="text-primary"
+        />
         <span>{ratingText}</span>
       </div>
       {reviews.length > 0 && (
-        <div className={textList ? "mt-2 space-y-2" : "mt-2 flex flex-col gap-2"}>
+        <div className={textList ? "mt-2 space-y-1.5" : "mt-2 flex flex-col gap-1.5"}>
           {reviews.map((review) => (
             <div
               key={review.id}
-              className={textList ? "border-t border-sand-light pt-2 first:border-t-0 first:pt-0" : "rounded-lg bg-cream px-3 py-2"}
+              className={textList ? "border-t border-sand-light pt-2 first:border-t-0 first:pt-0" : "rounded-lg bg-cream px-2.5 py-2"}
             >
               <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
                 <span>{review.reviewer_name}</span>
                 <span className="text-muted">on {review.route}</span>
                 <span className="inline-flex items-center gap-1 text-primary">
-                  <Star size={12} fill="currentColor" />
+                  <Star size={10} strokeWidth={2.5} fill="currentColor" />
                   {review.rating}
                 </span>
               </div>
