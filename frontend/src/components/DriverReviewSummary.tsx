@@ -4,11 +4,13 @@ import type { DriverProfile } from "../types";
 export default function DriverReviewSummary({
   profile,
   compact = false,
+  hideRatingHeader = false,
   limit,
   textList = false,
 }: {
   profile?: DriverProfile;
   compact?: boolean;
+  hideRatingHeader?: boolean;
   limit?: number;
   textList?: boolean;
 }) {
@@ -25,15 +27,17 @@ export default function DriverReviewSummary({
 
   return (
     <div className={compact ? "mt-2" : ""}>
-      <div className="flex items-center gap-1.5 text-xs font-bold md:text-sm">
-        <Star
-          size={13}
-          strokeWidth={2.5}
-          fill="currentColor"
-          className="text-primary"
-        />
-        <span>{ratingText}</span>
-      </div>
+      {!hideRatingHeader && (
+        <div className="flex items-center gap-1.5 text-xs font-bold md:text-sm">
+          <Star
+            size={13}
+            strokeWidth={2.5}
+            fill="currentColor"
+            className="text-primary"
+          />
+          <span>{ratingText}</span>
+        </div>
+      )}
       {reviews.length > 0 && (
         <div className={textList ? "mt-2 space-y-1.5" : "mt-2 flex flex-col gap-1.5"}>
           {reviews.map((review) => (
@@ -56,8 +60,10 @@ export default function DriverReviewSummary({
           ))}
         </div>
       )}
-      {reviews.length === 0 && profile.rating_count > 0 && (
-        <p className="mt-2 text-xs text-muted">No written review text yet.</p>
+      {reviews.length === 0 && (
+        <p className="mt-2 text-xs text-muted">
+          {profile.rating_count > 0 ? "No written review text yet." : "No reviews yet."}
+        </p>
       )}
     </div>
   );

@@ -301,8 +301,8 @@ export default function RideDetail() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-4 md:py-6">
-      <div className="card rounded-2xl p-4 md:p-5">
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:gap-4">
+        <section className="card p-4 md:p-5">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -318,13 +318,15 @@ export default function RideDetail() {
                 )}
               </div>
               <p className="mt-0.5 text-sm text-muted">
-                {formatShortDate(ride.journey_date)} ·{" "}
+                {formatShortDate(ride.journey_date)} -{" "}
                 {formatTimeAmPm(ride.departure_time)}
               </p>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1fr_330px]">
+        </section>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_330px]">
             <div className="flex flex-col gap-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="card p-3.5 shadow-none">
@@ -342,7 +344,7 @@ export default function RideDetail() {
                 </div>
                 <div className="card p-3.5 shadow-none">
                   <h3 className="text-sm font-bold">
-                    Car details ·{" "}
+                    Car details -{" "}
                     <span className="font-normal text-muted">
                       {ride.vehicle.brand} {ride.vehicle.model}
                     </span>
@@ -407,9 +409,9 @@ export default function RideDetail() {
                       <h3 className="text-sm font-bold">Driver's route</h3>
                       {ride.route.distance_meters > 0 && (
                         <span className="text-xs font-bold text-muted">
-                          {(ride.route.distance_meters / 1000).toFixed(0)} km ·{" "}
+                          {(ride.route.distance_meters / 1000).toFixed(0)} km -{" "}
                           {formatDuration(ride.route.duration_seconds)}
-                          {ride.route.has_tolls ? " · Tolls" : " · No tolls"}
+                          {ride.route.has_tolls ? " - Tolls" : " - No tolls"}
                         </span>
                       )}
                     </div>
@@ -458,7 +460,7 @@ export default function RideDetail() {
                         >
                           <span className="font-bold">{p.name}</span>
                           <span className="text-muted">
-                            {p.pickup_point} → {p.drop_point}
+                            {p.pickup_point} {"->"} {p.drop_point}
                           </span>
                           {p.seats_booked > 1 && (
                             <span className="chip self-start sm:self-center">
@@ -633,7 +635,7 @@ export default function RideDetail() {
                           )}
                           {paying
                             ? "Processing..."
-                            : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
+                            : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} - Rs. ${paymentAmount}`}
                         </button>
                       )}
                       <p className="text-xs text-muted">
@@ -648,7 +650,6 @@ export default function RideDetail() {
               </div>
             )}
           </div>
-        </div>
       </div>
     </div>
   );

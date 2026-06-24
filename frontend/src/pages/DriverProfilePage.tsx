@@ -72,7 +72,7 @@ export default function DriverProfilePage() {
             </button>
             {reviewsOpen && (
               <div className="px-4 pb-3">
-                <DriverReviewSummary profile={profile} compact textList />
+                <DriverReviewSummary profile={profile} compact textList hideRatingHeader />
               </div>
             )}
           </div>
