@@ -50,6 +50,15 @@ class BookingRepository(BaseRepository[Booking]):
             .all()
         )
 
+    def list_for_passenger(self, passenger_id: int) -> list[Booking]:
+        return (
+            self.db.query(Booking)
+            .join(Ride)
+            .filter(Booking.passenger_id == passenger_id)
+            .order_by(Ride.created_at.desc())
+            .all()
+        )
+
     def list_active_for_driver(self, driver_id: int) -> list[Booking]:
         return (
             self.db.query(Booking)

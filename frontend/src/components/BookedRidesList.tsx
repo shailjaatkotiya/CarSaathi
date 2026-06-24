@@ -5,10 +5,10 @@ import {
   Flag,
   MapPin,
   MessageCircle,
-  Palette,
+  Star,
   XCircle,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { bookingsApi } from "../api/bookings";
@@ -68,6 +68,74 @@ function ReportForm({
   );
 }
 
+function ReviewForm({
+  booking,
+  onDone,
+}: {
+  booking: Booking;
+  onDone: (message: string) => void;
+}) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submitReview() {
+    setError("");
+    setSubmitting(true);
+    try {
+      await bookingsApi.review(booking.id, {
+        rating,
+        comment: comment.trim() || null,
+      });
+      onDone("Review submitted. Thanks for rating your driver.");
+    } catch (err) {
+      setError(apiErrorMessage(err, "Could not submit the review. Please try again."));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-sand bg-cream p-3 md:p-4">
+      <p className="font-bold">Rate {booking.driver_name}</p>
+      <div className="mt-2 flex gap-1">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={`grid h-8 w-8 place-items-center rounded-full border ${
+              value <= rating
+                ? "border-primary bg-primary text-white"
+                : "border-sand bg-white text-muted"
+            }`}
+            onClick={() => setRating(value)}
+            aria-label={`${value} star rating`}
+          >
+            <Star size={15} fill={value <= rating ? "currentColor" : "none"} />
+          </button>
+        ))}
+      </div>
+      <AutoGrowTextarea
+        className="input mt-3"
+        placeholder="Share a quick note about the ride (optional)"
+        value={comment}
+        onChange={(event) => setComment(event.target.value)}
+      />
+      {error && <p className="alert-error mt-2">{error}</p>}
+      <button
+        type="button"
+        className="btn-primary mt-3 min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
+        onClick={submitReview}
+        disabled={submitting}
+      >
+        <Star size={14} />
+        {submitting ? "Submitting..." : "Submit review"}
+      </button>
+    </div>
+  );
+}
+
 // Renders the passenger's not-yet-completed booked rides. Used both on the
 // standalone /profile/passenger page and inside the profile dropdown menu.
 const PASSENGER_FILTERS: { value: "all" | PassengerStateLabel; label: string }[] = [
@@ -80,8 +148,10 @@ const PASSENGER_FILTERS: { value: "all" | PassengerStateLabel; label: string }[]
 ];
 
 export default function BookedRidesList() {
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [reportBookingId, setReportBookingId] = useState<number | null>(null);
+  const [reviewBookingId, setReviewBookingId] = useState<number | null>(null);
   // Default to Pending; completed/cancelled/etc. show only when explicitly filtered.
   const [filter, setFilter] = useState<"all" | PassengerStateLabel>("Pending");
   const { data: passengerBookings, refetch } = useQuery({
@@ -109,7 +179,9 @@ export default function BookedRidesList() {
   function handleFormDone(text: string) {
     setMessage(text);
     setReportBookingId(null);
+    setReviewBookingId(null);
     refetch();
+    queryClient.invalidateQueries({ queryKey: queryKeys.me });
   }
 
   return (
@@ -173,8 +245,20 @@ export default function BookedRidesList() {
                     .join(", ")}
                 </p>
               )}
+              <Link
+                to={`/drivers/${booking.driver_id}`}
+                className="mt-1 inline-flex text-xs font-bold text-primary hover:underline"
+              >
+                View {booking.driver_name}'s profile
+              </Link>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:mt-2 md:gap-2">
                 <StatusChip label={passengerStateLabel(booking)} />
+                {booking.review_rating && (
+                  <span className="chip-outline">
+                    <Star size={12} fill="currentColor" />
+                    Reviewed {booking.review_rating}
+                  </span>
+                )}
                 <span className="chip-outline">{booking.booking_code}</span>
                 <span className="chip-outline">Rs. {booking.total_amount}</span>
                 {whatsappLink(booking.driver_whatsapp) && (
@@ -211,21 +295,40 @@ export default function BookedRidesList() {
               )}
               {/* Report only after the ride is completed. */}
               {booking.status === "completed" && (
-                <button
-                  type="button"
-                  className="btn-outline min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
-                  onClick={() =>
-                    setReportBookingId((current) =>
-                      current === booking.id ? null : booking.id,
-                    )
-                  }
-                >
-                  <Flag size={14} />
-                  Report driver
-                </button>
+                <>
+                  {!booking.review_rating && (
+                    <button
+                      type="button"
+                      className="btn-primary min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
+                      onClick={() =>
+                        setReviewBookingId((current) =>
+                          current === booking.id ? null : booking.id,
+                        )
+                      }
+                    >
+                      <Star size={14} />
+                      Rate driver
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn-outline min-h-[32px] px-3 py-1 text-xs md:min-h-[36px] md:text-sm"
+                    onClick={() =>
+                      setReportBookingId((current) =>
+                        current === booking.id ? null : booking.id,
+                      )
+                    }
+                  >
+                    <Flag size={14} />
+                    Report driver
+                  </button>
+                </>
               )}
             </div>
           </div>
+          {reviewBookingId === booking.id && (
+            <ReviewForm booking={booking} onDone={handleFormDone} />
+          )}
           {reportBookingId === booking.id && (
             <ReportForm booking={booking} onDone={handleFormDone} />
           )}

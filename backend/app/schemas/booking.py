@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -71,6 +71,9 @@ class BookingOut(BaseModel):
     payment_method: str
     payment_status: str
     passengers: list[PassengerOut] = []
+    review_rating: int | None = None
+    review_comment: str | None = None
+    reviewed_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

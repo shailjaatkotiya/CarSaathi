@@ -266,17 +266,12 @@ class BookingService:
 
     # ----- read models ------------------------------------------------------
     def history(self, passenger: User) -> list[Booking]:
-        bookings = self.bookings.list_active_for_passenger(passenger.id)
+        bookings = self.bookings.list_for_passenger(passenger.id)
         changed = [auto_complete_if_passed(booking.ride) for booking in bookings]
         if any(changed):
             self.db.commit()
             cache.bump_rides_version()
-        # Bookings that just completed drop out of the "not completed yet" list.
-        return [
-            booking
-            for booking in bookings
-            if booking.status != BookingStatus.completed
-        ]
+        return bookings
 
     def report(self, reporter: User, payload: ReportCreate) -> None:
         self.db.add(

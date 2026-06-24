@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Car,
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
   CreditCard,
   FileText,
   HelpCircle,
@@ -25,6 +27,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { profileApi } from "../api/profile";
+import DriverReviewSummary from "../components/DriverReviewSummary";
 import SavedPassengersManager from "../components/SavedPassengersManager";
 import VerifiedBadge from "../components/VerifiedBadge";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -129,6 +132,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [reviewsOpen, setReviewsOpen] = useState(false);
 
   const { data, isError, isLoading } = useCurrentUser();
 
@@ -136,6 +140,12 @@ export default function ProfilePage() {
     queryKey: queryKeys.profile.verification,
     queryFn: profileApi.verificationStatus,
     enabled: Boolean(data),
+  });
+
+  const { data: driverProfile } = useQuery({
+    queryKey: queryKeys.profile.driver(data?.id ?? ""),
+    queryFn: () => profileApi.driver(data!.id),
+    enabled: data?.role === "driver",
   });
 
   useEffect(() => {
@@ -399,16 +409,45 @@ export default function ProfilePage() {
         <div>
           <SectionTitle>Reviews</SectionTitle>
           <SettingsGroup>
-            <div className="flex items-center gap-3 px-4 py-3.5">
-              <Star size={16} className="shrink-0 text-muted" />
-              <span className="flex-1">
-                <span className="block text-sm font-semibold">Rating</span>
-                <span className="block text-xs text-muted">
-                  {data.rating_average || 0} rating from{" "}
-                  {data.rating_count || 0} reviews
-                </span>
-              </span>
-            </div>
+            {isDriver ? (
+              <>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-sand-light"
+                  onClick={() => setReviewsOpen((current) => !current)}
+                >
+                  <Star size={16} className="shrink-0 text-muted" />
+                  <div className="flex-1">
+                    <span className="block text-sm font-semibold">Rating</span>
+                    <span className="block text-xs text-muted">
+                      {data.rating_average || 0} rating from{" "}
+                      {data.rating_count || 0} reviews
+                    </span>
+                  </div>
+                  {reviewsOpen ? (
+                    <ChevronUp size={16} className="shrink-0 text-muted" />
+                  ) : (
+                    <ChevronDown size={16} className="shrink-0 text-muted" />
+                  )}
+                </button>
+                {reviewsOpen && (
+                  <div className="px-4 pb-3">
+                    <DriverReviewSummary profile={driverProfile} compact textList />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                <Star size={16} className="shrink-0 text-muted" />
+                <div className="flex-1">
+                  <span className="block text-sm font-semibold">Rating</span>
+                  <span className="block text-xs text-muted">
+                    {data.rating_average || 0} rating from{" "}
+                    {data.rating_count || 0} reviews
+                  </span>
+                </div>
+              </div>
+            )}
           </SettingsGroup>
         </div>
 

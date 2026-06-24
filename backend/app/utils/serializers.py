@@ -118,6 +118,7 @@ def ride_to_out(ride: Ride) -> RideOut:
         women_only_preference=ride.women_only_preference,
         auto_confirm_bookings=ride.auto_confirm_bookings,
         status=effective_status,
+        driver_id=ride.driver_id,
         driver_name=ride.driver.full_name,
         driver_rating=ride.driver.rating_average,
         driver_verified=ride.driver.verification_status.value == "verified",

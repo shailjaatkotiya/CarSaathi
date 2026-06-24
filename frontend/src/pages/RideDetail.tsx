@@ -21,6 +21,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { bookingsApi, type PassengerInput } from "../api/bookings";
+import { profileApi } from "../api/profile";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { apiErrorMessage } from "../lib/apiError";
@@ -35,6 +36,7 @@ import PassengerSeats, {
   emptySeatEntry,
   type SeatEntry,
 } from "../components/PassengerSeats";
+import DriverReviewSummary from "../components/DriverReviewSummary";
 import SavedRouteMap from "../components/SavedRouteMap";
 import { useSessionStore } from "../store/session";
 
@@ -77,6 +79,11 @@ export default function RideDetail() {
     enabled: Boolean(rideId),
   });
   const { data: me } = useCurrentUser();
+  const { data: driverProfile } = useQuery({
+    queryKey: queryKeys.profile.driver(ride?.driver_id ?? ""),
+    queryFn: () => profileApi.driver(ride!.driver_id),
+    enabled: Boolean(ride?.driver_id),
+  });
   const { data: fellowPassengers } = useQuery({
     queryKey: queryKeys.rides.fellowPassengers(rideId ?? ""),
     queryFn: () => ridesApi.fellowPassengers(rideId!),
@@ -323,8 +330,15 @@ export default function RideDetail() {
                 <div className="card p-3.5 shadow-none">
                   <h3 className="text-sm font-bold">Driver</h3>
                   <p className="mt-0.5 text-sm text-muted">
-                    {ride.driver_name} · {ride.driver_rating} rating
+                    {ride.driver_name}
                   </p>
+                  <Link
+                    to={`/drivers/${ride.driver_id}`}
+                    className="mt-1 inline-flex text-xs font-bold text-primary hover:underline"
+                  >
+                    View driver profile
+                  </Link>
+                  <DriverReviewSummary profile={driverProfile} compact limit={2} />
                 </div>
                 <div className="card p-3.5 shadow-none">
                   <h3 className="text-sm font-bold">

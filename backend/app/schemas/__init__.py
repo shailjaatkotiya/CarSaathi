@@ -15,7 +15,13 @@ from app.schemas.booking import (
     PassengerInput,
     PassengerOut,
 )
-from app.schemas.moderation import AdminDecision, ReportCreate, ReviewCreate
+from app.schemas.moderation import (
+    AdminDecision,
+    DriverProfileOut,
+    ReportCreate,
+    ReviewCreate,
+    ReviewOut,
+)
 from app.schemas.passenger import (
     SavedPassengerCreate,
     SavedPassengerOut,
@@ -39,6 +45,7 @@ __all__ = [
     "BookingOut",
     "CancellationRequest",
     "DriverBookingOut",
+    "DriverProfileOut",
     "FellowPassengerOut",
     "LoginRequest",
     "PassengerInput",
@@ -49,6 +56,7 @@ __all__ = [
     "RegisterRequest",
     "ReportCreate",
     "ReviewCreate",
+    "ReviewOut",
     "RideCreate",
     "RideOut",
     "SavedRouteOut",

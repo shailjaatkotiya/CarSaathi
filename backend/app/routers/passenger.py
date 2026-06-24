@@ -12,6 +12,8 @@ from app.schemas import (
     FellowPassengerOut,
     PaymentVerifyRequest,
     ReportCreate,
+    ReviewCreate,
+    ReviewOut,
     RideOut,
     SavedPassengerCreate,
     SavedPassengerOut,
@@ -19,6 +21,7 @@ from app.schemas import (
 )
 from app.services.booking_service import BookingService
 from app.services.ride_search_service import RideSearchFilters, RideSearchService
+from app.services.review_service import ReviewService
 from app.services.saved_passenger_service import SavedPassengerService
 from app.utils.serializers import ride_to_out
 
@@ -159,6 +162,17 @@ def booking_history(
     passenger: User = Depends(require_passenger), db: Session = Depends(get_db)
 ) -> list[Booking]:
     return BookingService(db).history(passenger)
+
+
+@router.post("/bookings/{booking_id}/review", response_model=ReviewOut)
+def review_driver(
+    booking_id: int,
+    payload: ReviewCreate,
+    passenger: User = Depends(require_passenger),
+    db: Session = Depends(get_db),
+) -> ReviewOut:
+    review = ReviewService(db).create_for_booking(booking_id, passenger, payload)
+    return ReviewService._review_out(review)
 
 
 @router.get("/saved-passengers", response_model=list[SavedPassengerOut])

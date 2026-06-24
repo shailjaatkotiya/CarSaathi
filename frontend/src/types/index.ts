@@ -62,6 +62,7 @@ export type Ride = {
   women_only_preference: boolean;
   auto_confirm_bookings: boolean;
   status: RideStatus;
+  driver_id: number;
   driver_name: string;
   driver_rating: number;
   driver_verified: boolean;
@@ -104,6 +105,27 @@ export type Booking = {
   payment_method: PaymentMethod;
   payment_status: string;
   passengers?: BookingPassenger[];
+  review_rating?: number | null;
+  review_comment?: string | null;
+  reviewed_at?: string | null;
+};
+
+export type DriverReview = {
+  id: number;
+  booking_id: number;
+  rating: number;
+  comment?: string | null;
+  reviewer_name: string;
+  route: string;
+  created_at: string;
+};
+
+export type DriverProfile = {
+  id: number;
+  full_name: string;
+  rating_average: number;
+  rating_count: number;
+  reviews: DriverReview[];
 };
 
 // Booking row as the driver sees it (adds passenger contact fields).

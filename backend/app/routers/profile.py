@@ -4,8 +4,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.schemas import AadhaarUploadRequest, ProfileUpdate, UserOut, VerificationOut
+from app.schemas import (
+    AadhaarUploadRequest,
+    DriverProfileOut,
+    ProfileUpdate,
+    UserOut,
+    VerificationOut,
+)
 from app.services.profile_service import ProfileService
+from app.services.review_service import ReviewService
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -13,6 +20,11 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 @router.get("/me", response_model=UserOut)
 def profile_me(user: User = Depends(get_current_user)) -> User:
     return user
+
+
+@router.get("/drivers/{driver_id}", response_model=DriverProfileOut)
+def driver_profile(driver_id: int, db: Session = Depends(get_db)) -> DriverProfileOut:
+    return ReviewService(db).driver_profile(driver_id)
 
 
 @router.put("", response_model=UserOut)

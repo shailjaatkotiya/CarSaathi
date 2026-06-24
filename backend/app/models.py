@@ -90,6 +90,12 @@ class User(Base):
     vehicles: Mapped[list["Vehicle"]] = relationship(back_populates="driver")
     rides: Mapped[list["Ride"]] = relationship(back_populates="driver")
     bookings: Mapped[list["Booking"]] = relationship(back_populates="passenger")
+    reviews_written: Mapped[list["Review"]] = relationship(
+        back_populates="reviewer", foreign_keys="Review.reviewer_id"
+    )
+    reviews_received: Mapped[list["Review"]] = relationship(
+        back_populates="reviewee", foreign_keys="Review.reviewee_id"
+    )
 
 
 class DriverProfile(Base):
@@ -252,6 +258,7 @@ class Booking(Base):
     ride: Mapped[Ride] = relationship(back_populates="bookings")
     passenger: Mapped[User] = relationship(back_populates="bookings")
     payment: Mapped["Payment"] = relationship(back_populates="booking", uselist=False)
+    review: Mapped["Review"] = relationship(back_populates="booking", uselist=False)
     passengers: Mapped[list["BookingPassenger"]] = relationship(
         back_populates="booking", cascade="all, delete-orphan"
     )
@@ -291,6 +298,18 @@ class Booking(Base):
     @property
     def payment_status(self) -> str:
         return self.payment.status if self.payment else "unpaid"
+
+    @property
+    def review_rating(self) -> int | None:
+        return self.review.rating if self.review else None
+
+    @property
+    def review_comment(self) -> str | None:
+        return self.review.comment if self.review else None
+
+    @property
+    def reviewed_at(self) -> datetime | None:
+        return self.review.created_at if self.review else None
 
 
 class SavedPassenger(Base):
@@ -349,6 +368,14 @@ class Review(Base):
     rating: Mapped[int] = mapped_column(Integer)
     comment: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    booking: Mapped[Booking] = relationship(back_populates="review")
+    reviewer: Mapped[User] = relationship(
+        back_populates="reviews_written", foreign_keys=[reviewer_id]
+    )
+    reviewee: Mapped[User] = relationship(
+        back_populates="reviews_received", foreign_keys=[reviewee_id]
+    )
 
 
 class NotificationLog(Base):

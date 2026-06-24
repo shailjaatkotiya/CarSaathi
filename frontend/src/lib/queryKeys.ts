@@ -24,7 +24,8 @@ export const queryKeys = {
   },
 
   profile: {
-    verification: ["profile-verification"] as const
+    verification: ["profile-verification"] as const,
+    driver: (driverId: string | number) => ["driver-profile", driverId] as const
   },
 
   admin: {

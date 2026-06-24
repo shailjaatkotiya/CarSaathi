@@ -84,6 +84,7 @@ class RideOut(BaseModel):
     women_only_preference: bool
     auto_confirm_bookings: bool
     status: RideStatus
+    driver_id: int
     driver_name: str
     driver_rating: float
     driver_verified: bool

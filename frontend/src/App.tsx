@@ -9,6 +9,7 @@ import AuthPage from "./pages/AuthPage";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import CreateRide from "./pages/CreateRide";
 import DriverOnboarding from "./pages/DriverOnboarding";
+import DriverProfilePage from "./pages/DriverProfilePage";
 import DriverRidePlan from "./pages/DriverRidePlan";
 import LandingPage from "./pages/LandingPage";
 import MyRides from "./pages/MyRides";
@@ -74,6 +75,7 @@ export default function App() {
           }
         />
         <Route path="/rides/:rideId" element={<RideDetail />} />
+        <Route path="/drivers/:driverId" element={<DriverProfilePage />} />
         <Route path="/booking-confirmation" element={<BookingConfirmation />} />
         <Route path="/my-bookings" element={<Navigate to="/profile/passenger" />} />
         <Route
