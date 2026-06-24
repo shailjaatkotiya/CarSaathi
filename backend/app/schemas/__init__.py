@@ -22,7 +22,7 @@ from app.schemas.passenger import (
     SavedPassengerUpdate,
 )
 from app.schemas.payment import PaymentInitOut, PaymentVerifyRequest
-from app.schemas.ride import FellowPassengerOut, RideCreate, RideOut
+from app.schemas.ride import FellowPassengerOut, RideCreate, RideOut, SavedRouteOut
 from app.schemas.user import (
     AadhaarUploadRequest,
     ProfileUpdate,
@@ -51,6 +51,7 @@ __all__ = [
     "ReviewCreate",
     "RideCreate",
     "RideOut",
+    "SavedRouteOut",
     "SavedPassengerCreate",
     "SavedPassengerOut",
     "SavedPassengerUpdate",

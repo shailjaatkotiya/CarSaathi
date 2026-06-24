@@ -42,6 +42,18 @@ class AuthError(DomainError):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
+class ConfigurationError(DomainError):
+    """A required server-side setting (e.g. an API key) is missing."""
+
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+
+class ExternalServiceError(DomainError):
+    """An upstream provider (e.g. Google Maps) failed or was unreachable."""
+
+    status_code = status.HTTP_502_BAD_GATEWAY
+
+
 async def domain_error_handler(_: Request, exc: DomainError) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 

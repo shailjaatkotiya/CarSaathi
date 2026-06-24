@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
     payment_currency: str = "INR"
+    # Google Maps Platform. Backend uses this key for Geocoding, Places, and
+    # Directions web-service calls; it is also handed to the frontend (via
+    # /navigation/map-config) to load the Maps JavaScript API for rendering.
+    # Restrict the key to those APIs + your HTTP referrers in Cloud Console.
+    google_maps_api_key: str = ""
+    google_maps_language: str = "en"
+    google_maps_region: str = "in"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"), env_file_encoding="utf-8", extra="ignore"

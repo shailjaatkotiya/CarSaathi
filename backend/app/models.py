@@ -167,8 +167,22 @@ class Ride(Base):
     vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"))
     source_city: Mapped[str] = mapped_column(String(80), index=True)
     destination_city: Mapped[str] = mapped_column(String(80), index=True)
+    # Geo-coordinates ([lng, lat]) behind the city labels, set when the driver
+    # picks source/destination on the map. Optional — a plain typed city still
+    # publishes.
+    source_lat: Mapped[float | None] = mapped_column(Float)
+    source_lng: Mapped[float | None] = mapped_column(Float)
+    destination_lat: Mapped[float | None] = mapped_column(Float)
+    destination_lng: Mapped[float | None] = mapped_column(Float)
     route_key: Mapped[str] = mapped_column(String(180), index=True)
     distance_km: Mapped[int] = mapped_column(Integer)
+    # Driver-selected route, saved so passengers see it in ride details.
+    # route_geometry is a JSON-encoded list of [lng, lat] pairs (the polyline).
+    route_geometry: Mapped[str | None] = mapped_column(Text)
+    route_distance_m: Mapped[float | None] = mapped_column(Float)
+    route_duration_s: Mapped[float | None] = mapped_column(Float)
+    route_label: Mapped[str | None] = mapped_column(String(160))
+    route_has_tolls: Mapped[bool] = mapped_column(Boolean, default=False)
     journey_date: Mapped[date] = mapped_column(Date, index=True)
     departure_time: Mapped[time] = mapped_column(Time)
     available_seats: Mapped[int] = mapped_column(Integer)

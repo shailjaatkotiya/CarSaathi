@@ -1,7 +1,25 @@
-import { AlertTriangle, Banknote, Car, CreditCard, Fuel, Hash, MessageCircle, Palette, Share2, ShieldCheck, Users, UserRound } from "lucide-react";
+import {
+  AlertTriangle,
+  Banknote,
+  Car,
+  CreditCard,
+  Fuel,
+  Hash,
+  MessageCircle,
+  Palette,
+  Share2,
+  ShieldCheck,
+  Users,
+  UserRound,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { bookingsApi, type PassengerInput } from "../api/bookings";
 import { ridesApi } from "../api/rides";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -13,8 +31,20 @@ import { queryKeys } from "../lib/queryKeys";
 import type { BookingActionResponse } from "../types";
 import StatusChip from "../components/StatusChip";
 import { rideStateLabel } from "../lib/rideStatus";
-import PassengerSeats, { emptySeatEntry, type SeatEntry } from "../components/PassengerSeats";
+import PassengerSeats, {
+  emptySeatEntry,
+  type SeatEntry,
+} from "../components/PassengerSeats";
+import SavedRouteMap from "../components/SavedRouteMap";
 import { useSessionStore } from "../store/session";
+
+function formatDuration(seconds: number) {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours <= 0) return `${rest} min`;
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
+}
 
 const ruleLabels: Record<string, string> = {
   no_pets: "No pets",
@@ -22,14 +52,16 @@ const ruleLabels: Record<string, string> = {
   no_music: "No music",
   no_smoking: "No smoking",
   no_alcohol: "No alcohol",
-  no_tobacco: "No tobacco"
+  no_tobacco: "No tobacco",
 };
 
 export default function RideDetail() {
   const { rideId } = useParams();
   const [searchParams] = useSearchParams();
   const isViewOnly = searchParams.get("view") === "1";
-  const [seatEntries, setSeatEntries] = useState<SeatEntry[]>([emptySeatEntry()]);
+  const [seatEntries, setSeatEntries] = useState<SeatEntry[]>([
+    emptySeatEntry(),
+  ]);
   const seats = seatEntries.length;
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
@@ -42,13 +74,13 @@ export default function RideDetail() {
   const { data: ride, refetch } = useQuery({
     queryKey: queryKeys.rides.detail(rideId ?? ""),
     queryFn: () => ridesApi.get(rideId!),
-    enabled: Boolean(rideId)
+    enabled: Boolean(rideId),
   });
   const { data: me } = useCurrentUser();
   const { data: fellowPassengers } = useQuery({
     queryKey: queryKeys.rides.fellowPassengers(rideId ?? ""),
     queryFn: () => ridesApi.fellowPassengers(rideId!),
-    enabled: Boolean(rideId)
+    enabled: Boolean(rideId),
   });
   const missingContactNumber = Boolean(me) && !me?.whatsapp_number?.trim();
   const isDriver = me?.role === "driver";
@@ -56,14 +88,15 @@ export default function RideDetail() {
   const { data: savedPassengers } = useQuery({
     queryKey: queryKeys.passenger.savedPassengers,
     queryFn: bookingsApi.savedPassengers,
-    enabled: Boolean(token) && !isDriver
+    enabled: Boolean(token) && !isDriver,
   });
 
   // Prefill the first seat with the account holder's name once loaded.
   useEffect(() => {
     if (!me) return;
     setSeatEntries((current) => {
-      if (current.length !== 1 || current[0].savedId || current[0].full_name) return current;
+      if (current.length !== 1 || current[0].savedId || current[0].full_name)
+        return current;
       return [emptySeatEntry(me.full_name)];
     });
   }, [me]);
@@ -76,14 +109,24 @@ export default function RideDetail() {
     setSeatEntries((current) => {
       if (next === current.length) return current;
       if (next < current.length) return current.slice(0, next);
-      return [...current, ...Array.from({ length: next - current.length }, () => emptySeatEntry())];
+      return [
+        ...current,
+        ...Array.from({ length: next - current.length }, () =>
+          emptySeatEntry(),
+        ),
+      ];
     });
   }
 
-  const paymentAmount = useMemo(() => (ride ? seats * ride.price_per_seat : 0), [ride, seats]);
+  const paymentAmount = useMemo(
+    () => (ride ? seats * ride.price_per_seat : 0),
+    [ride, seats],
+  );
   const instructionLines = useMemo(() => {
     if (!ride) return [];
-    const fromRules = ride.ride_rules.map((rule) => ruleLabels[rule] ?? rule.replace(/_/g, " "));
+    const fromRules = ride.ride_rules.map(
+      (rule) => ruleLabels[rule] ?? rule.replace(/_/g, " "),
+    );
     const fromText = (ride.driver_instructions ?? "")
       .split("\n")
       .map((line) => line.trim().replace(/^-+\s*/, ""))
@@ -94,11 +137,15 @@ export default function RideDetail() {
   async function book() {
     if (!ride) return;
     if (!token) {
-      navigate("/auth?role=passenger", { state: { from: `/rides/${ride.id}` } });
+      navigate("/auth?role=passenger", {
+        state: { from: `/rides/${ride.id}` },
+      });
       return;
     }
     if (isDriver) {
-      setError("Driver accounts cannot book rides. Please login as a passenger to book.");
+      setError(
+        "Driver accounts cannot book rides. Please login as a passenger to book.",
+      );
       return;
     }
     setMessage("");
@@ -107,7 +154,10 @@ export default function RideDetail() {
       setError("Please select pickup and drop points before booking.");
       return;
     }
-    const passengerValidationError = validatePassengerEntries(seatEntries, savedPassengers ?? []);
+    const passengerValidationError = validatePassengerEntries(
+      seatEntries,
+      savedPassengers ?? [],
+    );
     if (passengerValidationError) {
       setError(passengerValidationError);
       return;
@@ -122,7 +172,12 @@ export default function RideDetail() {
           setError(`Select a passenger for seat ${i + 1}.`);
           return;
         }
-        passengers.push({ full_name: sp.full_name, age: sp.age, gender: sp.gender, phone: sp.phone });
+        passengers.push({
+          full_name: sp.full_name,
+          age: sp.age,
+          gender: sp.gender,
+          phone: sp.phone,
+        });
       } else {
         if (!entry.full_name.trim()) {
           setError(`Enter the name for passenger ${i + 1}.`);
@@ -132,9 +187,14 @@ export default function RideDetail() {
           full_name: entry.full_name.trim(),
           age: entry.age ? Number(entry.age) : null,
           gender: entry.gender || null,
-          save: entry.save
+          save: entry.save,
         });
       }
+    }
+    // Women-only rides cannot carry male passengers.
+    if (ride.women_only_preference && passengers.some((p) => (p.gender ?? "").toLowerCase() === "male")) {
+      setError("This is a women-only ride. Male passengers cannot be booked.");
+      return;
     }
     setPaying(true);
     try {
@@ -143,15 +203,23 @@ export default function RideDetail() {
         pickup_point: pickup,
         drop_point: drop,
         payment_method: paymentMethod,
-        passengers
+        passengers,
       });
       if (data.payment) {
         await payWithRazorpay(data);
       } else {
-        navigate("/booking-confirmation", { state: { bookingCode: data.booking.booking_code, status: data.booking.status, paymentMethod: "cash" } });
+        navigate("/booking-confirmation", {
+          state: {
+            bookingCode: data.booking.booking_code,
+            status: data.booking.status,
+            paymentMethod: "cash",
+          },
+        });
       }
     } catch (err) {
-      setError(apiErrorMessage(err, "Could not book the ride. Please try again."));
+      setError(
+        apiErrorMessage(err, "Could not book the ride. Please try again."),
+      );
     } finally {
       setPaying(false);
     }
@@ -161,7 +229,9 @@ export default function RideDetail() {
     const init = data.payment!;
     const ready = await loadRazorpayCheckout();
     if (!ready) {
-      setError("Could not load the payment window. Check your connection and try again.");
+      setError(
+        "Could not load the payment window. Check your connection and try again.",
+      );
       return;
     }
     const rzp = new (window as any).Razorpay({
@@ -183,16 +253,30 @@ export default function RideDetail() {
             booking_id: data.booking.id,
             razorpay_order_id: resp.razorpay_order_id,
             razorpay_payment_id: resp.razorpay_payment_id,
-            razorpay_signature: resp.razorpay_signature
+            razorpay_signature: resp.razorpay_signature,
           });
-          navigate("/booking-confirmation", { state: { bookingCode: confirmed.booking_code, status: confirmed.status, paymentMethod: "online" } });
+          navigate("/booking-confirmation", {
+            state: {
+              bookingCode: confirmed.booking_code,
+              status: confirmed.status,
+              paymentMethod: "online",
+            },
+          });
         } catch (err) {
-          setError(apiErrorMessage(err, "Payment could not be verified. If money was deducted it will be refunded."));
+          setError(
+            apiErrorMessage(
+              err,
+              "Payment could not be verified. If money was deducted it will be refunded.",
+            ),
+          );
         }
       },
       modal: {
-        ondismiss: () => setError("Payment cancelled. Your seats are held briefly - try again to confirm.")
-      }
+        ondismiss: () =>
+          setError(
+            "Payment cancelled. Your seats are held briefly - try again to confirm.",
+          ),
+      },
     });
     rzp.on("payment.failed", (resp: { error?: { description?: string } }) => {
       setError(resp.error?.description || "Payment failed. Please try again.");
@@ -227,22 +311,9 @@ export default function RideDetail() {
                 )}
               </div>
               <p className="mt-0.5 text-sm text-muted">
-                {formatShortDate(ride.journey_date)} · {formatTimeAmPm(ride.departure_time)}
+                {formatShortDate(ride.journey_date)} ·{" "}
+                {formatTimeAmPm(ride.departure_time)}
               </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="rounded-lg bg-primary-soft px-3 py-2">
-                <p className="text-[11px] font-bold text-primary">Date</p>
-                <p className="text-sm font-bold text-primary-dark">{formatShortDate(ride.journey_date)}</p>
-              </div>
-              <div className="rounded-lg bg-primary-soft px-3 py-2">
-                <p className="text-[11px] font-bold text-primary">Time</p>
-                <p className="text-sm font-bold text-primary-dark">{formatTimeAmPm(ride.departure_time)}</p>
-              </div>
-              <div className="rounded-lg bg-primary-soft px-3 py-2">
-                <p className="text-[11px] font-bold text-primary">Price per seat</p>
-                <p className="text-sm font-bold text-primary-dark">Rs. {ride.price_per_seat}</p>
-              </div>
             </div>
           </div>
 
@@ -257,7 +328,10 @@ export default function RideDetail() {
                 </div>
                 <div className="card p-3.5 shadow-none">
                   <h3 className="text-sm font-bold">
-                    Car details · <span className="font-normal text-muted">{ride.vehicle.brand} {ride.vehicle.model}</span>
+                    Car details ·{" "}
+                    <span className="font-normal text-muted">
+                      {ride.vehicle.brand} {ride.vehicle.model}
+                    </span>
                   </h3>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="chip">
@@ -276,26 +350,65 @@ export default function RideDetail() {
                       <Fuel size={12} />
                       {ride.vehicle.fuel_type}
                     </span>
-                    <span className="chip-outline">{ride.ac_available ? "AC" : "Non-AC"}</span>
+                    <span className="chip-outline">
+                      {ride.ac_available ? "AC" : "Non-AC"}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="card p-3.5 shadow-none">
-                <h3 className="text-sm font-bold">Pickup, stops, and drop points</h3>
+                <h3 className="text-sm font-bold">
+                  Pickup, stops, and drop points
+                </h3>
                 <div className="mt-2 grid gap-2 md:grid-cols-3">
                   {[
                     ["Pickup", ride.pickup_points.join(", ")],
-                    ["In-between stops", ride.route_stops.length ? ride.route_stops.join(", ") : "No stops added"],
-                    ["Drop", ride.drop_points.join(", ")]
+                    [
+                      "In-between stops",
+                      ride.route_stops.length
+                        ? ride.route_stops.join(", ")
+                        : "No stops added",
+                    ],
+                    ["Drop", ride.drop_points.join(", ")],
                   ].map(([label, value]) => (
                     <div key={label} className="rounded-lg bg-cream p-2.5">
-                      <p className="text-[11px] font-bold text-muted">{label}</p>
+                      <p className="text-[11px] font-bold text-muted">
+                        {label}
+                      </p>
                       <p className="mt-0.5 text-xs leading-relaxed">{value}</p>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {ride.route &&
+                ((ride.route.geometry?.length ?? 0) >= 2 ||
+                  Boolean(
+                    ride.route.origin_position &&
+                    ride.route.destination_position,
+                  )) && (
+                  <div className="card p-3.5 shadow-none">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold">Driver's route</h3>
+                      {ride.route.distance_meters > 0 && (
+                        <span className="text-xs font-bold text-muted">
+                          {(ride.route.distance_meters / 1000).toFixed(0)} km ·{" "}
+                          {formatDuration(ride.route.duration_seconds)}
+                          {ride.route.has_tolls ? " · Tolls" : " · No tolls"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2">
+                      <SavedRouteMap route={ride.route} />
+                    </div>
+                    {ride.route.label && (
+                      <p className="mt-2 text-xs text-muted">
+                        Via {ride.route.label}
+                      </p>
+                    )}
+                  </div>
+                )}
 
               <div className="card p-3.5 shadow-none">
                 <h3 className="text-sm font-bold">Ride instructions</h3>
@@ -307,30 +420,44 @@ export default function RideDetail() {
                     </div>
                   ))}
                 </div>
-                {ride.route_notes && <p className="mt-2 text-xs text-muted">Route note: {ride.route_notes}</p>}
+                {ride.route_notes && (
+                  <p className="mt-2 text-xs text-muted">
+                    Route note: {ride.route_notes}
+                  </p>
+                )}
               </div>
 
               {(isViewOnly || Boolean(fellowPassengers?.length)) && (
                 <div className="card p-3.5 shadow-none">
                   <div className="flex items-center gap-2">
                     <Users size={14} className="text-primary" />
-                    <h3 className="text-sm font-bold">Booked passengers ({fellowPassengers?.length ?? 0})</h3>
+                    <h3 className="text-sm font-bold">
+                      Booked passengers ({fellowPassengers?.length ?? 0})
+                    </h3>
                   </div>
                   {fellowPassengers?.length ? (
                     <div className="mt-2 flex flex-col gap-2">
-                    {fellowPassengers.map((p, i) => (
-                      <div
-                        key={`${p.name}-${p.pickup_point}-${p.drop_point}-${i}`}
-                        className="flex flex-col gap-1 rounded-lg bg-cream px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <span className="font-bold">{p.name}</span>
-                        <span className="text-muted">{p.pickup_point} → {p.drop_point}</span>
-                        {p.seats_booked > 1 && <span className="chip self-start sm:self-center">{p.seats_booked} seats</span>}
-                      </div>
-                    ))}
+                      {fellowPassengers.map((p, i) => (
+                        <div
+                          key={`${p.name}-${p.pickup_point}-${p.drop_point}-${i}`}
+                          className="flex flex-col gap-1 rounded-lg bg-cream px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <span className="font-bold">{p.name}</span>
+                          <span className="text-muted">
+                            {p.pickup_point} → {p.drop_point}
+                          </span>
+                          {p.seats_booked > 1 && (
+                            <span className="chip self-start sm:self-center">
+                              {p.seats_booked} seats
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <p className="alert-info mt-2">No passengers have booked this ride yet.</p>
+                    <p className="alert-info mt-2">
+                      No passengers have booked this ride yet.
+                    </p>
                   )}
                 </div>
               )}
@@ -339,109 +466,166 @@ export default function RideDetail() {
             {!isViewOnly && (
               <div className="card self-start p-3.5 shadow-none lg:sticky lg:top-24">
                 <h2 className="text-base font-bold">Book this ride</h2>
-                <p className="mt-0.5 text-xs text-muted">Choose seats, pickup, and a final drop or in-between stop.</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  Choose seats, pickup, and a final drop.
+                </p>
+
                 <div className="mt-3 flex flex-col gap-2.5">
+                  <div className="flex flex-wrap gap-2">
+                    <div className="rounded-lg bg-primary-soft px-3 py-2">
+                      <p className="text-[11px] font-bold text-primary">Date</p>
+                      <p className="text-sm font-bold text-primary-dark">
+                        {formatShortDate(ride.journey_date)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-primary-soft px-3 py-2">
+                      <p className="text-[11px] font-bold text-primary">Time</p>
+                      <p className="text-sm font-bold text-primary-dark">
+                        {formatTimeAmPm(ride.departure_time)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-primary-soft px-3 py-2">
+                      <p className="text-[11px] font-bold text-primary">
+                        Price per seat
+                      </p>
+                      <p className="text-sm font-bold text-primary-dark">
+                        Rs. {ride.price_per_seat}
+                      </p>
+                    </div>
+                  </div>
                   {isDriver ? (
-                    <p className="alert-warning">Driver accounts cannot book rides. Login as a passenger to book a seat.</p>
+                    <p className="alert-warning">
+                      Driver accounts cannot book rides. Login as a passenger to
+                      book a seat.
+                    </p>
                   ) : (
                     <>
-                    <select
-                      className="input"
-                      value={seats}
-                      onChange={(event) => setSeats(Number(event.target.value))}
-                    >
-                      {Array.from({ length: Math.max(1, ride.available_seats) }, (_, index) => (
-                        <option key={index + 1} value={index + 1}>
-                          {index + 1} passenger{index + 1 > 1 ? "s" : ""}
-                        </option>
-                      ))}
-                    </select>
-                    <PassengerSeats
-                      entries={seatEntries}
-                      onChange={setSeatEntries}
-                      savedPassengers={savedPassengers ?? []}
-                    />
-                    <select className="input" value={pickup} onChange={(event) => setPickup(event.target.value)}>
-                      <option value="">Select pickup</option>
-                      {ride.pickup_points.map((point) => (
-                        <option key={point} value={point}>
-                          {point}
-                        </option>
-                      ))}
-                    </select>
-                    <select className="input" value={drop} onChange={(event) => setDrop(event.target.value)}>
-                      <option value="">Select drop-off or stop</option>
-                      {ride.route_stops.length > 0 && (
-                        <optgroup label="In-between stops">
-                          {ride.route_stops.map((point) => (
+                      <select
+                        className="input"
+                        value={seats}
+                        onChange={(event) =>
+                          setSeats(Number(event.target.value))
+                        }
+                      >
+                        {Array.from(
+                          { length: Math.max(1, ride.available_seats) },
+                          (_, index) => (
+                            <option key={index + 1} value={index + 1}>
+                              {index + 1} passenger{index + 1 > 1 ? "s" : ""}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                      <PassengerSeats
+                        entries={seatEntries}
+                        onChange={setSeatEntries}
+                        savedPassengers={savedPassengers ?? []}
+                      />
+                      <select
+                        className="input"
+                        value={pickup}
+                        onChange={(event) => setPickup(event.target.value)}
+                      >
+                        <option value="">Select pickup</option>
+                        {ride.pickup_points.map((point) => (
+                          <option key={point} value={point}>
+                            {point}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="input"
+                        value={drop}
+                        onChange={(event) => setDrop(event.target.value)}
+                      >
+                        <option value="">Select drop-off or stop</option>
+                        {ride.route_stops.length > 0 && (
+                          <optgroup label="In-between stops">
+                            {ride.route_stops.map((point) => (
+                              <option key={point} value={point}>
+                                {point}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Final drop points">
+                          {ride.drop_points.map((point) => (
                             <option key={point} value={point}>
                               {point}
                             </option>
                           ))}
                         </optgroup>
-                      )}
-                      <optgroup label="Final drop points">
-                        {ride.drop_points.map((point) => (
-                          <option key={point} value={point}>
-                            {point}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
-                    <div>
-                      <span className="field-label">Payment method</span>
-                      <div className="mt-1 grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod("cash")}
-                          className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
-                            paymentMethod === "cash"
-                              ? "border-primary bg-primary-soft text-primary-dark"
-                              : "border-gray-200 text-muted"
-                          }`}
-                        >
-                          <Banknote size={14} />
-                          Pay by cash
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod("online")}
-                          className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
-                            paymentMethod === "online"
-                              ? "border-primary bg-primary-soft text-primary-dark"
-                              : "border-gray-200 text-muted"
-                          }`}
-                        >
-                          <CreditCard size={14} />
-                          Pay online
-                        </button>
+                      </select>
+                      <div>
+                        <span className="field-label">Payment method</span>
+                        <div className="mt-1 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod("cash")}
+                            className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                              paymentMethod === "cash"
+                                ? "border-primary bg-primary-soft text-primary-dark"
+                                : "border-gray-200 text-muted"
+                            }`}
+                          >
+                            <Banknote size={14} />
+                            Pay by cash
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod("online")}
+                            className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                              paymentMethod === "online"
+                                ? "border-primary bg-primary-soft text-primary-dark"
+                                : "border-gray-200 text-muted"
+                            }`}
+                          >
+                            <CreditCard size={14} />
+                            Pay online
+                          </button>
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted">
+                          {paymentMethod === "cash"
+                            ? "Pay the driver in cash at the end of the ride."
+                            : "Pay now via UPI, card, or netbanking. Seat is confirmed after payment."}
+                        </p>
                       </div>
-                      <p className="mt-1 text-[11px] text-muted">
-                        {paymentMethod === "cash"
-                          ? "Pay the driver in cash at the end of the ride."
-                          : "Pay now via UPI, card, or netbanking. Seat is confirmed after payment."}
+                      {missingContactNumber && (
+                        <p className="alert-warning">
+                          A WhatsApp contact number is required to book.{" "}
+                          <Link to="/profile" className="font-bold underline">
+                            Add it in My Profile
+                          </Link>{" "}
+                          first.
+                        </p>
+                      )}
+                      {ride.available_seats <= 0 ? (
+                        <p className="alert-warning">
+                          This ride is full. No seats remaining.
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-primary py-2"
+                          onClick={book}
+                          disabled={
+                            missingContactNumber || paying || !pickup || !drop 
+                          }
+                        >
+                          {paymentMethod === "online" ? (
+                            <CreditCard size={16} />
+                          ) : (
+                            <MessageCircle size={16} />
+                          )}
+                          {paying
+                            ? "Processing..."
+                            : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
+                        </button>
+                      )}
+                      <p className="text-xs text-muted">
+                        {ride.available_seats} seats remaining. WhatsApp details
+                        are shared after confirmation.
                       </p>
-                    </div>
-                    {missingContactNumber && (
-                      <p className="alert-warning">
-                        A WhatsApp contact number is required to book.{" "}
-                        <Link to="/profile" className="font-bold underline">
-                          Add it in My Profile
-                        </Link>{" "}
-                        first.
-                      </p>
-                    )}
-                    {ride.available_seats <= 0 ? (
-                      <p className="alert-warning">This ride is full. No seats remaining.</p>
-                    ) : (
-                      <button type="button" className="btn-primary py-2" onClick={book} disabled={missingContactNumber || paying || !pickup || !drop}>
-                        {paymentMethod === "online" ? <CreditCard size={16} /> : <MessageCircle size={16} />}
-                        {paying ? "Processing..." : `${paymentMethod === "online" ? "Pay & book" : "Book ride"} · Rs. ${paymentAmount}`}
-                      </button>
-                    )}
-                    <p className="text-xs text-muted">
-                      {ride.available_seats} seats remaining. WhatsApp details are shared after confirmation.
-                    </p>
                     </>
                   )}
                   {message && <p className="alert-success">{message}</p>}

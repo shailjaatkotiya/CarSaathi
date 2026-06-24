@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -96,13 +97,30 @@ class DriverRideService:
             )
         self._validate_publish_window(payload)
 
+        # Distance comes from the chosen route when present (km, rounded);
+        # otherwise the driver-supplied/default value.
+        distance_km = payload.distance_km
+        if payload.route_distance_m:
+            distance_km = max(1, round(payload.route_distance_m / 1000))
+
         ride = Ride(
             driver_id=driver.id,
             vehicle_id=vehicle.id,
             source_city=payload.source_city,
             destination_city=payload.destination_city,
+            source_lat=payload.source_lat,
+            source_lng=payload.source_lng,
+            destination_lat=payload.destination_lat,
+            destination_lng=payload.destination_lng,
             route_key=f"{payload.source_city.lower()}:{payload.destination_city.lower()}",
-            distance_km=payload.distance_km,
+            distance_km=distance_km,
+            route_geometry=(
+                json.dumps(payload.route_geometry) if payload.route_geometry else None
+            ),
+            route_distance_m=payload.route_distance_m,
+            route_duration_s=payload.route_duration_s,
+            route_label=payload.route_label,
+            route_has_tolls=payload.route_has_tolls,
             journey_date=payload.journey_date,
             departure_time=payload.departure_time,
             available_seats=payload.available_seats,

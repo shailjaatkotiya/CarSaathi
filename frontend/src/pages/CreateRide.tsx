@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { driverApi } from "../api/driver";
 import { useCurrentUser } from "../hooks/useCurrentUser";
@@ -23,8 +23,11 @@ import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
 import AutoGrowTextarea from "../components/AutoGrowTextarea";
+import CitySearch from "../components/CitySearch";
+import RouteChooser from "../components/RouteChooser";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
+import type { NavigationRouteOption } from "../types";
 
 const rideRules = [
   { value: "no_pets", label: "No pets" },
@@ -55,6 +58,14 @@ function defaultAvailableSeats(carType?: string | null) {
 
 function countPoints(value: string) {
   return value.split(",").map((item) => item.trim()).filter(Boolean).length;
+}
+
+function formatDuration(seconds: number) {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours <= 0) return `${rest} min`;
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
 }
 
 // One step shell: title, subtitle, icon, and the step's fields. Same on every
@@ -123,43 +134,69 @@ function downloadRideImage(lines: [string, string][], title: string) {
   link.remove();
 }
 
+// Publish form survives the redirect to the map-picker page (and back) by
+// caching itself here. Cleared after a successful publish.
+const DRAFT_KEY = "carthi_create_ride_draft";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function readDraft(): Record<string, any> {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function CreateRide() {
   const token = useSessionStore((state) => state.token);
   const navigate = useNavigate();
+  const location = useLocation();
   const defaultRideDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+  // Restored once on mount so a round-trip to the map-picker keeps every field.
+  const draft = useMemo(() => readDraft(), []);
+
   // All fields are controlled so values survive while steps mount/unmount.
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(draft.step ?? 0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [sourceCity, setSourceCity] = useState("");
-  const [destinationCity, setDestinationCity] = useState("");
-  const [journeyDate, setJourneyDate] = useState(clampTravelDate(defaultRideDate));
-  const [departureTime, setDepartureTime] = useState("07:30");
-  const [pricePerSeat, setPricePerSeat] = useState("180");
+  const [sourceCity, setSourceCity] = useState<string>(draft.sourceCity ?? "");
+  const [destinationCity, setDestinationCity] = useState<string>(draft.destinationCity ?? "");
+  // [lng, lat] resolved from the map picker; null when the city was typed freehand.
+  const [sourcePos, setSourcePos] = useState<[number, number] | null>(draft.sourcePos ?? null);
+  const [destinationPos, setDestinationPos] = useState<[number, number] | null>(draft.destinationPos ?? null);
+  // Driver-selected route from the chooser, persisted with the ride.
+  const [chosenRoute, setChosenRoute] = useState<NavigationRouteOption | null>(draft.chosenRoute ?? null);
+  const [routeChooserOpen, setRouteChooserOpen] = useState(false);
+  const [journeyDate, setJourneyDate] = useState(clampTravelDate(draft.journeyDate ?? defaultRideDate));
+  const [departureTime, setDepartureTime] = useState<string>(draft.departureTime ?? "07:30");
+  const [pricePerSeat, setPricePerSeat] = useState<string>(draft.pricePerSeat ?? "180");
 
-  const [pickupPoints, setPickupPoints] = useState("");
-  const [routeStops, setRouteStops] = useState("");
-  const [dropPoints, setDropPoints] = useState("");
+  const [pickupPoints, setPickupPoints] = useState<string>(draft.pickupPoints ?? "");
+  const [routeStops, setRouteStops] = useState<string>(draft.routeStops ?? "");
+  const [dropPoints, setDropPoints] = useState<string>(draft.dropPoints ?? "");
 
-  const [carMode, setCarMode] = useState<CarMode>("new");
-  const [newCarBrand, setNewCarBrand] = useState("Maruti Suzuki");
-  const [newCarBrandOther, setNewCarBrandOther] = useState("");
-  const [carModel, setCarModel] = useState("");
-  const [vehicleNumber, setVehicleNumber] = useState("");
-  const [fuelType, setFuelType] = useState("Petrol");
-  const [carColor, setCarColor] = useState("");
-  const [newCarType, setNewCarType] = useState("Sedan");
-  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
-  const [availableSeats, setAvailableSeats] = useState(3);
+  const [carMode, setCarMode] = useState<CarMode>(draft.carMode ?? "new");
+  const [newCarBrand, setNewCarBrand] = useState<string>(draft.newCarBrand ?? "Maruti Suzuki");
+  const [newCarBrandOther, setNewCarBrandOther] = useState<string>(draft.newCarBrandOther ?? "");
+  const [carModel, setCarModel] = useState<string>(draft.carModel ?? "");
+  const [vehicleNumber, setVehicleNumber] = useState<string>(draft.vehicleNumber ?? "");
+  const [fuelType, setFuelType] = useState<string>(draft.fuelType ?? "Petrol");
+  const [carColor, setCarColor] = useState<string>(draft.carColor ?? "");
+  const [newCarType, setNewCarType] = useState<string>(draft.newCarType ?? "Sedan");
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(draft.selectedVehicleId ?? null);
+  const [availableSeats, setAvailableSeats] = useState<number>(draft.availableSeats ?? 3);
 
-  const [selectedRules, setSelectedRules] = useState(defaultRuleValues);
-  const [extraInstructions, setExtraInstructions] = useState("Please be on time. Call before reaching pickup point.");
-  const [luggageAllowance, setLuggageAllowance] = useState("One cabin bag");
-  const [routeNotes, setRouteNotes] = useState("Short route with one optional water break.");
-  const [autoConfirm, setAutoConfirm] = useState(false);
-  const [womenOnly, setWomenOnly] = useState(false);
+  const [selectedRules, setSelectedRules] = useState<string[]>(draft.selectedRules ?? defaultRuleValues);
+  const [extraInstructions, setExtraInstructions] = useState<string>(
+    draft.extraInstructions ?? "Please be on time. Call before reaching pickup point."
+  );
+  const [luggageAllowance, setLuggageAllowance] = useState<string>(draft.luggageAllowance ?? "One cabin bag");
+  const [routeNotes, setRouteNotes] = useState<string>(draft.routeNotes ?? "Short route with one optional water break.");
+  const [autoConfirm, setAutoConfirm] = useState<boolean>(draft.autoConfirm ?? false);
+  const [womenOnly, setWomenOnly] = useState<boolean>(draft.womenOnly ?? false);
 
   // Summary captured at publish time so the success screen can redraw the image.
   const summaryRef = useRef<[string, string][]>([]);
@@ -180,6 +217,119 @@ export default function CreateRide() {
   useEffect(() => {
     setAvailableSeats(defaultAvailableSeats(selectedCarType));
   }, [selectedCarType]);
+
+  // A chosen route is tied to a specific source/destination pair. Drop it if
+  // either city changes so a stale route is never published. Skip the first
+  // run so a restored draft route is not wiped on mount.
+  const cityChangeRef = useRef(false);
+  useEffect(() => {
+    if (!cityChangeRef.current) {
+      cityChangeRef.current = true;
+      return;
+    }
+    setChosenRoute(null);
+  }, [sourceCity, destinationCity]);
+
+  // Persist the whole form so the redirect to the map-picker page (and back)
+  // never loses entered data.
+  useEffect(() => {
+    const snapshot = {
+      step,
+      sourceCity,
+      destinationCity,
+      sourcePos,
+      destinationPos,
+      chosenRoute,
+      journeyDate,
+      departureTime,
+      pricePerSeat,
+      pickupPoints,
+      routeStops,
+      dropPoints,
+      carMode,
+      newCarBrand,
+      newCarBrandOther,
+      carModel,
+      vehicleNumber,
+      fuelType,
+      carColor,
+      newCarType,
+      selectedVehicleId,
+      availableSeats,
+      selectedRules,
+      extraInstructions,
+      luggageAllowance,
+      routeNotes,
+      autoConfirm,
+      womenOnly
+    };
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot));
+    } catch {
+      /* sessionStorage unavailable — non-fatal */
+    }
+  }, [
+    step,
+    sourceCity,
+    destinationCity,
+    sourcePos,
+    destinationPos,
+    chosenRoute,
+    journeyDate,
+    departureTime,
+    pricePerSeat,
+    pickupPoints,
+    routeStops,
+    dropPoints,
+    carMode,
+    newCarBrand,
+    newCarBrandOther,
+    carModel,
+    vehicleNumber,
+    fuelType,
+    carColor,
+    newCarType,
+    selectedVehicleId,
+    availableSeats,
+    selectedRules,
+    extraInstructions,
+    luggageAllowance,
+    routeNotes,
+    autoConfirm,
+    womenOnly
+  ]);
+
+  // Apply a location pinned on the map-picker page (returned via router state).
+  const pinAppliedRef = useRef(false);
+  useEffect(() => {
+    const pin = (location.state as { pin?: { target: string; city: string; position: [number, number] } } | null)?.pin;
+    if (!pin || pinAppliedRef.current) return;
+    pinAppliedRef.current = true;
+    if (pin.target === "destination") {
+      setDestinationCity(pin.city);
+      setDestinationPos(pin.position);
+    } else {
+      setSourceCity(pin.city);
+      setSourcePos(pin.position);
+    }
+    // Clear router state so a refresh does not re-apply the pin.
+    navigate("/driver/create-ride", { replace: true, state: null });
+  }, [location.state, navigate]);
+
+  // Cache the form, then redirect to the full map page to pin a location.
+  // Carry the current city (and any prior pin) so the map opens centred there.
+  function goToPin(target: "source" | "destination") {
+    pinAppliedRef.current = false;
+    const city = target === "source" ? sourceCity : destinationCity;
+    const pos = target === "source" ? sourcePos : destinationPos;
+    const params = new URLSearchParams({ target });
+    if (city.trim()) params.set("q", city.trim());
+    if (pos) {
+      params.set("lng", String(pos[0]));
+      params.set("lat", String(pos[1]));
+    }
+    navigate(`/driver/pin-location?${params.toString()}`);
+  }
 
   const instructionText = useMemo(
     () =>
@@ -226,6 +376,15 @@ export default function CreateRide() {
         if (!departureTime) return "Choose a departure time.";
         return null;
       }
+    },
+    {
+      key: "chooseroute",
+      title: "What is your route?",
+      subtitle: "Pick the driving route passengers will see on the map.",
+      icon: <RouteIcon size={20} />,
+      // Optional: publishing still works if the driver skips route selection
+      // (e.g. a freehand city Google can't resolve).
+      validate: () => null
     },
     {
       key: "points",
@@ -348,11 +507,26 @@ export default function CreateRide() {
             car_seats: defaultAvailableSeats(newCarType)
           };
 
+    // Fall back to the route's polyline endpoints when a city was typed
+    // freehand (no map pick) so coordinates are still saved.
+    const geo = chosenRoute?.geometry ?? [];
+    const sourceCoord = sourcePos ?? (geo.length ? geo[0] : null);
+    const destinationCoord = destinationPos ?? (geo.length ? geo[geo.length - 1] : null);
+
     try {
       await driverApi.publishRide({
         ...carDetails,
         source_city: sourceCity,
         destination_city: destinationCity,
+        source_lng: sourceCoord ? sourceCoord[0] : null,
+        source_lat: sourceCoord ? sourceCoord[1] : null,
+        destination_lng: destinationCoord ? destinationCoord[0] : null,
+        destination_lat: destinationCoord ? destinationCoord[1] : null,
+        route_geometry: chosenRoute?.geometry ?? [],
+        route_distance_m: chosenRoute?.distance_meters ?? null,
+        route_duration_s: chosenRoute?.duration_seconds ?? null,
+        route_label: chosenRoute?.road_label ?? null,
+        route_has_tolls: chosenRoute?.has_tolls ?? false,
         journey_date: journeyDate,
         departure_time: departureTime,
         available_seats: availableSeats,
@@ -370,6 +544,12 @@ export default function CreateRide() {
         auto_confirm_bookings: autoConfirm
       });
       summaryRef.current = buildSummary();
+      // Draft no longer needed once published.
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* non-fatal */
+      }
       setMessage("Ride published successfully.");
       // Auto-download an image of the published ride details.
       downloadRideImage(summaryRef.current, `${sourceCity} to ${destinationCity}`);
@@ -382,6 +562,19 @@ export default function CreateRide() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-5 md:py-7">
+      {routeChooserOpen && (
+        <RouteChooser
+          originQuery={sourceCity}
+          destinationQuery={destinationCity}
+          originPosition={sourcePos}
+          destinationPosition={destinationPos}
+          onClose={() => setRouteChooserOpen(false)}
+          onSave={(option) => {
+            setChosenRoute(option);
+            setRouteChooserOpen(false);
+          }}
+        />
+      )}
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold md:text-2xl">Publish a ride</h1>
@@ -440,8 +633,65 @@ export default function CreateRide() {
             <StepShell title={current.title} subtitle={current.subtitle} icon={current.icon}>
               {current.key === "route" && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <input className="input" value={sourceCity} onChange={(event) => setSourceCity(event.target.value)} placeholder="Source city" />
-                  <input className="input" value={destinationCity} onChange={(event) => setDestinationCity(event.target.value)} placeholder="Destination city" />
+                  <div className="flex flex-col gap-2">
+                    <CitySearch
+                      label="Source city"
+                      value={sourceCity}
+                      onChange={setSourceCity}
+                      onResolved={(info) => setSourcePos(info.position)}
+                      placeholder="Search source city"
+                      wrapperClassName="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                    />
+                    <button type="button" className="btn-outline justify-center" onClick={() => goToPin("source")}>
+                      <MapPin size={16} />
+                      Pin pickup on map
+                    </button>
+                    {sourcePos && <span className="field-hint text-primary">📍 Pinned on map</span>}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <CitySearch
+                      label="Destination city"
+                      value={destinationCity}
+                      onChange={setDestinationCity}
+                      onResolved={(info) => setDestinationPos(info.position)}
+                      placeholder="Search destination city"
+                      wrapperClassName="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                    />
+                    <button type="button" className="btn-outline justify-center" onClick={() => goToPin("destination")}>
+                      <MapPin size={16} />
+                      Pin drop on map
+                    </button>
+                    {destinationPos && <span className="field-hint text-primary">📍 Pinned on map</span>}
+                  </div>
+                </div>
+              )}
+
+              {current.key === "chooseroute" && (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted">
+                    Route from <span className="font-bold text-ink">{sourceCity || "source"}</span> to{" "}
+                    <span className="font-bold text-ink">{destinationCity || "destination"}</span>. Open the map to compare
+                    routes and pick the one you will drive.
+                  </p>
+                  {chosenRoute ? (
+                    <div className="rounded-xl border border-primary bg-primary-soft p-4">
+                      <p className="text-sm font-bold text-primary-dark">
+                        {(chosenRoute.distance_meters / 1000).toFixed(0)} km · {formatDuration(chosenRoute.duration_seconds)}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {chosenRoute.road_label || "Selected route"} · {chosenRoute.has_tolls ? "Has tolls" : "No tolls"}
+                      </p>
+                      <button type="button" className="btn-outline mt-3" onClick={() => setRouteChooserOpen(true)}>
+                        Change route
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="button" className="btn-primary self-start" onClick={() => setRouteChooserOpen(true)}>
+                      <MapPin size={16} />
+                      Select your route
+                    </button>
+                  )}
+                  <span className="field-hint">Optional — passengers see this route in the ride details.</span>
                 </div>
               )}
 

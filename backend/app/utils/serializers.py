@@ -1,8 +1,40 @@
+import json
 import re
 
 from app.models import Booking, Ride, RideStatus
-from app.schemas import DriverBookingOut, PassengerOut, RideOut, VehicleOut
+from app.schemas import DriverBookingOut, PassengerOut, RideOut, SavedRouteOut, VehicleOut
 from app.services.ride_time import ride_has_ended
+
+
+def _saved_route(ride: Ride) -> SavedRouteOut | None:
+    """Build the passenger-facing route payload from the persisted columns.
+    Returns None when the driver published without selecting a route."""
+    geometry: list[list[float]] = []
+    if ride.route_geometry:
+        try:
+            geometry = json.loads(ride.route_geometry)
+        except (ValueError, TypeError):
+            geometry = []
+    has_endpoints = ride.source_lng is not None and ride.destination_lng is not None
+    if not geometry and not has_endpoints:
+        return None
+    return SavedRouteOut(
+        geometry=geometry,
+        distance_meters=ride.route_distance_m or 0,
+        duration_seconds=ride.route_duration_s or 0,
+        label=ride.route_label or "",
+        has_tolls=bool(ride.route_has_tolls),
+        origin_position=(
+            [ride.source_lng, ride.source_lat]
+            if ride.source_lng is not None and ride.source_lat is not None
+            else None
+        ),
+        destination_position=(
+            [ride.destination_lng, ride.destination_lat]
+            if ride.destination_lng is not None and ride.destination_lat is not None
+            else None
+        ),
+    )
 
 
 def driver_booking_to_out(booking: Booking) -> DriverBookingOut:
@@ -66,6 +98,11 @@ def ride_to_out(ride: Ride) -> RideOut:
         id=ride.id,
         source_city=ride.source_city,
         destination_city=ride.destination_city,
+        source_lat=ride.source_lat,
+        source_lng=ride.source_lng,
+        destination_lat=ride.destination_lat,
+        destination_lng=ride.destination_lng,
+        route=_saved_route(ride),
         distance_km=ride.distance_km,
         journey_date=ride.journey_date,
         departure_time=ride.departure_time,

@@ -13,6 +13,7 @@ import DriverRidePlan from "./pages/DriverRidePlan";
 import LandingPage from "./pages/LandingPage";
 import MyRides from "./pages/MyRides";
 import PassengerProfilePage from "./pages/PassengerProfilePage";
+import PinLocation from "./pages/PinLocation";
 import ProfilePage from "./pages/ProfilePage";
 import RideDetail from "./pages/RideDetail";
 import SearchRides from "./pages/SearchRides";
@@ -53,6 +54,14 @@ export default function App() {
           element={
             <RequireRole role="driver">
               <CreateRide />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/driver/pin-location"
+          element={
+            <RequireRole role="driver">
+              <PinLocation />
             </RequireRole>
           }
         />

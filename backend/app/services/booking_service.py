@@ -74,6 +74,15 @@ class BookingService:
         if ride_departure_has_passed(ride):
             raise ValidationError("This ride has already departed")
 
+        # Women-only rides reject any passenger explicitly marked male.
+        if ride.women_only_preference and any(
+            (entry.gender or "").strip().lower() == "male"
+            for entry in payload.passengers
+        ):
+            raise ValidationError(
+                "This is a women-only ride. Male passengers cannot be booked."
+            )
+
         ride_output = ride_to_out(ride)
         valid_pickups = ride_output.pickup_points
         valid_drops = ride_output.drop_points + ride_output.route_stops

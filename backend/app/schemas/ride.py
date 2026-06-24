@@ -17,9 +17,20 @@ class RideCreate(BaseModel):
     car_seats: int | None = Field(default=None, ge=1, le=8)
     source_city: str
     destination_city: str
-    # Distance is no longer entered by the driver; it will be filled from the
-    # map integration later. Kept on the model with a 0 default for now.
+    # [lng, lat] coordinates behind the city labels, set when the driver picks
+    # source/destination on the map. Optional so a plain typed city still works.
+    source_lat: float | None = None
+    source_lng: float | None = None
+    destination_lat: float | None = None
+    destination_lng: float | None = None
+    # Distance is filled from the chosen route when available; falls back to 0.
     distance_km: int = 0
+    # Driver-selected route, persisted on the ride and shown to passengers.
+    route_geometry: list[list[float]] = Field(default_factory=list)
+    route_distance_m: float | None = None
+    route_duration_s: float | None = None
+    route_label: str | None = None
+    route_has_tolls: bool = False
     journey_date: date
     departure_time: time
     available_seats: int = Field(ge=1, le=8)
@@ -37,10 +48,27 @@ class RideCreate(BaseModel):
     driver_instructions: str | None = None
 
 
+class SavedRouteOut(BaseModel):
+    """The driver-selected route, replayed for passengers in ride details."""
+
+    geometry: list[list[float]] = []
+    distance_meters: float = 0
+    duration_seconds: float = 0
+    label: str = ""
+    has_tolls: bool = False
+    origin_position: list[float] | None = None
+    destination_position: list[float] | None = None
+
+
 class RideOut(BaseModel):
     id: int
     source_city: str
     destination_city: str
+    source_lat: float | None = None
+    source_lng: float | None = None
+    destination_lat: float | None = None
+    destination_lng: float | None = None
+    route: SavedRouteOut | None = None
     distance_km: int
     journey_date: date
     departure_time: time

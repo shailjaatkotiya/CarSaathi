@@ -24,10 +24,26 @@ export type Vehicle = {
   is_verified: boolean;
 };
 
+// The driver-selected route, persisted on the ride and shown to passengers.
+export type SavedRoute = {
+  geometry: number[][]; // [lng, lat] pairs forming the polyline
+  distance_meters: number;
+  duration_seconds: number;
+  label: string;
+  has_tolls: boolean;
+  origin_position?: number[] | null;
+  destination_position?: number[] | null;
+};
+
 export type Ride = {
   id: number;
   source_city: string;
   destination_city: string;
+  source_lat?: number | null;
+  source_lng?: number | null;
+  destination_lat?: number | null;
+  destination_lng?: number | null;
+  route?: SavedRoute | null;
   distance_km: number;
   journey_date: string;
   departure_time: string;
@@ -144,4 +160,61 @@ export type BookingActionResponse = {
 export type TokenResponse = {
   access_token: string;
   token_type?: string;
+};
+
+// ----- Google Maps navigation -----------------------------------------------
+
+export type NavigationPlace = {
+  label: string;
+  query: string;
+  position: number[]; // [lng, lat]
+};
+
+export type NavigationStep = {
+  instruction: string;
+  distance_meters: number;
+  duration_seconds: number;
+};
+
+export type NavigationRoute = {
+  provider: string;
+  origin: NavigationPlace;
+  destination: NavigationPlace;
+  distance_meters: number;
+  duration_seconds: number;
+  steps: NavigationStep[];
+  geometry: number[][];
+};
+
+export type NavigationRouteOption = {
+  distance_meters: number;
+  duration_seconds: number;
+  steps: NavigationStep[];
+  geometry: number[][];
+  has_tolls: boolean;
+  road_label: string;
+};
+
+export type NavigationRouteOptions = {
+  provider: string;
+  origin: NavigationPlace;
+  destination: NavigationPlace;
+  options: NavigationRouteOption[];
+};
+
+export type NavigationReverse = {
+  label: string;
+  position: number[]; // [lng, lat]
+  city: string;
+};
+
+export type NavigationSuggestion = {
+  label: string;
+};
+
+export type NavigationMapConfig = {
+  provider: string;
+  api_key: string;
+  language: string;
+  region: string;
 };
