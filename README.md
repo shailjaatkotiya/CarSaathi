@@ -4,6 +4,13 @@ Carthi is a scalable intercity carpooling MVP for Gujarat routes. It connects ve
 
 Tagline: **Skip the lonely bus. Choose a homely car ride, friendly company, and flexible halts with Carthi.**
 
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Screenshot 1](1.png) | ![Screenshot 2](2.png) |
+| ![Screenshot 3](3.png) | ![Screenshot 4](4.png) |
+
 ## What Is Included
 
 - Product requirement document in `docs/product-requirements.md`
