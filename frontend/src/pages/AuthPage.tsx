@@ -252,6 +252,10 @@ export default function AuthPage() {
             <div className={mode === "login" ? "grid gap-3 sm:grid-cols-[1fr_auto]" : ""}>
               <input
                 className="input"
+                type="tel"
+                inputMode="numeric"
+                pattern="(\+91|91|0)?[6-9][0-9]{9}"
+                title="Enter a valid 10-digit Indian mobile number"
                 value={mobileNumber}
                 onChange={(event) => setMobileNumber(event.target.value)}
                 placeholder="Mobile number"
@@ -276,7 +280,7 @@ export default function AuthPage() {
                 placeholder={mode === "login" ? "Username or email" : "Username"}
                 required
               />
-              {mode === "register" && <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" required />}
+              {mode === "register" && <input className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" required />}
               <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" required />
             </>
           )}

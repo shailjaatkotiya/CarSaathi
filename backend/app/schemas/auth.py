@@ -1,7 +1,23 @@
+import re
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.models import UserRole
 from app.schemas.vehicle import VehicleCreate
+
+# Indian mobile: optional +91 / 91 / 0 prefix, then 10 digits starting 6-9.
+_INDIAN_MOBILE_RE = re.compile(r"^(?:\+91|91|0)?([6-9]\d{9})$")
+
+
+def validate_indian_mobile(value: str, *, field: str = "Mobile number") -> str:
+    """Normalize to a bare 10-digit Indian mobile, raising on invalid input."""
+    cleaned = "".join(ch for ch in value.strip() if ch.isdigit() or ch == "+")
+    if not cleaned:
+        raise ValueError(f"{field} is required")
+    match = _INDIAN_MOBILE_RE.match(cleaned)
+    if not match:
+        raise ValueError(f"{field} must be a valid 10-digit Indian mobile number")
+    return match.group(1)
 
 
 class TokenResponse(BaseModel):
@@ -52,18 +68,14 @@ class RegisterRequest(BaseModel):
     @field_validator("mobile_number")
     @classmethod
     def normalize_mobile_number(cls, value: str) -> str:
-        value = "".join(ch for ch in value.strip() if ch.isdigit() or ch == "+")
-        if not value:
-            raise ValueError("Mobile number is required")
-        return value
+        return validate_indian_mobile(value)
 
     @field_validator("whatsapp_number")
     @classmethod
     def normalize_whatsapp_number(cls, value: str | None) -> str | None:
-        if value is None:
+        if value is None or not value.strip():
             return None
-        value = value.strip()
-        return value or None
+        return validate_indian_mobile(value, field="WhatsApp number")
 
 
 class LoginRequest(BaseModel):
@@ -95,10 +107,7 @@ class SendOtpRequest(BaseModel):
     @field_validator("mobile_number")
     @classmethod
     def normalize_mobile_number(cls, value: str) -> str:
-        value = "".join(ch for ch in value.strip() if ch.isdigit() or ch == "+")
-        if not value:
-            raise ValueError("Mobile number is required")
-        return value
+        return validate_indian_mobile(value)
 
 
 class VerifyOtpRequest(SendOtpRequest):
