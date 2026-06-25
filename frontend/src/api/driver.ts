@@ -1,16 +1,6 @@
 import { api } from "./client";
-import type { DriverBooking, Ride, Vehicle } from "../types";
-
-export type VehiclePayload = {
-  brand: string;
-  model: string;
-  vehicle_number: string;
-  fuel_type: string;
-  car_type: string;
-  color: string;
-  seats: number;
-  photo_urls: string[];
-};
+import type { DriverBooking, Ride, Vehicle, VehiclePayload } from "../types";
+export type { VehiclePayload } from "../types";
 
 export const driverApi = {
   rides: () => api.get<Ride[]>("/driver/rides").then((r) => r.data),

@@ -24,6 +24,9 @@ class Base(DeclarativeBase):
 RUNTIME_COLUMNS: dict[str, dict[str, str]] = {
     "users": {
         "role": "VARCHAR(20) DEFAULT 'passenger'",
+        "username": "VARCHAR(80)",
+        "gender": "VARCHAR(20)",
+        "mobile_number": "VARCHAR(20)",
         "personal_car_brand": "VARCHAR(80)",
         "personal_car_model": "VARCHAR(80)",
         "personal_car_number": "VARCHAR(30)",

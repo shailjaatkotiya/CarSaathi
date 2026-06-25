@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     twilio_content_sid_driver_booking_request: str = ""
     twilio_content_sid_passenger_booking_cancelled: str = ""
     twilio_content_sid_driver_booking_cancelled: str = ""
+    twilio_content_sid_login_otp: str = ""
     # Razorpay online payments. Empty key/secret = online payment disabled
     # (cash bookings keep working). Use test keys (rzp_test_...) in development.
     razorpay_key_id: str = ""

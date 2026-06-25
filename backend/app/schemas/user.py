@@ -7,7 +7,10 @@ class UserOut(BaseModel):
     id: int
     full_name: str
     email: EmailStr
+    username: str | None
     role: UserRole
+    gender: str | None
+    mobile_number: str | None
     whatsapp_number: str | None
     personal_car_brand: str | None
     personal_car_model: str | None
@@ -27,6 +30,9 @@ class UserOut(BaseModel):
 class ProfileUpdate(BaseModel):
     full_name: str | None = None
     email: EmailStr | None = None
+    username: str | None = None
+    gender: str | None = None
+    mobile_number: str | None = None
     whatsapp_number: str | None = None
     personal_car_brand: str | None = None
     personal_car_model: str | None = None

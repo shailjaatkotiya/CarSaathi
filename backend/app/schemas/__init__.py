@@ -5,7 +5,14 @@ definitions live in cohesive per-domain modules (auth, user, vehicle, ride,
 booking, payment, moderation).
 """
 
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
+from app.schemas.auth import (
+    LoginRequest,
+    PasswordLoginRequest,
+    RegisterRequest,
+    SendOtpRequest,
+    TokenResponse,
+    VerifyOtpRequest,
+)
 from app.schemas.booking import (
     BookingActionOut,
     BookingCreate,
@@ -48,6 +55,7 @@ __all__ = [
     "DriverProfileOut",
     "FellowPassengerOut",
     "LoginRequest",
+    "PasswordLoginRequest",
     "PassengerInput",
     "PassengerOut",
     "PaymentInitOut",
@@ -59,6 +67,7 @@ __all__ = [
     "ReviewOut",
     "RideCreate",
     "RideOut",
+    "SendOtpRequest",
     "SavedRouteOut",
     "SavedPassengerCreate",
     "SavedPassengerOut",
@@ -67,4 +76,5 @@ __all__ = [
     "UserOut",
     "VehicleCreate",
     "VehicleOut",
+    "VerifyOtpRequest",
 ]

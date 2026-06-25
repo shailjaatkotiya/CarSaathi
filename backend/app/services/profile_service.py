@@ -27,6 +27,8 @@ PERSONAL_CAR_FIELDS = [
 
 USER_WRITABLE_FIELDS = [
     "full_name",
+    "gender",
+    "mobile_number",
     "whatsapp_number",
     "personal_car_brand",
     "personal_car_model",
@@ -57,6 +59,17 @@ class ProfileService:
             if self.users.email_taken_by_other(str(updates["email"]), user.id):
                 raise ConflictError("Email already registered")
             user.email = str(updates["email"])
+        if "username" in updates and updates["username"] != user.username:
+            if self.users.username_taken_by_other(str(updates["username"]), user.id):
+                raise ConflictError("Username already registered")
+            user.username = str(updates["username"])
+        if (
+            "mobile_number" in updates
+            and updates["mobile_number"] != user.mobile_number
+            and updates["mobile_number"] is not None
+        ):
+            if self.users.mobile_taken_by_other(str(updates["mobile_number"]), user.id):
+                raise ConflictError("Mobile number already registered")
 
         merged_number = updates.get("personal_car_number", user.personal_car_number)
         has_car_detail = any(

@@ -27,6 +27,50 @@ DRIVER_DEMO_EMAILS = {
 
 PASSENGER_DEMO_EMAILS = {"shailja@gmail.com"}
 
+DEMO_USER_META = {
+    "shubham@gmail.com": {
+        "username": "shubham",
+        "gender": "Male",
+        "mobile_number": "9876501001",
+    },
+    "shailja@gmail.com": {
+        "username": "shailja",
+        "gender": "Female",
+        "mobile_number": "9876501002",
+    },
+    "aarav.driver@carthi.in": {
+        "username": "aarav",
+        "gender": "Male",
+        "mobile_number": "9876501003",
+    },
+    "mehul.driver@carthi.in": {
+        "username": "mehul",
+        "gender": "Male",
+        "mobile_number": "9876501004",
+    },
+    "rohan.driver@carthi.in": {
+        "username": "rohan",
+        "gender": "Male",
+        "mobile_number": "9876501005",
+    },
+    "nikhil.driver@carthi.in": {
+        "username": "nikhil",
+        "gender": "Male",
+        "mobile_number": "9876501006",
+    },
+}
+
+
+def apply_demo_user_meta(user: User) -> None:
+    meta = DEMO_USER_META.get(user.email)
+    if not meta:
+        return
+    for field, value in meta.items():
+        if not getattr(user, field):
+            setattr(user, field, value)
+    if not user.whatsapp_number:
+        user.whatsapp_number = meta["mobile_number"]
+
 
 def tagged_notes(
     notes: str, route_stops: list[str], ride_rules: list[str], driver_instructions: str
@@ -47,13 +91,25 @@ def ensure_default_admin(db: Session) -> None:
         admin = User(
             full_name="Carthi Admin",
             email="admin@carthi.in",
+            username="admin",
             password_hash=hash_password("Admin@123"),
             role=UserRole.admin,
+            gender="Prefer not to say",
+            mobile_number="9876501000",
+            whatsapp_number="9876501000",
             verification_status=VerificationStatus.verified,
         )
         db.add(admin)
         db.flush()
     admin.role = UserRole.admin
+    if not admin.username:
+        admin.username = "admin"
+    if not admin.gender:
+        admin.gender = "Prefer not to say"
+    if not admin.mobile_number:
+        admin.mobile_number = "9876501000"
+    if not admin.whatsapp_number:
+        admin.whatsapp_number = admin.mobile_number
     if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
         db.add(AdminUser(user_id=admin.id))
     db.commit()
@@ -61,6 +117,7 @@ def ensure_default_admin(db: Session) -> None:
 
 def ensure_demo_roles_and_profiles(db: Session) -> None:
     for user in db.query(User).all():
+        apply_demo_user_meta(user)
         if user.email in DRIVER_DEMO_EMAILS:
             user.role = UserRole.driver
             if not user.driver_profile:
@@ -81,23 +138,35 @@ def seed_database(db: Session) -> None:
     shubham = User(
         full_name="Shubham",
         email="shubham@gmail.com",
+        username="shubham",
         password_hash=hash_password("driver@123"),
         role=UserRole.driver,
+        gender="Male",
+        mobile_number="9876501001",
+        whatsapp_number="9876501001",
         verification_status=VerificationStatus.pending,
     )
     shailja = User(
         full_name="Shailja",
         email="shailja@gmail.com",
+        username="shailja",
         password_hash=hash_password("passenger@123"),
         role=UserRole.passenger,
+        gender="Female",
+        mobile_number="9876501002",
+        whatsapp_number="9876501002",
         verification_status=VerificationStatus.pending,
     )
     dummy_drivers = [
         User(
             full_name="Aarav Patel",
             email="aarav.driver@carthi.in",
+            username="aarav",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
+            gender="Male",
+            mobile_number="9876501003",
+            whatsapp_number="9876501003",
             verification_status=VerificationStatus.verified,
             rating_average=4.8,
             rating_count=26,
@@ -105,8 +174,12 @@ def seed_database(db: Session) -> None:
         User(
             full_name="Mehul Shah",
             email="mehul.driver@carthi.in",
+            username="mehul",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
+            gender="Male",
+            mobile_number="9876501004",
+            whatsapp_number="9876501004",
             verification_status=VerificationStatus.verified,
             rating_average=4.6,
             rating_count=19,
@@ -114,8 +187,12 @@ def seed_database(db: Session) -> None:
         User(
             full_name="Rohan Trivedi",
             email="rohan.driver@carthi.in",
+            username="rohan",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
+            gender="Male",
+            mobile_number="9876501005",
+            whatsapp_number="9876501005",
             verification_status=VerificationStatus.verified,
             rating_average=4.9,
             rating_count=34,
@@ -123,8 +200,12 @@ def seed_database(db: Session) -> None:
         User(
             full_name="Nikhil Desai",
             email="nikhil.driver@carthi.in",
+            username="nikhil",
             password_hash=hash_password("driver@123"),
             role=UserRole.driver,
+            gender="Male",
+            mobile_number="9876501006",
+            whatsapp_number="9876501006",
             verification_status=VerificationStatus.verified,
             rating_average=4.7,
             rating_count=22,

@@ -58,3 +58,23 @@ def send_via_twilio(
     except Exception:  # noqa: BLE001 - messaging must never break the caller
         logger.exception("twilio whatsapp send failed to=%s", recipient)
         return NotificationStatus.failed
+
+
+def send_login_otp_via_twilio(recipient: str, otp: str, expires_minutes: int) -> NotificationStatus:
+    settings = get_settings()
+    body = (
+        f"Carthi login OTP: {otp}. "
+        f"It expires in {expires_minutes} minutes. Do not share this code."
+    )
+    content_variables = {
+        "1": otp,
+        "2": str(expires_minutes),
+        "otp": otp,
+        "expires_minutes": str(expires_minutes),
+    }
+    return send_via_twilio(
+        recipient,
+        body,
+        settings.twilio_content_sid_login_otp or None,
+        content_variables,
+    )

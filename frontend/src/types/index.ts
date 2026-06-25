@@ -24,6 +24,17 @@ export type Vehicle = {
   is_verified: boolean;
 };
 
+export type VehiclePayload = {
+  brand: string;
+  model: string;
+  vehicle_number: string;
+  fuel_type: string;
+  car_type: string;
+  color: string;
+  seats: number;
+  photo_urls: string[];
+};
+
 // The driver-selected route, persisted on the ride and shown to passengers.
 export type SavedRoute = {
   geometry: number[][]; // [lng, lat] pairs forming the polyline
@@ -145,7 +156,10 @@ export type User = {
   id: number;
   full_name: string;
   email: string;
+  username?: string | null;
   role: UserRole;
+  gender?: string | null;
+  mobile_number?: string | null;
   whatsapp_number?: string;
   personal_car_brand?: string;
   personal_car_model?: string;
