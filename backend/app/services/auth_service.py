@@ -89,6 +89,8 @@ class AuthService:
         user = self.users.get_by_username(payload.username)
         if not user and "@" in payload.username:
             user = self.users.get_by_email(payload.username)
+        if not user:
+            user = self.users.get_by_mobile_number(payload.username)
         if not user or not verify_password(payload.password, user.password_hash):
             raise AuthError("Invalid username or password")
         return user

@@ -26,11 +26,9 @@ function roleFromQuery(value: string | null): UserRole {
   return value === "driver" || value === "admin" || value === "passenger" ? value : "passenger";
 }
 
-function defaultsForRole(role: UserRole) {
-  if (role === "driver") {
-    return { email: "driver@example.com", username: "driver", fullName: "Driver User" };
-  }
-  return { email: "passenger@example.com", username: "passenger", fullName: "Passenger User" };
+function defaultsForRole(_role: UserRole) {
+  // Keep inputs empty so users see placeholders, not pre-filled demo values.
+  return { email: "", username: "", fullName: "" };
 }
 
 function defaultPassengerSeats(carType: string) {
@@ -159,7 +157,7 @@ export default function AuthPage() {
               gender: gender.trim(),
               mobile_number: mobileNumber.trim(),
               email: email.trim().toLowerCase(),
-              username: username.trim(),
+              username: fullName.trim(),
               password: password.trim(),
               whatsapp_number: mobileNumber.trim(),
               role: selectedRole,
@@ -206,7 +204,7 @@ export default function AuthPage() {
           </div>
 
           {mode === "login" && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => setLoginMethod("password")}
@@ -215,6 +213,11 @@ export default function AuthPage() {
                 <KeyRound size={16} />
                 Username
               </button>
+              <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted">
+                <span className="h-px flex-1 bg-sand" />
+                or
+                <span className="h-px flex-1 bg-sand" />
+              </div>
               <button
                 type="button"
                 onClick={() => setLoginMethod("otp")}
@@ -274,13 +277,15 @@ export default function AuthPage() {
             <input className="input" value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="Enter OTP" required />
           ) : (
             <>
-              <input
-                className="input"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder={mode === "login" ? "Username or email" : "Username"}
-                required
-              />
+              {mode === "login" && (
+                <input
+                  className="input"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  placeholder="Username or mobile number"
+                  required
+                />
+              )}
               {mode === "register" && <input className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" required />}
               <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" required />
             </>
