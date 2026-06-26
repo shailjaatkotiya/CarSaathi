@@ -35,6 +35,15 @@ function defaultPassengerSeats(carType: string) {
   return carType.toLowerCase().includes("7") ? 6 : 3;
 }
 
+// OTP lifetime matches the backend (OTP_TTL_MINUTES = 5).
+const OTP_TTL_SECONDS = 5 * 60;
+
+function formatCountdown(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const requiredRole = roleFromQuery(searchParams.get("role"));
@@ -49,12 +58,14 @@ export default function AuthPage() {
   const [gender, setGender] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [otpSent, setOtpSent] = useState(false);
   const [showVehicleForm, setShowVehicleForm] = useState(requiredRole === "driver");
   const [vehicleBrand, setVehicleBrand] = useState("Maruti Suzuki");
   const [customVehicleBrand, setCustomVehicleBrand] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
-  const [fuelType, setFuelType] = useState("Petrol");
+  const [fuelType, setFuelType] = useState("CNG");
   const [carType, setCarType] = useState("Sedan");
   const [carColor, setCarColor] = useState("White");
   const [message, setMessage] = useState("");
@@ -77,6 +88,13 @@ export default function AuthPage() {
       setShowVehicleForm(false);
     }
   }, [selectedRole]);
+
+  // Tick the OTP expiry countdown down to zero, one second at a time.
+  useEffect(() => {
+    if (otpCountdown <= 0) return;
+    const id = setTimeout(() => setOtpCountdown((seconds) => seconds - 1), 1000);
+    return () => clearTimeout(id);
+  }, [otpCountdown]);
 
   useEffect(() => {
     if (!token) return;
@@ -127,6 +145,8 @@ export default function AuthPage() {
     try {
       const response = await authApi.sendOtp({ mobile_number: mobileNumber.trim() });
       setMessage(response.message || "OTP sent. Check your mobile.");
+      setOtpSent(true);
+      setOtpCountdown(OTP_TTL_SECONDS);
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -266,15 +286,27 @@ export default function AuthPage() {
                 required
               />
               {mode === "login" && loginMethod === "otp" && (
-                <button className="btn-outline whitespace-nowrap px-5" type="button" onClick={sendOtp} disabled={isSubmitting || !mobileNumber.trim()}>
-                  Send OTP
+                <button
+                  className="btn-outline whitespace-nowrap px-5"
+                  type="button"
+                  onClick={sendOtp}
+                  disabled={isSubmitting || !mobileNumber.trim() || otpCountdown > 0}
+                >
+                  {otpCountdown > 0 ? formatCountdown(otpCountdown) : otpSent ? "Resend OTP" : "Send OTP"}
                 </button>
               )}
             </div>
           )}
 
           {mode === "login" && loginMethod === "otp" ? (
-            <input className="input" value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="Enter OTP" required />
+            <div className="flex flex-col gap-1">
+              <input className="input" value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="Enter OTP" required />
+              {otpCountdown > 0 ? (
+                <span className="field-hint">OTP expires in {formatCountdown(otpCountdown)}</span>
+              ) : otpSent ? (
+                <span className="field-hint text-red-600">OTP expired. Tap Resend OTP for a new code.</span>
+              ) : null}
+            </div>
           ) : (
             <>
               {mode === "login" && (
@@ -331,7 +363,7 @@ export default function AuthPage() {
                   <input
                     className="input"
                     value={vehicleNumber}
-                    onChange={(event) => setVehicleNumber(event.target.value)}
+                    onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())}
                     placeholder="Vehicle number"
                     required={showVehicleForm}
                   />

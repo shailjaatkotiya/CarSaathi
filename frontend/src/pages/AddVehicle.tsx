@@ -103,8 +103,17 @@ export default function AddVehicle() {
               )}
             </div>
             <input className="input" name="model" defaultValue="Swift Dzire" placeholder="Model" required />
-            <input className="input" name="vehicle_number" defaultValue="GJ01AB1234" placeholder="Vehicle number" required />
-            <select className="input" name="fuel_type" defaultValue="Petrol" required>
+            <input
+              className="input"
+              name="vehicle_number"
+              defaultValue="GJ01AB1234"
+              placeholder="Vehicle number"
+              onInput={(event) => {
+                event.currentTarget.value = event.currentTarget.value.toUpperCase();
+              }}
+              required
+            />
+            <select className="input" name="fuel_type" defaultValue="CNG" required>
               <option value="Petrol">Petrol</option>
               <option value="Diesel">Diesel</option>
               <option value="CNG">CNG</option>

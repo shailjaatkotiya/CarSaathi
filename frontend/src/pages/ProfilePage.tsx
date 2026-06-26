@@ -223,7 +223,6 @@ export default function ProfilePage() {
   const isDriver = data.role === "driver";
   const isPassenger = data.role === "passenger";
   const phoneVerified = Boolean(data.whatsapp_number);
-  const emailVerified = false;
   const govtIdVerified = verification?.status === "verified";
 
   return (
@@ -330,20 +329,6 @@ export default function ProfilePage() {
                 }
                 to="/verify"
               />
-              <SettingsRow
-                icon={
-                  emailVerified ? (
-                    <ShieldCheck size={16} className="text-green-600" />
-                  ) : (
-                    <Plus size={16} />
-                  )
-                }
-                label={`Confirm email ${data.email}`}
-                sublabel={
-                  emailVerified ? "Email verified" : "Verify your email address"
-                }
-                onClick={() => {}}
-              />
               <div className="flex items-center gap-3 px-4 py-3.5">
                 <span className="shrink-0 text-muted">
                   {phoneVerified ? (
@@ -369,22 +354,6 @@ export default function ProfilePage() {
             </SettingsGroup>
           </div>
         )}
-
-        <div>
-          <SectionTitle>About you</SectionTitle>
-          <SettingsGroup>
-            <SettingsRow
-              icon={<Plus size={16} />}
-              label="Add a mini bio"
-              onClick={() => {}}
-            />
-            <SettingsRow
-              icon={<Plus size={16} />}
-              label="Edit travel preferences"
-              onClick={() => {}}
-            />
-          </SettingsGroup>
-        </div>
 
         {isPassenger && (
           <div id="saved-passengers-section">
@@ -474,7 +443,6 @@ export default function ProfilePage() {
             onClick={handleLogout}
             danger
           />
-          <SettingsRow label="Close my account" onClick={() => {}} danger />
         </SettingsGroup>
       </div>
     </div>

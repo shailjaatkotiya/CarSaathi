@@ -23,7 +23,7 @@ import { queryKeys } from "../lib/queryKeys";
 import TravelDatePicker, { clampTravelDate } from "../components/TravelDatePicker";
 import TimePicker from "../components/TimePicker";
 import AutoGrowTextarea from "../components/AutoGrowTextarea";
-import CitySearch from "../components/CitySearch";
+import CityAutocomplete from "../components/CityAutocomplete";
 import RouteChooser from "../components/RouteChooser";
 import { carBrands } from "../data/carBrands";
 import { useSessionStore } from "../store/session";
@@ -54,6 +54,12 @@ function formatRuleLabel(value: string) {
 
 function defaultAvailableSeats(carType?: string | null) {
   return carType?.toLowerCase().includes("7") ? 6 : 3;
+}
+
+// Current local time as "HH:MM" so the departure-time field defaults to now.
+function currentTimeHHMM() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
 function countPoints(value: string) {
@@ -171,7 +177,7 @@ export default function CreateRide() {
   const [chosenRoute, setChosenRoute] = useState<NavigationRouteOption | null>(draft.chosenRoute ?? null);
   const [routeChooserOpen, setRouteChooserOpen] = useState(false);
   const [journeyDate, setJourneyDate] = useState(clampTravelDate(draft.journeyDate ?? defaultRideDate));
-  const [departureTime, setDepartureTime] = useState<string>(draft.departureTime ?? "07:30");
+  const [departureTime, setDepartureTime] = useState<string>(draft.departureTime ?? currentTimeHHMM());
   const [pricePerSeat, setPricePerSeat] = useState<string>(draft.pricePerSeat ?? "180");
 
   const [pickupPoints, setPickupPoints] = useState<string>(draft.pickupPoints ?? "");
@@ -183,7 +189,7 @@ export default function CreateRide() {
   const [newCarBrandOther, setNewCarBrandOther] = useState<string>(draft.newCarBrandOther ?? "");
   const [carModel, setCarModel] = useState<string>(draft.carModel ?? "");
   const [vehicleNumber, setVehicleNumber] = useState<string>(draft.vehicleNumber ?? "");
-  const [fuelType, setFuelType] = useState<string>(draft.fuelType ?? "Petrol");
+  const [fuelType, setFuelType] = useState<string>(draft.fuelType ?? "CNG");
   const [carColor, setCarColor] = useState<string>(draft.carColor ?? "");
   const [newCarType, setNewCarType] = useState<string>(draft.newCarType ?? "Sedan");
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(draft.selectedVehicleId ?? null);
@@ -634,13 +640,14 @@ export default function CreateRide() {
               {current.key === "route" && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-2">
-                    <CitySearch
+                    <CityAutocomplete
                       label="Source city"
+                      icon={MapPin}
                       value={sourceCity}
                       onChange={setSourceCity}
-                      onResolved={(info) => setSourcePos(info.position)}
                       placeholder="Search source city"
-                      wrapperClassName="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                      className="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                      inputClassName="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
                     />
                     <button type="button" className="btn-outline justify-center" onClick={() => goToPin("source")}>
                       <MapPin size={16} />
@@ -649,13 +656,14 @@ export default function CreateRide() {
                     {sourcePos && <span className="field-hint text-primary">📍 Pinned on map</span>}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <CitySearch
+                    <CityAutocomplete
                       label="Destination city"
+                      icon={MapPin}
                       value={destinationCity}
                       onChange={setDestinationCity}
-                      onResolved={(info) => setDestinationPos(info.position)}
                       placeholder="Search destination city"
-                      wrapperClassName="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                      className="flex flex-col gap-1 rounded-xl border border-sand bg-cream px-3 py-2"
+                      inputClassName="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
                     />
                     <button type="button" className="btn-outline justify-center" onClick={() => goToPin("destination")}>
                       <MapPin size={16} />
@@ -790,7 +798,7 @@ export default function CreateRide() {
                         )}
                       </div>
                       <input className="input" value={carModel} onChange={(event) => setCarModel(event.target.value)} placeholder="Car model" />
-                      <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value)} placeholder="Vehicle number" />
+                      <input className="input" value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())} placeholder="Vehicle number" />
                       <select className="input" value={fuelType} onChange={(event) => setFuelType(event.target.value)}>
                         <option value="Petrol">Petrol</option>
                         <option value="CNG">CNG</option>
