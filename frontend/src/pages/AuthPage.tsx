@@ -16,9 +16,10 @@ const vehicleCategories = [
 ];
 
 function homeForRole(role: UserRole) {
-  if (role === "driver") return "/driver/create-ride";
   if (role === "admin") return "/admin";
-  return "/search";
+  // Drivers and passengers land on the home page, which shows the
+  // role-specific workflow and primary actions.
+  return "/";
 }
 
 function roleFromQuery(value: string | null): UserRole {

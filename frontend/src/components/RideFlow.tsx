@@ -194,18 +194,23 @@ function SectionHeader({
 export default function RideFlow({ role }: { role?: string }) {
   const showPublish = role !== "passenger";
   const showBook = role !== "driver";
+  // Once signed in the account is already set up, so lead with the
+  // role-specific workflow instead of the generic "create account" steps.
+  const isSignedIn = Boolean(role);
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="card-soft p-4 md:p-5">
-        <SectionHeader
-          eyebrow="How Carthi works"
-          title="Set up your user before any ride action"
-          body="Every important action comes back to one logged-in user, so profile, vehicles, published rides, and booked rides stay connected."
-          icon={BadgeCheck}
-        />
-        <FlowRow steps={appSteps} compact />
-      </section>
+      {!isSignedIn && (
+        <section className="card-soft p-4 md:p-5">
+          <SectionHeader
+            eyebrow="How Carthi works"
+            title="Set up your user before any ride action"
+            body="Every important action comes back to one logged-in user, so profile, vehicles, published rides, and booked rides stay connected."
+            icon={BadgeCheck}
+          />
+          <FlowRow steps={appSteps} compact />
+        </section>
+      )}
 
       <section className={`grid gap-4 ${showPublish && showBook ? "md:grid-cols-2" : ""}`}>
         {showPublish && (

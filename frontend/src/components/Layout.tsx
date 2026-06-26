@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useSessionStore } from "../store/session";
+import ScrollToTop from "./ScrollToTop";
 import ScrollToTopButton from "./ScrollToTopButton";
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
+      <ScrollToTop />
       <header className="sticky top-0 z-40 border-b border-sand bg-cream/85 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[64px] w-full max-w-6xl items-center justify-between gap-2 px-4 md:min-h-[72px] md:gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-2 md:gap-3">

@@ -85,7 +85,7 @@ export default function CityAutocomplete({
   const showList = open && focused && suggestions.length > 0;
 
   return (
-    <div ref={containerRef} className={`relative ${containerClassName ?? ""}`}>
+    <div ref={containerRef} className={`relative ${containerClassName ?? ""}`} style={{display:'flex'}}>
       <label
         className={`block origin-center transition-transform duration-150 ${
           focused ? "scale-[1.03]" : ""

@@ -172,6 +172,7 @@ export default function SearchRides() {
       {/* Top search bar: pickup, drop off, date, passengers */}
       <div className="card flex flex-col gap-2 rounded-2xl p-2 md:flex-row md:items-stretch md:gap-0 md:divide-x md:divide-sand">
         <CityAutocomplete
+          icon={MapPin}
           value={source}
           onChange={setSource}
           placeholder="Enter pickup city"
@@ -180,6 +181,7 @@ export default function SearchRides() {
           inputClassName="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-muted"
         />
         <CityAutocomplete
+          icon={MapPin}
           value={destination}
           onChange={setDestination}
           placeholder="Enter drop off city"

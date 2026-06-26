@@ -90,7 +90,7 @@ function RideSearchBar() {
         value={pickup}
         onChange={setPickup}
         placeholder="Enter pickup city"
-        className="rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl"
+        className="rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl flex"
         inputClassName="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
       />
       <CityAutocomplete
@@ -98,7 +98,7 @@ function RideSearchBar() {
         value={dropoff}
         onChange={setDropoff}
         placeholder="Enter drop off city"
-        className="rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl"
+        className="rounded-xl px-3 py-2 transition hover:bg-neutral-50 md:rounded-2xl flex"
         inputClassName="w-full bg-transparent text-sm text-ink outline-none placeholder:text-neutral-400"
       />
       <TravelDatePicker value={pickupDate} onChange={setPickupDate} />
