@@ -15,6 +15,11 @@ class Settings(BaseSettings):
         "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5176,http://127.0.0.1:5176,http://localhost:5177,http://127.0.0.1:5177"
     )
     public_api_base_url: str = "http://localhost:8000/api/v1"
+    # Generated WhatsApp share-card images. media_root is the on-disk folder
+    # served at /media; public_media_base_url is the externally reachable URL
+    # Twilio fetches the image from (must be public in production, not localhost).
+    media_root: str = "media"
+    public_media_base_url: str = "http://localhost:8000/media"
     # Empty = caching disabled; e.g. redis://localhost:6379/0
     redis_url: str = ""
     ride_search_cache_ttl: int = 30

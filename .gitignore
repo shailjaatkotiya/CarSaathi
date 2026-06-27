@@ -24,3 +24,6 @@ Thumbs.db
 
 carthi-key.pem
 global-bundle.pem
+# Generated WhatsApp share-card images / runtime media
+backend/media/
+media/

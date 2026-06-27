@@ -192,8 +192,8 @@ function SectionHeader({
 }
 
 export default function RideFlow({ role }: { role?: string }) {
-  const showPublish = role !== "passenger";
-  const showBook = role !== "driver";
+  const showPublish = role === "driver";
+  const showBook = role === "passenger";
   // Once signed in the account is already set up, so lead with the
   // role-specific workflow instead of the generic "create account" steps.
   const isSignedIn = Boolean(role);

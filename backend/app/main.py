@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
@@ -39,6 +42,10 @@ def startup() -> None:
         seed_database(db)
     finally:
         db.close()
+
+
+os.makedirs(settings.media_root, exist_ok=True)
+app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
 
 
 @app.get("/health")

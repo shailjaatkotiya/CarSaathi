@@ -27,6 +27,7 @@ def send_via_twilio(
     body: str,
     content_sid: str | None = None,
     content_variables: dict | None = None,
+    media_url: str | None = None,
 ) -> NotificationStatus:
     """Send one WhatsApp message. Returns sent / failed. Never raises."""
     settings = get_settings()
@@ -52,6 +53,11 @@ def send_via_twilio(
         else:
             # Freeform (sandbox / within 24h customer-service window).
             params["body"] = body
+
+        # Attach the generated share-card image (freeform sends only; template
+        # sends carry media through the approved template itself).
+        if media_url and not content_sid:
+            params["media_url"] = [media_url]
 
         client.messages.create(**params)
         return NotificationStatus.sent

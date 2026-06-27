@@ -69,6 +69,7 @@ function RideSearchBar() {
   const [dropoff, setDropoff] = useState("");
   const [pickupDate, setPickupDate] = useState(getTodayInputDate);
   const [seats, setSeats] = useState(1);
+  const [focused, setFocused] = useState(false);
 
   function findVehicle(event: React.FormEvent) {
     event.preventDefault();
@@ -83,7 +84,15 @@ function RideSearchBar() {
   return (
     <form
       onSubmit={findVehicle}
-      className="grid gap-3 rounded-2xl bg-white p-3 text-ink shadow-2xl sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:gap-2 md:rounded-3xl md:p-3"
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setFocused(false);
+        }
+      }}
+      className={`grid gap-3 rounded-2xl border-2 bg-white p-3 text-ink shadow-2xl transition-colors sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:gap-2 md:rounded-3xl md:p-3 ${
+        focused ? "border-neutral-950" : "border-transparent"
+      }`}
     >
       <CityAutocomplete
         icon={MapPin}

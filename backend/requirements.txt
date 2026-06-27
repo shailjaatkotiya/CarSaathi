@@ -13,3 +13,4 @@ cryptography==44.0.0
 twilio==9.4.1
 redis==5.2.1
 razorpay==1.4.2
+Pillow==11.0.0

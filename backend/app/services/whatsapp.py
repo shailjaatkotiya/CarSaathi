@@ -4,9 +4,23 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models import Booking, NotificationLog, NotificationStatus, User
+from app.services.ride_image import (
+    generate_booking_card,
+    generate_ride_published_card,
+)
 from app.services.twilio_client import send_via_twilio
 
 _BODY_TEMPLATES = {
+    "driver_ride_published": (
+        "Carthi: ride published!\n"
+        "Ride: {ride_id}\n"
+        "Route: {route}\n"
+        "Car: {car_model} ({vehicle_number})\n"
+        "Departure: {journey_date} {journey_time}\n"
+        "Seats: {available_seats}\n"
+        "Price/seat: Rs. {price_per_seat}\n"
+        "Share the ride card below to fill your seats."
+    ),
     "passenger_booking_confirmation": (
         "Carthi: booking {booking_status}!\n"
         "Booking: {booking_id}\n"
@@ -65,7 +79,12 @@ def _content_sid_for(template_name: str) -> str | None:
 
 
 def log_whatsapp(
-    db: Session, user: User, booking: Booking, template_name: str, payload: dict
+    db: Session,
+    user: User,
+    booking: Booking | None,
+    template_name: str,
+    payload: dict,
+    media_url: str | None = None,
 ) -> NotificationLog:
     settings = get_settings()
     recipient = user.whatsapp_number or "missing"
@@ -87,11 +106,12 @@ def log_whatsapp(
             _render_body(template_name, payload),
             _content_sid_for(template_name),
             {key: str(value) for key, value in payload.items()},
+            media_url,
         )
 
     log = NotificationLog(
         user_id=user.id,
-        booking_id=booking.id,
+        booking_id=booking.id if booking else None,
         template_name=template_name,
         recipient=recipient,
         payload=json.dumps(payload),
@@ -110,6 +130,7 @@ def notify_booking_created(
     passenger = booking.passenger
     vehicle = ride.vehicle
 
+    card = generate_booking_card(booking)
     log_whatsapp(
         db,
         passenger,
@@ -130,6 +151,7 @@ def notify_booking_created(
             "seat_count_booked": booking.seats_booked,
             "total_amount": booking.total_amount,
         },
+        media_url=card[1] if card else None,
     )
     if notify_driver:
         log_whatsapp(
@@ -146,6 +168,30 @@ def notify_booking_created(
                 "booking_id": booking.booking_code,
             },
         )
+
+
+def notify_ride_published(db: Session, ride) -> None:
+    """Send the driver a B&W ride-published share card on WhatsApp."""
+    driver = ride.driver
+    vehicle = ride.vehicle
+    card = generate_ride_published_card(ride)
+    log_whatsapp(
+        db,
+        driver,
+        None,
+        "driver_ride_published",
+        {
+            "ride_id": ride.id,
+            "route": f"{ride.source_city} to {ride.destination_city}",
+            "car_model": f"{vehicle.brand} {vehicle.model}" if vehicle else "-",
+            "vehicle_number": vehicle.vehicle_number if vehicle else "-",
+            "journey_date": ride.journey_date.isoformat(),
+            "journey_time": ride.departure_time.isoformat(),
+            "available_seats": ride.available_seats,
+            "price_per_seat": ride.price_per_seat,
+        },
+        media_url=card[1] if card else None,
+    )
 
 
 def notify_booking_cancelled(

@@ -147,7 +147,7 @@ export default function TravelDatePicker({
         type="button"
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className="flex h-full min-h-[60px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-left text-ink transition hover:border-primary hover:bg-white focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-light/40 md:min-h-[60px] md:rounded-2xl"
+        className="flex h-full min-h-[60px] w-full items-center gap-3 rounded-xl border border-sand bg-cream px-3 py-2 text-left text-ink transition focus:outline-none md:min-h-[60px] md:rounded-2xl"
         onClick={() => setIsOpen((current) => !current)}
       >
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-white">

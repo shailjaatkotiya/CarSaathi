@@ -31,6 +31,7 @@ from app.services.whatsapp import (
     notify_booking_created,
     notify_booking_rejected_by_driver,
     notify_ride_cancelled,
+    notify_ride_published,
 )
 from app.utils.serializers import ride_to_out
 
@@ -151,6 +152,8 @@ class DriverRideService:
         )
         self.db.commit()
         self.db.refresh(ride)
+        notify_ride_published(self.db, ride)
+        self.db.commit()
         cache.bump_rides_version()
         return ride
 
