@@ -9,7 +9,7 @@ import { carBrands } from "../data/carBrands";
 const categories = [
   { value: "Sedan", icon: "S", hint: "Default 3 passenger seats" },
   { value: "SUV", icon: "SUV", hint: "Default 3 passenger seats" },
-  { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" }
+  { value: "7 Seater", icon: "7", hint: "Default 6 passenger seats" },
 ];
 
 function defaultPassengerSeats(carType: string) {
@@ -19,7 +19,9 @@ function defaultPassengerSeats(carType: string) {
 export default function AddVehicle() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Sedan");
-  const [passengerSeats, setPassengerSeats] = useState(defaultPassengerSeats("Sedan"));
+  const [passengerSeats, setPassengerSeats] = useState(
+    defaultPassengerSeats("Sedan"),
+  );
   const [brand, setBrand] = useState("Maruti Suzuki");
   const [customBrand, setCustomBrand] = useState("");
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -27,7 +29,7 @@ export default function AddVehicle() {
 
   const { data: vehicles, refetch } = useQuery({
     queryKey: queryKeys.driver.vehicles,
-    queryFn: driverApi.vehicles
+    queryFn: driverApi.vehicles,
   });
 
   function chooseCategory(value: string) {
@@ -49,10 +51,14 @@ export default function AddVehicle() {
     setMessage("");
     const form = formRef.current;
     if (form) {
-      (form.elements.namedItem("model") as HTMLInputElement).value = vehicle.model;
-      (form.elements.namedItem("vehicle_number") as HTMLInputElement).value = vehicle.vehicle_number;
-      (form.elements.namedItem("fuel_type") as HTMLSelectElement).value = vehicle.fuel_type;
-      (form.elements.namedItem("color") as HTMLInputElement).value = vehicle.color || "White";
+      (form.elements.namedItem("model") as HTMLInputElement).value =
+        vehicle.model;
+      (form.elements.namedItem("vehicle_number") as HTMLInputElement).value =
+        vehicle.vehicle_number;
+      (form.elements.namedItem("fuel_type") as HTMLSelectElement).value =
+        vehicle.fuel_type;
+      (form.elements.namedItem("color") as HTMLInputElement).value =
+        vehicle.color || "White";
       form.scrollIntoView({ behavior: "smooth" });
     }
   }
@@ -62,7 +68,13 @@ export default function AddVehicle() {
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     const resolvedBrand = brand === "Other" ? customBrand.trim() : brand;
-    const body = { ...payload, brand: resolvedBrand, car_type: category, seats: passengerSeats, photo_urls: [] } as unknown as VehiclePayload;
+    const body = {
+      ...payload,
+      brand: resolvedBrand,
+      car_type: category,
+      seats: passengerSeats,
+      photo_urls: [],
+    } as unknown as VehiclePayload;
     if (editingVehicle) {
       await driverApi.updateVehicle(editingVehicle.id, body);
       setMessage("Vehicle updated.");
@@ -79,12 +91,23 @@ export default function AddVehicle() {
       <div className="card rounded-2xl p-4 md:p-5">
         <form ref={formRef} onSubmit={submit} className="flex flex-col gap-4">
           <div>
-            <h1 className="text-xl font-bold md:text-2xl">{editingVehicle ? `Edit vehicle ${editingVehicle.vehicle_number}` : "Add vehicle"}</h1>
-            <p className="mt-1 text-sm text-muted">Add car details passengers can compare before requesting seats.</p>
+            <h1 className="text-xl font-bold md:text-2xl">
+              {editingVehicle
+                ? `Edit vehicle ${editingVehicle.vehicle_number}`
+                : "Add vehicle"}
+            </h1>
+            <p className="mt-1 text-sm text-muted">
+              Add car details passengers can compare before requesting seats.
+            </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <select className="input" value={brand} onChange={(event) => setBrand(event.target.value)} required>
+              <select
+                className="input"
+                value={brand}
+                onChange={(event) => setBrand(event.target.value)}
+                required
+              >
                 {carBrands.map((item) => (
                   <option key={item} value={item}>
                     {item}
@@ -102,26 +125,46 @@ export default function AddVehicle() {
                 />
               )}
             </div>
-            <input className="input" name="model" defaultValue="Swift Dzire" placeholder="Model" required />
+            <input
+              className="input"
+              name="model"
+              defaultValue="Swift Dzire"
+              placeholder="Model"
+              required
+            />
             <input
               className="input"
               name="vehicle_number"
               defaultValue="GJ01AB1234"
               placeholder="Vehicle number"
               onInput={(event) => {
-                event.currentTarget.value = event.currentTarget.value.toUpperCase();
+                event.currentTarget.value =
+                  event.currentTarget.value.toUpperCase();
               }}
               required
             />
-            <select className="input" name="fuel_type" defaultValue="CNG" required>
+            <select
+              className="input"
+              name="fuel_type"
+              defaultValue="CNG"
+              required
+            >
               <option value="Petrol">Petrol</option>
               <option value="Diesel">Diesel</option>
               <option value="CNG">CNG</option>
               <option value="EV">EV</option>
             </select>
             <div>
-              <input className="input" name="color" defaultValue="White" placeholder="Car color" required />
-              <span className="field-hint">Helps passengers spot your car. Defaults to White.</span>
+              <input
+                className="input"
+                name="color"
+                defaultValue="White"
+                placeholder="Car color"
+                required
+              />
+              <span className="field-hint">
+                Helps passengers spot your car. Defaults to White.
+              </span>
             </div>
             <div>
               <input
@@ -131,10 +174,16 @@ export default function AddVehicle() {
                 min={1}
                 max={defaultPassengerSeats(category)}
                 value={passengerSeats}
-                onChange={(event) => setPassengerSeats(Number(event.target.value))}
+                onChange={(event) =>
+                  setPassengerSeats(Number(event.target.value))
+                }
                 placeholder="Passenger seats"
               />
-              <span className="field-hint">{category === "7 Seater" ? "7 Seater default is 6" : "Sedan and SUV default is 3"}</span>
+              <span className="field-hint">
+                {category === "7 Seater"
+                  ? "7 Seater default is 6"
+                  : "Sedan and SUV default is 3"}
+              </span>
             </div>
           </div>
 
@@ -152,12 +201,10 @@ export default function AddVehicle() {
                       : "border-sand bg-cream text-ink hover:border-primary"
                   }`}
                 >
-                  <p className="font-bold">
-                    {item.icon} - {item.value}
-                  </p>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs">
+                  <p className="font-bold">{item.value}</p>
+                  {/* <p className="mt-1 inline-flex items-center gap-1 text-xs">
                     <Fuel size={12} /> Fuel type selected above
-                  </p>
+                  </p> */}
                   <p className="text-xs">{item.hint}</p>
                 </button>
               ))}
@@ -165,11 +212,18 @@ export default function AddVehicle() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button className="btn-primary self-start px-6 py-3 text-base" type="submit">
+            <button
+              className="btn-primary self-start px-6 py-3 text-base"
+              type="submit"
+            >
               {editingVehicle ? "Update vehicle" : "Save vehicle"}
             </button>
             {editingVehicle && (
-              <button type="button" className="btn-outline" onClick={() => setEditingVehicle(null)}>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => setEditingVehicle(null)}
+              >
                 Cancel edit
               </button>
             )}
@@ -179,28 +233,42 @@ export default function AddVehicle() {
       </div>
 
       <div className="card mt-6 overflow-hidden rounded-3xl">
-        <div className="border-b border-sand px-5 py-4 font-bold">My vehicles</div>
+        <div className="border-b border-sand px-5 py-4 font-bold">
+          My vehicles
+        </div>
         {vehicles?.map((vehicle) => (
-          <div key={vehicle.id} className="flex flex-col gap-2 border-b border-sand-light px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            key={vehicle.id}
+            className="flex flex-col gap-2 border-b border-sand-light px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+          >
             <div>
               <p className="inline-flex items-center gap-2 font-semibold">
                 <Car size={16} className="text-primary" />
                 {vehicle.brand} {vehicle.model} - {vehicle.vehicle_number}
               </p>
               <p className="text-sm text-muted">
-                {vehicle.car_type} - {vehicle.color} - {vehicle.fuel_type} - {vehicle.seats} passenger seats
+                {vehicle.car_type} - {vehicle.color} - {vehicle.fuel_type} -{" "}
+                {vehicle.seats} passenger seats
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="chip">{vehicle.is_verified ? "verified" : "not verified"}</span>
-              <button type="button" className="btn-outline" onClick={() => startEdit(vehicle)}>
+              <span className="chip">
+                {vehicle.is_verified ? "verified" : "not verified"}
+              </span>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => startEdit(vehicle)}
+              >
                 <Pencil size={14} />
                 Edit
               </button>
             </div>
           </div>
         ))}
-        {vehicles?.length === 0 && <p className="px-5 py-4 text-sm text-muted">No vehicles added yet.</p>}
+        {vehicles?.length === 0 && (
+          <p className="px-5 py-4 text-sm text-muted">No vehicles added yet.</p>
+        )}
       </div>
     </div>
   );

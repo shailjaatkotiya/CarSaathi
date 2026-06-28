@@ -282,9 +282,6 @@ export default function SavedPassengersManager() {
                     value={form.age}
                     onChange={(event) => setField("age", event.target.value)}
                   />
-                  <span className="field-hint">
-                    Optional. Helps drivers plan seating.
-                  </span>
                 </div>
                 <select
                   className="input"
@@ -303,9 +300,6 @@ export default function SavedPassengersManager() {
                     value={form.phone}
                     onChange={(event) => setField("phone", event.target.value)}
                   />
-                  <span className="field-hint">
-                    Optional. Used to contact the co-traveller.
-                  </span>
                 </div>
               </div>
 
