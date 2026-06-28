@@ -105,11 +105,11 @@ function downloadRideImage(lines: [string, string][], title: string) {
   if (!ctx) return;
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#FFF8EC";
+  ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "#546B41";
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, width, 90);
-  ctx.fillStyle = "#FFF8EC";
+  ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 30px Arial";
   ctx.fillText("Carthi", 32, 56);
   ctx.fillStyle = "#171717";
@@ -124,7 +124,7 @@ function downloadRideImage(lines: [string, string][], title: string) {
     ctx.fillStyle = "#171717";
     ctx.font = "600 18px Arial";
     ctx.fillText(value, 32, y + 24);
-    ctx.strokeStyle = "#DCCCAC";
+    ctx.strokeStyle = "#E5E5E5";
     ctx.beginPath();
     ctx.moveTo(32, y + 36);
     ctx.lineTo(width - 32, y + 36);
