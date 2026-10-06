@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.models import AdminUser, User
+from app.models import User, UserRole
 from app.repositories.base import BaseRepository
 
 
@@ -43,10 +43,8 @@ class UserRepository(BaseRepository[User]):
         )
 
     def is_admin(self, user_id: int) -> bool:
-        return (
-            self.db.query(AdminUser).filter(AdminUser.user_id == user_id).first()
-            is not None
-        )
+        user = self.db.get(User, user_id)
+        return user is not None and user.role == UserRole.admin
 
     def list_newest_first(self) -> list[User]:
         return self.db.query(User).order_by(User.created_at.desc()).all()

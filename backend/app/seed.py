@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.models import (
-    AdminUser,
     DriverProfile,
     PassengerProfile,
     Ride,
@@ -110,8 +109,6 @@ def ensure_default_admin(db: Session) -> None:
         admin.mobile_number = "9876501000"
     if not admin.whatsapp_number:
         admin.whatsapp_number = admin.mobile_number
-    if not db.query(AdminUser).filter(AdminUser.user_id == admin.id).first():
-        db.add(AdminUser(user_id=admin.id))
     db.commit()
 
 

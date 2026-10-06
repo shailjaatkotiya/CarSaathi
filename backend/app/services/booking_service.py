@@ -17,7 +17,6 @@ from app.models import (
     Booking,
     BookingPassenger,
     BookingStatus,
-    CancellationReason,
     Payment,
     ReportedUser,
     Ride,
@@ -253,11 +252,6 @@ class BookingService:
         cap_available_seats(booking.ride)
         booking.status = BookingStatus.cancelled
         booking.cancellation_reason = reason
-        self.db.add(
-            CancellationReason(
-                user_id=passenger_id, booking_id=booking.id, reason=reason
-            )
-        )
         notify_booking_cancelled(self.db, booking, reason, "passenger")
         self.db.commit()
         self.db.refresh(booking)

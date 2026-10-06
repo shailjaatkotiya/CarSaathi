@@ -3,11 +3,11 @@
 Copies account data only. Ride and booking history is intentionally left
 behind to clean out stale data:
 
-    kept:    users, admin_users, driver_profiles, passenger_profiles,
+    kept:    users, driver_profiles, passenger_profiles,
              aadhaar_verifications, vehicles
     dropped: rides, ride_pickup_points, ride_drop_points, bookings,
              payments, reviews, notification_logs, reported_users,
-             cancellation_reasons
+             cancellation_reasons. Legacy admin_users are folded into users.role.
 
 The target schema is created from the current SQLAlchemy models. Only
 columns that exist in both source and target are copied, so older SQLite
@@ -35,7 +35,6 @@ import app.models  # noqa: E402,F401  (imported for table registration)
 # Order matters: every table must come after the tables it references.
 TABLES_TO_MIGRATE = [
     "users",
-    "admin_users",
     "driver_profiles",
     "passenger_profiles",
     "aadhaar_verifications",
@@ -61,6 +60,15 @@ def main() -> None:
 
     source = sqlite3.connect(sqlite_path)
     engine = create_engine(args.postgres)
+    source_tables = {
+        row[0]
+        for row in source.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    legacy_admin_ids = set()
+    if "admin_users" in source_tables:
+        legacy_admin_ids = {
+            row[0] for row in source.execute("SELECT user_id FROM admin_users")
+        }
 
     Base.metadata.create_all(bind=engine)
     inspector = inspect(engine)
@@ -81,6 +89,8 @@ def main() -> None:
             source_columns, rows = fetch_source_rows(source, table)
             target_columns = {column["name"] for column in inspector.get_columns(table)}
             shared = [column for column in source_columns if column in target_columns]
+            if table == "users" and "role" in target_columns and "role" not in shared:
+                shared.append("role")
             skipped = [column for column in source_columns if column not in target_columns]
             if skipped:
                 print(f"{table}: ignoring source-only columns {skipped}")
@@ -94,12 +104,20 @@ def main() -> None:
             )
             for row in rows:
                 record = dict(zip(source_columns, row))
-                payload = {
-                    column: bool(record[column])
-                    if column in boolean_columns[table] and record[column] is not None
-                    else record[column]
-                    for column in shared
-                }
+                payload = {}
+                for column in shared:
+                    value = record.get(column)
+                    if table == "users" and column == "role":
+                        value = (
+                            "admin"
+                            if record["id"] in legacy_admin_ids
+                            else value or "passenger"
+                        )
+                    payload[column] = (
+                        bool(value)
+                        if column in boolean_columns[table] and value is not None
+                        else value
+                    )
                 target.execute(insert_sql, payload)
             print(f"{table}: migrated {len(rows)} rows")
 

@@ -1,9 +1,10 @@
 import pytest
+from pydantic import ValidationError
 from types import SimpleNamespace
 
 from app.core.exceptions import AuthError
 from app.models import NotificationLog, NotificationStatus, SavedPassenger, UserRole, Vehicle
-from app.schemas import PasswordLoginRequest, RegisterRequest, VehicleCreate
+from app.schemas import LoginRequest, PasswordLoginRequest, RegisterRequest, VehicleCreate
 from app.services import auth_service
 from app.services.auth_service import AuthService
 
@@ -38,6 +39,24 @@ def test_register_passenger_creates_default_saved_passenger(db):
     assert saved.full_name == user.full_name
     assert saved.gender == "Female"
     assert saved.phone == "9876543210"
+
+
+def test_public_registration_rejects_admin_role():
+    with pytest.raises(ValidationError):
+        register_payload(role=UserRole.admin)
+
+
+def test_admin_authentication_uses_user_role(db):
+    service = AuthService(db)
+    user = service.register(register_payload())
+    user.role = UserRole.admin
+    db.commit()
+
+    authenticated = service.authenticate_admin(
+        LoginRequest(email=user.email, password="password123")
+    )
+
+    assert authenticated.id == user.id
 
 
 def test_register_driver_can_add_vehicle_during_signup(db):

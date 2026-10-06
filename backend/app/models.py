@@ -396,16 +396,6 @@ class NotificationLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
-class AdminUser(Base):
-    __tablename__ = "admin_users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
-    permissions: Mapped[str] = mapped_column(
-        Text, default="users,rides,bookings,verification,reports"
-    )
-
-
 class ReportedUser(Base):
     __tablename__ = "reported_users"
 
@@ -415,15 +405,4 @@ class ReportedUser(Base):
     ride_id: Mapped[int | None] = mapped_column(ForeignKey("rides.id"))
     reason: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(40), default="open")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
-class CancellationReason(Base):
-    __tablename__ = "cancellation_reasons"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    ride_id: Mapped[int | None] = mapped_column(ForeignKey("rides.id"))
-    booking_id: Mapped[int | None] = mapped_column(ForeignKey("bookings.id"))
-    reason: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

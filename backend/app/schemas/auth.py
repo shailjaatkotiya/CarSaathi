@@ -36,6 +36,13 @@ class RegisterRequest(BaseModel):
     role: UserRole = UserRole.passenger
     vehicle: VehicleCreate | None = None
 
+    @field_validator("role")
+    @classmethod
+    def reject_admin_registration(cls, value: UserRole) -> UserRole:
+        if value == UserRole.admin:
+            raise ValueError("Admin accounts cannot be created through registration")
+        return value
+
     @field_validator("full_name")
     @classmethod
     def normalize_full_name(cls, value: str) -> str:

@@ -13,7 +13,6 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models import (
     Booking,
     BookingStatus,
-    CancellationReason,
     Ride,
     RideDropPoint,
     RidePickupPoint,
@@ -259,9 +258,6 @@ class DriverRideService:
             if booking.status in {BookingStatus.pending, BookingStatus.confirmed}:
                 booking.status = BookingStatus.cancelled
                 booking.cancellation_reason = f"Driver cancelled ride: {reason}"
-        self.db.add(
-            CancellationReason(user_id=driver.id, ride_id=ride.id, reason=reason)
-        )
         self.db.commit()
         cache.bump_rides_version()
 
